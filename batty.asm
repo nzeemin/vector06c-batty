@@ -6073,7 +6073,7 @@ all_var_init:
   LD A,$0B
 LB7F8_0:
   LD BC,$0016
-  LDIR
+  CALL LDIR8080
   DEC A
   JP NZ,LB7F8_0
   LD (LBAEB+$01),A		; меняем параметр команды JR
@@ -6135,7 +6135,7 @@ LB7F8_2:
 LB7F8_3:
   LD DE,bonus_table_current
   LD BC,$0010
-  LDIR
+  CALL LDIR8080
   LD HL,LA270
   LD B,$0C
   CALL clear_hl_buff
@@ -6219,7 +6219,7 @@ game_start:
   LD A,$0B
 game_start_0:
   LD BC,$0016
-  LDIR
+  CALL LDIR8080
   DEC A
   JP NZ,game_start_0
 ;---------------------------------
@@ -6266,11 +6266,11 @@ game_restart:
   LD DE,current_level_copy
   LD HL,(current_level_addr)
   LD BC,$00B4			; 180 - количество ячеек на уровне
-  LDIR
+  CALL LDIR8080
   LD DE,lives_2up
   LD HL,lives_1up
   LD BC,$0007
-  LDIR
+  CALL LDIR8080
   LD A,(game_mode)
   AND A
   JP NZ,LB9E8_0
@@ -6847,7 +6847,7 @@ hi_score_update_1:
   LD DE,hi_score
   LD HL,current_score_1up
   LD BC,$0003
-  LDIR
+  CALL LDIR8080
   RET
 
 ; Used by the routine at game_restart.

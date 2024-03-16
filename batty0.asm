@@ -2,6 +2,7 @@
 
 	.EXPORT KeyLine0, KeyLine7, JoystickP
 	.EXPORT BorderColor
+	.EXPORT LDIR8080, LDDR8080
 	.EXPORT dzx0, BATTY0_END
 
 ;----------------------------------------------------------------------------
@@ -156,6 +157,36 @@ PaletteGame:		; Palette
 	.db	ColorNone, ColorGame, ColorText, ColorBoth	; 4..7
 	.db	ColorNone, ColorGame, ColorText, ColorBoth	; 8..11
 	.db	ColorNone, ColorGame, ColorText, ColorBoth	; 12..15
+
+;----------------------------------------------------------------------------
+
+LDIR8080:
+	push psw
+LDIR8080_1:
+	mov a,m
+	stax d
+	inx h
+	inx d
+	dcx b
+	mov a,b
+	ora c
+	jnz LDIR8080_1
+	pop psw
+	ret
+
+LDDR8080:
+	push psw
+LDDR8080_1:
+	mov a,m
+	stax d
+	dcx h
+	dcx d
+	dcx b
+	mov a,b
+	ora c
+	jnz LDDR8080_1
+	pop psw
+	ret
 
 ;----------------------------------------------------------------------------
 

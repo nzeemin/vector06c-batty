@@ -61,7 +61,7 @@ L910C_5:
   LD HL,txt_high_score_table+222 ; Последняя строка таблицы рекордов
 L910C_6:
   LD BC,$000E
-  LDDR
+  CALL LDDR8080
   DEC HL
   DEC HL
   DEC HL
@@ -79,7 +79,7 @@ L910C_7:
   POP DE
   LD HL,score_six_digits
   LD BC,$0006
-  LDIR
+  CALL LDIR8080
   LD C,$26
   LD (IX+$09),$0A
   LD (IX+$0A),C
