@@ -14,7 +14,8 @@ get_free_sound_slot:
 ;   AND A
 ;   RET Z
 ;   ADD IX,DE
-;   DJNZ LC064_0
+;   dec b
+;   jp nz,LC064_0
   RET
 
 ; Used by the routines at LAF81, LBAED, LBB97, LBBFB and LBC10.
@@ -42,7 +43,8 @@ play_sounds_queue:
 ;   LD BC,$0007
 ;   ADD IX,BC
 ;   POP BC
-;   DJNZ play_sounds_queue_0
+;   dec b
+;   jp nz,play_sounds_queue_0
 ;   LD A,(frames)
 ;   LD B,A
 ;   LD A,(frames_copy)
@@ -334,12 +336,14 @@ sound_beep:
 ;   ld a,$0b
 ;   ld (sound_port),a
 ; sound_beep_0:
-;   DJNZ sound_beep_0
+;   dec b
+;   jp nz,sound_beep_0
 ;   LD B,E
 ;   ld a,$0a
 ;   ld (sound_port),a
 ; sound_beep_1:
-;   DJNZ sound_beep_1
+;   dec b
+;   jp nz,sound_beep_1
   RET
 
 ; Used by the routines at L9F64, play_sound_normall_brik, play_sound_metal_brik, play_sound_bat_beat, play_sound_05, play_sound_06, play_sound_live_add,

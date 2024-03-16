@@ -34,7 +34,7 @@ L8D4C_0:
   CALL random_generate
   LD A,(random_number)
   RRA
-  JR C,L8D4C_1
+  JP C,L8D4C_1
   LD (IX+$01),$07
   CALL print_obj_to_buff
 L8D4C_1:
@@ -45,7 +45,7 @@ L8D4C_1:
   ADD IX,DE
   POP AF
   DEC A
-  JR NZ,L8D4C_0
+  JP NZ,L8D4C_0
   LD A,$17		; Меняем высоту спрайта - 23 точки
   LD (spr_magnet_circle_on+1),A
   RET
@@ -137,8 +137,8 @@ L8E72_0:
   AND $03
   POP BC
   CP B
-  JR Z,L8E72_1
-  JR NC,L8E72_0
+  JP Z,L8E72_1
+  JP NC,L8E72_0
 L8E72_1:
   ADD A,A		; 2+2
   ADD A,A		; 4+4

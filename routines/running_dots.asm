@@ -23,7 +23,7 @@ running_dot:
   LD A,(IX+$0C)
   SUB B
   CP $09
-  JR NC,LB8E6_0
+  JP NC,LB8E6_0
   LD A,(IX+$0C)
   SUB $0B
   LD B,A		; В В константа для расчёта обеих точек
@@ -73,10 +73,10 @@ LB8E6_0:
   LD A,(running_dot_frame_1up)
   BIT 7,A
   RES 7,A
-  JR Z,LB8E6_1
+  JP Z,LB8E6_1
   DEC A
   CP $09
-  JR Z,LB8E6_2
+  JP Z,LB8E6_2
   OR $80
   LD (running_dot_frame_1up),A
   RET
@@ -86,7 +86,7 @@ LB8E6_1:
   LD A,(IX+$0C)
   SUB B
   CP $0A
-  JR NZ,LB8E6_3
+  JP NZ,LB8E6_3
 LB8E6_2:
   LD A,(running_dot_frame_1up)
   XOR $80

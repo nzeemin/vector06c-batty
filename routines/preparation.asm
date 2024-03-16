@@ -20,18 +20,18 @@ table_gen_2:
   SRL D
   RRA
   DEC E
-  JR NZ,table_gen_2
+  JP NZ,table_gen_2
   INC H
   LD (HL),A
   DEC H
   LD (HL),D
   INC HL
   INC C
-  JR NZ,table_gen_1
+  JP NZ,table_gen_1
   INC H
   INC B
   BIT 3,B
-  JR Z,table_gen_0
+  JP Z,table_gen_0
 
   CALL spr_shift_gen	; Генерация сдвинутых спрайтов шарика и всех видов кареток
 
@@ -42,7 +42,7 @@ gfx_inverse_1:
   LD H,(IX+$01)
   LD A,L
   OR H
-  JR Z,L6800_6	; Прекращаем, если вместо адреса следующего спрайта нули
+  JP Z,L6800_6	; Прекращаем, если вместо адреса следующего спрайта нули
   INC IX
   INC IX
   LD C,(HL)
@@ -57,10 +57,11 @@ gfx_inverse_3:
   XOR (HL)
   LD (HL),A
   INC HL
-  DJNZ gfx_inverse_3
+  dec b
+  jp nz,gfx_inverse_3
   DEC E
-  JR NZ,gfx_inverse_2
-  JR gfx_inverse_1
+  JP NZ,gfx_inverse_2
+  JP gfx_inverse_1
 
 L6800_6:
   LD A,$0C	; Устанавливается высота спрайта ракеты в 12 пикселей (отсекается пламя)
@@ -91,15 +92,15 @@ L6800_9:
   POP BC
   LD A,C
   AND A
-  JR Z,L6800_10
+  JP Z,L6800_10
   LD A,(L68A4+1)	; ok (этот комментарий необходим для отключения warning компилятора)
   INC A
   LD (L68A4+1),A
-  JR L6800_9
+  JP L6800_9
 L6800_10:
   LD DE,$0005
   ADD IX,DE
-  JR L6800_8
+  JP L6800_8
 
 ; Генерация одной фазы сдвига спрайта
 ; HL - адрес спрайта
@@ -139,7 +140,8 @@ L6800_14:
   RR D
   SRL A
   RR C
-  DJNZ L6800_14
+  dec b
+  jp nz,L6800_14
   LD B,A
   LD A,D
   LD (L68C8+1),A
@@ -165,12 +167,13 @@ L68C8:
   LD (DE),A
   DEC DE
   POP BC
-  DJNZ L6800_13
+  dec b
+  jp nz,L6800_13
   INC DE
   INC DE
   EX AF,AF'
   DEC A
-  JR NZ,L6800_12
+  JP NZ,L6800_12
   POP HL
   RET
 

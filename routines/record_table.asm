@@ -20,7 +20,8 @@ L910C_0:
   LD (DE),A
   INC DE
   DEC HL
-  DJNZ L910C_0
+  dec b
+  jp nz,L910C_0
   LD IY,score_six_digits
   LD D,$0B
 L910C_1:
@@ -30,18 +31,19 @@ L910C_1:
 L910C_2:
   LD A,(IX+$00)
   CP (IY+$00)
-  JR C,L910C_4
-  JR NZ,L910C_3
+  JP C,L910C_4
+  JP NZ,L910C_3
   INC IX
   INC IY
-  DJNZ L910C_2
+  dec b
+  jp nz,L910C_2
 L910C_3:
   POP IX
   POP IY
   LD A,D
   CP $0B
   RET Z
-  JR L910C_5
+  JP L910C_5
 L910C_4:
   DEC D
   POP IX
@@ -50,11 +52,11 @@ L910C_4:
   ADD IX,BC
   LD A,D
   DEC A
-  JR NZ,L910C_1
+  JP NZ,L910C_1
 L910C_5:
   LD A,$0A
   SUB D
-  JR Z,L910C_7
+  JP Z,L910C_7
   LD DE,txt_high_scores-1
   LD HL,txt_high_score_table+222 ; Последняя строка таблицы рекордов
 L910C_6:
@@ -69,7 +71,7 @@ L910C_6:
   DEC DE
   DEC DE
   DEC A
-  JR NZ,L910C_6
+  JP NZ,L910C_6
 L910C_7:
   LD DE,$0012
   ADD IX,DE
@@ -108,24 +110,24 @@ L910C_9:
   CALL get_control_state_1up
   LD A,(ctrl_btns_pressed)
   AND $13
-  JR Z,L910C_9
+  JP Z,L910C_9
   BIT 4,A
-  JR NZ,L910C_12
+  JP NZ,L910C_12
   CP $03
-  JR Z,L910C_9
+  JP Z,L910C_9
   POP BC
   RRA
-  JR NC,L910C_10
+  JP NC,L910C_10
   INC C
   LD A,C
   CP $28
-  JR NZ,L910C_11
+  JP NZ,L910C_11
   LD C,$00
-  JR L910C_11
+  JP L910C_11
 L910C_10:
   DEC C
   BIT 7,C
-  JR Z,L910C_11
+  JP Z,L910C_11
   LD C,$27
 L910C_11:
   LD (IX+$09),C
@@ -135,12 +137,12 @@ L910C_11:
   CALL play_sound_choose_letter
   LD D,$20
   CALL pause_short
-  JR L910C_9
+  JP L910C_9
 L910C_12:
   CALL play_sound_confirm_letter
   POP BC
   DEC B
-  JR Z,L910C_14
+  JP Z,L910C_14
   INC IX
   LD (IX+$09),$0A
   PUSH BC
@@ -150,9 +152,9 @@ L910C_13:
   CALL get_control_state_1up
   LD A,(ctrl_btns_pressed)
   AND $10
-  JR NZ,L910C_13
+  JP NZ,L910C_13
   POP BC
-  JR L910C_8
+  JP L910C_8
 L910C_14:
   CALL disp_high_score_table_screen
   LD B,$0A

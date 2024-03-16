@@ -220,7 +220,8 @@ read_keyboard_map:                    ; 7   6   5   4   3   2   1   0
 clear_hl_buff:
   LD (HL),$00
   INC HL
-  DJNZ clear_hl_buff
+  dec b
+  jp nz,clear_hl_buff
   RET
 
 spr_level_textures:
@@ -245,7 +246,8 @@ next_win_line:
 next_win_column:
   LD (HL),$00
   INC H
-  DJNZ next_win_column
+  dec b
+  jp nz,next_win_column
   POP HL
   DEC HL   ; Was CALL dec_scr_line
   DEC C
@@ -259,7 +261,8 @@ next_win_column:
 next_round_number:
   ADD A,$01
   DAA
-  DJNZ next_round_number
+  dec b
+  jp nz,next_round_number
   LD B,A
   RRA
   RRA
@@ -546,7 +549,8 @@ next_digit:
   ADD A,A
   CALL print_digit
   DEC HL
-  DJNZ next_digit
+  dec b
+  jp nz,next_digit
   RET
 
 ; Used by the routine at add_points_to_score.
@@ -748,7 +752,8 @@ next_obj_to_buff:
   POP BC
   LD DE,$0016
   ADD IX,DE
-  DJNZ next_obj_to_buff
+  dec b
+  jp nz,next_obj_to_buff
   LD (save_obj_buff_end),HL	; Бесполезная команда
   RET
 
@@ -927,7 +932,8 @@ rest_obj_03:
   ; JP NC,next_line_restore_obj
   ; INC D
 ; next_line_restore_obj:
-  ; DJNZ next_line_restore_obj
+  ; dec b
+  ; jp nz,next_line_restore_obj
   ; JP check_next_obj
 
 ; Data block at 98DA
@@ -2619,7 +2625,8 @@ LA27E_7:
 LA27E_8:
   LD DE,$0010
   ADD IY,DE
-  DJNZ LA27E_7
+  dec b
+  jp nz,LA27E_7
   JP LA27E_12
 LA27E_9:
   PUSH IY
@@ -4084,7 +4091,8 @@ LAD8F_0:
   LD L,A
 LAD8F_1:
   POP BC
-  DJNZ LAD8F_0
+  dec b
+  jp nz,LAD8F_0
   RET
 
 ; Used by the routine at all_metal_briks_frame.
@@ -4100,7 +4108,8 @@ LADAC_0:
   INC H
   POP BC
   INC IY
-  DJNZ LADAC_0
+  dec b
+  jp nz,LADAC_0
   RET
 
 ; Used by the routine at line_metal_briks_frame.
@@ -4173,7 +4182,8 @@ LADBC_02:
   LD (HL),D
   DEC H
   INC L
-  DJNZ LADBC_0
+  dec b
+  jp nz,LADBC_0
 LADDD:
   LD SP,$0000
   ei
@@ -4225,7 +4235,8 @@ LADE1_01:
   inc l
   LD (brik_attr_buf),HL
   POP BC
-  DJNZ LADE1_0
+  dec b
+  jp nz,LADE1_0
   RET
 
 ; Used by the routine at print_briks.
@@ -4242,7 +4253,8 @@ LAE13_0:
   INC H
   INC IY
   POP BC
-  DJNZ LAE13_0
+  dec b
+  jp nz,LAE13_0
   RET
 
 ; Used by the routine at print_briks.
@@ -4272,7 +4284,8 @@ brik_shadow_1:
 brik_shadow_2:
   inc h
   INC IY
-  DJNZ brik_shadow_0
+  dec b
+  jp nz,brik_shadow_0
   RET
 	ENDIF
 
@@ -4331,7 +4344,8 @@ LAE82_0:
 	ENDIF
 
   inc l
-  DJNZ LAE82_0
+  dec b
+  jp nz,LAE82_0
 LAE82_1:
 
 ; Раскрашивание кирпича
@@ -4395,7 +4409,8 @@ LAE82_3:
   ; В обеих версиях рисуем эту линию
   RES 7,(HL)		; Сброс стороны слева кирпича
   dec l
-  DJNZ LAE82_3
+  dec b
+  jp nz,LAE82_3
   RET
 
 ; Цвета кирпичей
@@ -4475,7 +4490,8 @@ add_points_for_left_briks_2:
   CALL pause_short
   INC IY
   POP BC
-  DJNZ add_points_for_left_briks_1
+  dec b
+  jp nz,add_points_for_left_briks_1
   LD A,(brik_value+$01)
   INC A
   LD (brik_value+$01),A
@@ -4553,7 +4569,8 @@ LAFFC_2:
   ADD A,$08
   LD C,A
   INC H
-  DJNZ LAFFC_0
+  dec b
+  jp nz,LAFFC_0
   RET
 
 LAFFC_3:
@@ -4819,7 +4836,8 @@ LAFFC_35:
   AND A
   JP Z,LAFFC_36
   ADD IX,DE
-  DJNZ LAFFC_35
+  dec b
+  jp nz,LAFFC_35
   JP LAFFC_37
 LAFFC_36:
   PUSH HL
@@ -5048,7 +5066,8 @@ LAFFC_54:
   AND C
   LD (HL),A
   inc l
-  DJNZ LAFFC_54
+  dec b
+  jp nz,LAFFC_54
 	ld a,l
 	add $1c
 	ld l,a
@@ -5058,7 +5077,8 @@ LAFFC_55:
   AND C
   LD (HL),A
   inc l
-  DJNZ LAFFC_55
+  dec b
+  jp nz,LAFFC_55
 ;=======================================
 
 LAFFC_56:
@@ -5172,7 +5192,8 @@ LAFFC_61:
   RES 7,(HL)
 
 	inc l
-  DJNZ LAFFC_61
+  dec b
+  jp nz,LAFFC_61
   POP HL
 
 ;-------------------------------------------------------
@@ -5206,7 +5227,8 @@ LAFFC_63:
   RES 0,(HL)
 	ENDIF
 	inc l
-  DJNZ LAFFC_63
+  dec b
+  jp nz,LAFFC_63
   POP HL
 	
 
@@ -5681,7 +5703,8 @@ LB678:
   LD DE,$0016
   ADD IX,DE
   POP BC
-  DJNZ LB66A_0
+  dec b
+  jp nz,LB66A_0
   RET
 
 ; Used by the routines at print_magnets, add_points_to_score, bonus_extra_life and game_screen_draw_to_buffer.
@@ -5706,7 +5729,8 @@ next_brik:
   CALL NZ,metal_brik_anim
   LD DE,$0007
   ADD IY,DE
-  DJNZ next_brik
+  dec b
+  jp nz,next_brik
   RET
 
 ; Used by the routine at fill_briks_data.
@@ -5840,7 +5864,8 @@ LB717_0:
   LD BC,$0004
   ADD IX,BC
   POP BC
-  DJNZ LB717_0
+  dec b
+  jp nz,LB717_0
   XOR A
   LD (wins_counter),A
   LD HL,wins_recovery_data
@@ -5860,7 +5885,8 @@ LB74A:
   AND $90
   JP Z,LB754
   INC HL
-  DJNZ LB74A
+  dec b
+  jp nz,LB74A
   JP LB764
 LB754:
   LD IY,(iy_storage)
@@ -5971,7 +5997,8 @@ score_2up_in_game:
 ; Used by the routine at LBC10.
 pause_clear_screen_attrib:
   CALL pause_short
-  DJNZ pause_clear_screen_attrib
+  dec b
+  jp nz,pause_clear_screen_attrib
   JP clear_screen_attrib
 
 ; Used by the routines at input_new_record_name, game_restart, LBBFB and LBC10.
@@ -5979,7 +6006,8 @@ pause_clear_screen_attrib:
 pause_long:
   LD D,$00
   CALL pause_short
-  DJNZ pause_long
+  dec b
+  jp nz,pause_long
   RET
 
 ; Неиспользуемый байт - копия предыдущего? Мусор?
@@ -6139,7 +6167,8 @@ bricks_reset_0:
   RES 4,(HL)			; Всем цветам 6 и выше (до невыбиваемых) сбрасываем признак обычного кирпича
 bricks_reset_1:
   INC HL
-  DJNZ bricks_reset_0
+  dec b
+  jp nz,bricks_reset_0
   RET
 
 ; Рисование бегающих точек на каретках
@@ -6388,7 +6417,8 @@ LBAED_7:
   SET 7,(IX+$00)
 LBAED_8:
   ADD IX,DE
-  DJNZ LBAED_7
+  dec b
+  jp nz,LBAED_7
   LD A,$01
 LBB83:
   LD HL,$0000
@@ -6499,7 +6529,8 @@ LBC10_1:
   SET 7,(IX+$00)
 LBC10_2:
   ADD IX,DE
-  DJNZ LBC10_1
+  dec b
+  jp nz,LBC10_1
   POP AF
   LD (object_rocket),A
   LD HL,print_obj_to_buff
@@ -6557,7 +6588,8 @@ LBC10_3:
   INC C
   INC C
   INC C
-  DJNZ LBC10_3
+  dec b
+  jp nz,LBC10_3
 
   LD A,(game_mode)
   CP $02
@@ -6572,7 +6604,8 @@ LBCE6:
   LD (IX+$02),A
   ADD IX,DE
   ADD IX,DE
-  DJNZ LBC10_4
+  dec b
+  jp nz,LBC10_4
 LBC10_5:
   CALL random_generate
   LD HL,handling_object
@@ -6722,7 +6755,8 @@ hl_swap_de:
   LD (DE),A
   INC HL
   INC DE
-  DJNZ hl_swap_de
+  dec b
+  jp nz,hl_swap_de
   RET
 
 ; Used by the routine at LBC10.
@@ -6788,7 +6822,8 @@ briks_calc_0:
   INC C
 briks_calc_1:
   INC HL
-  DJNZ briks_calc_0
+  dec b
+  jp nz,briks_calc_0
   LD A,C
   LD (briks_quantity_1up),A
   RET
@@ -6806,7 +6841,8 @@ hi_score_update_0:
   JP NZ,hi_score_update_1
   DEC DE
   DEC HL
-  DJNZ hi_score_update_0
+  dec b
+  jp nz,hi_score_update_0
 hi_score_update_1:
   LD DE,hi_score
   LD HL,current_score_1up
@@ -6868,7 +6904,8 @@ LBE8B_1:
   LD H,A
   EXX
   POP BC
-  DJNZ LBE8B_1
+  dec b
+  jp nz,LBE8B_1
 
 ;-------------------------
 ; Рисование дополнительной обводки бордюра толщиной в пиксель слева и справа с внутренней стороны
@@ -6881,7 +6918,8 @@ LBE8B_2:
 LBE8B_3:
   RES 7,(HL)	; Слева
   inc l
-  DJNZ LBE8B_3
+  dec b
+  jp nz,LBE8B_3
   POP HL
   PUSH HL
   LD A,H
@@ -6891,7 +6929,8 @@ LBE8B_3:
 LBE8B_4:
   RES 0,(HL)	; Справа
   inc l
-  DJNZ LBE8B_4
+  dec b
+  jp nz,LBE8B_4
   POP HL
   LD B,$07
   ld a,l
@@ -6911,7 +6950,8 @@ LBE8B_4:
 ; LBE8B_5:
   ; LD (HL),A
   ; ADD HL,DE
-  ; DJNZ LBE8B_5
+  ; dec b
+  ; jp nz,LBE8B_5
 
 ;-------------------------
 ; Рисование верхней части бордюра
@@ -6945,7 +6985,8 @@ LBE8B_7:
   LD (HL),A
   INC H
   INC DE
-  DJNZ LBE8B_7
+  dec b
+  jp nz,LBE8B_7
 
 ;-----------------------------------------
 ; Рисуем индикаторы количества жизней
@@ -6967,7 +7008,8 @@ LBE8B_8:
   LD (object_lives_indicator+$02),A
 LBE8B_9:
   POP BC
-  DJNZ LBE8B_8
+  dec b
+  jp nz,LBE8B_8
 
 ;---------------------------------
 ; Рисуем разделитель игроков, если соответствующий режим игры
@@ -7027,7 +7069,8 @@ LBFCF_0:
 	and %01110111
 	ld (hl),a
 	inc l
-	DJNZ LBFCF_0
+	dec b
+	jp nz,LBFCF_0
 	; Горизонталь
 	LD HL,attr_buff+$0201
 	LD B,$1D
@@ -7036,7 +7079,8 @@ LBFCF_1:
 	and %01110111
 	ld (hl),a
 	INC h
-	DJNZ LBFCF_1
+	dec b
+	jp nz,LBFCF_1
 	ENDIF
 
 	ret
