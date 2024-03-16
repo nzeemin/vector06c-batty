@@ -3,7 +3,7 @@
 	.EXPORT KeyLine0, KeyLine7, JoystickP
 	.EXPORT BorderColor
 	.EXPORT LDIR8080, LDDR8080, SBCHLDE8080
-	.EXPORT dzx0, BATTY0_END
+	.EXPORT BATTY0_END
 
 ;----------------------------------------------------------------------------
 
@@ -192,22 +192,22 @@ LDDR8080_1:
 
 ; SBC HL,DE
 SBCHLDE8080:
-		sta SBCHLDE8080_TMP
-		mov a,l
-		sbb e
-		mov l,a
-		mov a,h
-		sbb d
-		mov h,a
-		jc $+7
-		ora l
-		jmp $+5
-		ora l
-		stc
-		lda SBCHLDE8080_TMP
-		ret
+	sta SBCHLDE8080_TMP
+	mov a,l
+	sbb e
+	mov l,a
+	mov a,h
+	sbb d
+	mov h,a
+	jc $+7
+	ora l
+	jmp $+5
+	ora l
+	stc
+	lda SBCHLDE8080_TMP
+	ret
 SBCHLDE8080_TMP:
-		.DB	0
+	.DB	0
 
 ;----------------------------------------------------------------------------
 
@@ -216,113 +216,113 @@ SBCHLDE8080_TMP:
 ; input:	de=compressed data start
 ;		bc=uncompressed destination start
 
-#ifdef BACKWARD
-#define NEXT_HL dcx h
-#define NEXT_DE dcx d
-#define NEXT_BC dcx b
-#else
-#define NEXT_HL inx h
-#define NEXT_DE inx d
-#define NEXT_BC inx b
-#endif
+; #ifdef BACKWARD
+; #define NEXT_HL dcx h
+; #define NEXT_DE dcx d
+; #define NEXT_BC dcx b
+; #else
+; #define NEXT_HL inx h
+; #define NEXT_DE inx d
+; #define NEXT_BC inx b
+; #endif
 
-dzx0:
-#ifdef BACKWARD
-		lxi h,1
-		push h
-		dcr l
-#else
-		lxi h,0FFFFh
-		push h
-		inx h
-#endif
-		mvi a,080h
-dzx0_literals:
-		call dzx0_elias
-		call dzx0_ldir
-		jc dzx0_new_offset
-		call dzx0_elias
-dzx0_copy:
-		xchg
-		xthl
-		push h
-		dad b
-		xchg
-		call dzx0_ldir
-		xchg
-		pop h
-		xthl
-		xchg
-		jnc dzx0_literals
-dzx0_new_offset:
-		call dzx0_elias
-#ifdef BACKWARD
-		inx sp
-		inx sp
-		dcr h
-		rz
-		dcr l
-		push psw
-		mov a,l
-#else
-		mov h,a
-		pop psw
-		xra a
-		sub l
-		rz
-		push h
-#endif
-		rar\ mov h,a
-		ldax d
-		rar\ mov l,a
-		NEXT_DE
-#ifdef BACKWARD
-		inx h
-#endif
-		xthl
-		mov a,h
-		lxi h,1
-#ifdef BACKWARD
-		cc dzx0_elias_backtrack
-#else
-		cnc dzx0_elias_backtrack
-#endif
-		inx h
-		jmp dzx0_copy
-dzx0_elias:
-		inr l
-dzx0_elias_loop:
-		add a
-		jnz dzx0_elias_skip
-		ldax d
-		NEXT_DE
-		ral
-dzx0_elias_skip:
-#ifdef BACKWARD
-		rnc
-#else
-		rc
-#endif
-dzx0_elias_backtrack:
-		dad h
-		add a
-		jnc dzx0_elias_loop
-		jmp dzx0_elias
+; dzx0:
+; #ifdef BACKWARD
+; 		lxi h,1
+; 		push h
+; 		dcr l
+; #else
+; 		lxi h,0FFFFh
+; 		push h
+; 		inx h
+; #endif
+; 		mvi a,080h
+; dzx0_literals:
+; 		call dzx0_elias
+; 		call dzx0_ldir
+; 		jc dzx0_new_offset
+; 		call dzx0_elias
+; dzx0_copy:
+; 		xchg
+; 		xthl
+; 		push h
+; 		dad b
+; 		xchg
+; 		call dzx0_ldir
+; 		xchg
+; 		pop h
+; 		xthl
+; 		xchg
+; 		jnc dzx0_literals
+; dzx0_new_offset:
+; 		call dzx0_elias
+; #ifdef BACKWARD
+; 		inx sp
+; 		inx sp
+; 		dcr h
+; 		rz
+; 		dcr l
+; 		push psw
+; 		mov a,l
+; #else
+; 		mov h,a
+; 		pop psw
+; 		xra a
+; 		sub l
+; 		rz
+; 		push h
+; #endif
+; 		rar\ mov h,a
+; 		ldax d
+; 		rar\ mov l,a
+; 		NEXT_DE
+; #ifdef BACKWARD
+; 		inx h
+; #endif
+; 		xthl
+; 		mov a,h
+; 		lxi h,1
+; #ifdef BACKWARD
+; 		cc dzx0_elias_backtrack
+; #else
+; 		cnc dzx0_elias_backtrack
+; #endif
+; 		inx h
+; 		jmp dzx0_copy
+; dzx0_elias:
+; 		inr l
+; dzx0_elias_loop:
+; 		add a
+; 		jnz dzx0_elias_skip
+; 		ldax d
+; 		NEXT_DE
+; 		ral
+; dzx0_elias_skip:
+; #ifdef BACKWARD
+; 		rnc
+; #else
+; 		rc
+; #endif
+; dzx0_elias_backtrack:
+; 		dad h
+; 		add a
+; 		jnc dzx0_elias_loop
+; 		jmp dzx0_elias
 
-dzx0_ldir:
-		push psw
-dzx0_ldir1:
-		ldax d
-		stax b
-		NEXT_DE
-		NEXT_BC
-		dcx h
-		mov a,h
-		ora l
-		jnz dzx0_ldir1
-		pop psw
-		add a
-		ret
+; dzx0_ldir:
+; 		push psw
+; dzx0_ldir1:
+; 		ldax d
+; 		stax b
+; 		NEXT_DE
+; 		NEXT_BC
+; 		dcx h
+; 		mov a,h
+; 		ora l
+; 		jnz dzx0_ldir1
+; 		pop psw
+; 		add a
+; 		ret
 
 ;----------------------------------------------------------------------------
 BATTY0_END

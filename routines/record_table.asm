@@ -224,7 +224,7 @@ disp_high_score_table_screen:
 disp_hs_table_and_wait_keys:
   CALL disp_high_score_table_screen
 check_0_button:
-		ld a,$82	
+		ld a,$82
 		ld (kb_port_3),a	; Переключаем ВВ55 на чтение рядов
 		ld a,(kb_port_1)	; Проверка ряда цифр
 		and %01000000
@@ -241,7 +241,7 @@ any_key:
 		or		$01
 		inc a
   JP NZ,disp_main_menu_and_wait_keys
-  
+
   LD A,$49		; Цикл задержки $80
 L927F_1:		; Цикл задержки
   DEC A			; Цикл задержки
@@ -250,9 +250,9 @@ L927F_1:		; Цикл задержки
   LD HL,(counter_misc)
   INC HL
   LD (counter_misc),HL
-  
+
   LD A,H
   AND A,%1000000 ; BIT 6,H
-  
+
   JP NZ,disp_main_menu_and_wait_keys	; Переход на отображение главного меню, если счётчик достиг нужного значения
   JP check_0_button

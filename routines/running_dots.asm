@@ -69,7 +69,7 @@ LB8E6_0:
   LD A,(DE)
   AND (HL)
   LD (DE),A		; Запись второй точки
-  
+
   LD A,(running_dot_frame_1up)
   BIT 7,A
   RES 7,A

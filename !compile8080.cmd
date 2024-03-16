@@ -23,7 +23,7 @@ if exist batty0.exp del batty0.exp
 @if errorlevel 1 goto Failed
 
 @echo on
-tools\sjasmplus batty.asm --raw=batty.bin --target=i8080 --lst=batty.lst
+tools\sjasmplus --nobanner batty.asm --raw=batty.bin --target=i8080 --nofakes --lst=batty.lst
 @if errorlevel 1 goto Failed
 @echo off
 
@@ -40,4 +40,5 @@ exit
 :Failed
 @echo off
 echo %ESCchar%[91mFAILED%ESCchar%[0m
+pause
 exit /b

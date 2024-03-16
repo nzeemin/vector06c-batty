@@ -138,7 +138,7 @@ L68A4:
 L6800_14:
   SRL E
   RR D
-  SRL A
+  rra		; SRL A
   RR C
   dec b
   jp nz,L6800_14

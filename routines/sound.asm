@@ -80,10 +80,10 @@ play_sounds_list:
   DEFW play_sound_metal_brik	; 02 -
   DEFW play_sound_bat_beat		; 03 - Звук удара шара о каретку
   DEFW play_sound_ball_start	; 04 - Звук выстрела шара с картеки
-  DEFW play_sound_05			; 05 - 
-  DEFW play_sound_06			; 06 - 
+  DEFW play_sound_05			; 05 -
+  DEFW play_sound_06			; 06 -
   DEFW play_sound_live_add		; 07 - Звук добавление жизни
-  DEFW play_sound_08			; 08 - 
+  DEFW play_sound_08			; 08 -
   DEFW play_sound_bat_resize_1	; 09 - Один из составных звуков изменения размера каретки
   DEFW play_sound_triple_ball	; 0A - Звук размножения шариков
   DEFW play_sound_shot			; 0B - Звук выстрела

@@ -19,7 +19,7 @@ start_bin:
 ; 7 - $00 Белый
 
 ; Адрес начала окна ZX-экрана на экране Специалиста
-zx_scr EQU $C0F0	; поправка для Вектора
+zx_scr EQU $C0E0	; поправка для Вектора
 
 	IFDEF MX
 
@@ -4079,7 +4079,7 @@ LAD69:
 ; На входе в IX адрес текущего кадра анимации (IX - anim_brik)
 all_metal_briks_frame:
   LD IY,(current_level_addr)
-  LD HL,zx_scr+$0100-$27 ; Адрес в экранной области начала рисования кирпичей
+  LD HL,zx_scr+$00E0 ; Адрес в экранной области начала рисования кирпичей
   LD B,$0C
 LAD8F_0:
   PUSH BC
@@ -4127,7 +4127,7 @@ print_frame_metal_brik:
 	sub zx_scr/256 - scr_buff/256
 	ld d,a
 	ld a,l
-	add zx_scr%256 - scr_buff%256	; поправлено направление для Вектора
+	sub zx_scr%256 - scr_buff%256
 	rra
 	rra
 	rra
@@ -4169,19 +4169,19 @@ LADBC_0:
   POP DE
 
 LADBC_01:
-  ld a,$00
+;  ld a,$00
 ;  ld (color_port),a	; Цвет левой половины кирпича (на случай тени)
 
   LD (HL),E
   INC H
 
 LADBC_02:
-  ld a,$00
+;  ld a,$00
 ;  ld (color_port),a	; Цвет правой половины кирпича
 
   LD (HL),D
   DEC H
-  INC L
+  dec L			; поправлено направление для Вектора
   dec b
   jp nz,LADBC_0
 LADDD:
@@ -4458,7 +4458,7 @@ anim_brik_black:
   DEFW spr_brik_black
   DEFW $0000
 	ENDIF
-  
+
 
 ; Used by the routine at LBBFB.
 ; Добавляет двум игрокам поровну очки за оставшиеся на раунде кирпичи
@@ -4980,7 +4980,7 @@ LAFFC_46:
 	ld (de),a
   POP HL ; адрес текстуры внизу экрана для восстановления фона под кирпичом
   POP DE ; адрес в буфере scr_buff
-	
+
 	inc e
 	inc l
 ;-----------------------------------------
@@ -5097,19 +5097,19 @@ LAFFC_56:
   JP Z,LAFFC_57
   BIT 7,(IY+$0E)
   JP NZ,LAFFC_57
-  
+
   RES 7,(HL)
-  
+
   bit 0,b
   JP NZ,LAFFC_57
 
 	IFDEF MX
   XOR A
 	ELSE
-  XOR A	
-	
+  XOR A
+
 	; ld a,$ff
-	
+
 	ENDIF
   LD (BC),A
 
@@ -5124,18 +5124,18 @@ LAFFC_57:
   DEC A
   add a,b
   ld b,a
-  
+
   RES 0,(HL)
-	
+
   AND $01
   JP Z,LAFFC_58
 	IFDEF MX
   XOR A
 	ELSE
-  XOR A	
+  XOR A
 
 	; ld a,$ff
-	
+
 	ENDIF
   LD (BC),A
 
@@ -5188,7 +5188,7 @@ LAFFC_60:
   PUSH HL
   LD B,$08
 LAFFC_61:
-  
+
   RES 7,(HL)
 
 	inc l
@@ -5212,7 +5212,7 @@ LAFFC_62:
   AND $08
   JP Z,LAFFC_64
 
-	
+
   PUSH HL
   LD A,(IX+$02)
   DEC A
@@ -5223,14 +5223,14 @@ LAFFC_63:
 	IFDEF MX
   RES 0,(HL)
 	ELSE
-  ; SET 0,(HL)	
+  ; SET 0,(HL)
   RES 0,(HL)
 	ENDIF
 	inc l
   dec b
   jp nz,LAFFC_63
   POP HL
-	
+
 
 ;-----------------------------------------------
 ; Обработка стороны кирпича над и под выбитым кирпичом
@@ -5247,15 +5247,15 @@ LAFFC_64:
 	dec h
 
 LAFFC_65:
-	
+
   AND $08
   JP NZ,LAFFC_66
   ld a,l
   add $07
   ld l,a
 
-	IFDEF MX  
-  LD (HL),D 
+	IFDEF MX
+  LD (HL),D
   inc h
   LD (HL),D
 	ELSE
@@ -5264,12 +5264,12 @@ LAFFC_65:
 	; ld (hl),a
 	; inc h
 	; ld (hl),a
-	
-  LD (HL),D 
+
+  LD (HL),D
   inc h
   LD (HL),D
-	
-	
+
+
 	ENDIF
 ;------------------------------------------
 ; Восстановление цвета под выбитым кирпичом
@@ -5282,7 +5282,7 @@ LAFFC_66:
   CALL scr_buff_attr_calc
 ;  В HL адрес в буфере атрибутов
 
-	IFDEF MX	
+	IFDEF MX
   PUSH HL
   LD DE,(attr_buff+$0202)
 
@@ -5401,12 +5401,12 @@ col_res_10:
 LAFFC_72:
   POP HL		; hl - адрес в буфере атрибутов
 	ELSE
-	
+
 	ld de,(attr_buff+$0202)
 	ld (hl),e
 	inc h
 	ld (hl),d
-	
+
 	ENDIF
 
 ;----------------------------------------------------------------
@@ -5434,7 +5434,7 @@ col_zm_rest:
 	rla
 	rla
 	and %11111000
-	sub zx_scr%256 - scr_buff%256	; поправлено направление для Вектора
+	add zx_scr%256 - scr_buff%256
 	ld l,a
 	ld a,h
 	add zx_scr/256 - scr_buff/256
@@ -5443,8 +5443,8 @@ col_zm_rest:
 	ld b,$08
 col_zm_rest_0:
 	ld a,(hl)
-	ld (hl),a
-	dec l		; поправлено направление для Вектора
+	;ld (hl),a
+	inc l
 	dec b
 	jp nz,col_zm_rest_0
 	pop hl
@@ -5612,12 +5612,12 @@ print_sprite_pix_2:
 	ld a,(de)
 	ld (hl),a
 	inc de
-	dec l		; НЕ поправлено направление для Вектора
+	dec l		; НЕ поправлено направление для Вектора (рисуем в буфер)
 	dec b
 	jp nz,print_sprite_pix_2
 	ld a,l
 print_sprite_pix_3:
-	add $00		; B - высота	; НЕ поправлено направление для Вектора
+	add $00		; B - высота	; НЕ поправлено направление для Вектора (рисуем в буфер)
 	ld l,a
 	inc h
 	dec c
@@ -5745,7 +5745,7 @@ metal_brik_anim:
 
 LB6A9_0:
   EXX
-  
+
   ld e,a
 
 ; Установка цвета для переливающегося кирпича
@@ -5767,7 +5767,7 @@ LB6A9_0:
 	ld (LB6A9_11+$01),a
 	dec b
 	ld c,d
-  
+
 	; Индивидуальная обработка чёрного кирпича
 	IFDEF MX
 	; Ничего не делаем
@@ -5783,7 +5783,7 @@ LB6A9_0:
 
 LB6A9_01:
 	ld a,e
-LB6A9_03:	
+LB6A9_03:
   INC A
   AND $FE
   LD HL,anim_brik-$02
@@ -6073,7 +6073,7 @@ all_var_init:
   LD A,$0B
 LB7F8_0:
   LD BC,$0016
-  CALL LDIR8080
+  CALL LDIR8080		; LDIR
   DEC A
   JP NZ,LB7F8_0
   LD (LBAEB+$01),A		; меняем параметр команды JR
@@ -6135,7 +6135,7 @@ LB7F8_2:
 LB7F8_3:
   LD DE,bonus_table_current
   LD BC,$0010
-  CALL LDIR8080
+  CALL LDIR8080		; LDIR
   LD HL,LA270
   LD B,$0C
   CALL clear_hl_buff
@@ -6219,7 +6219,7 @@ game_start:
   LD A,$0B
 game_start_0:
   LD BC,$0016
-  CALL LDIR8080
+  CALL LDIR8080		; LDIR
   DEC A
   JP NZ,game_start_0
 ;---------------------------------
@@ -6258,7 +6258,7 @@ game_restart:
   LD (lives_1up),A
   LD A,$C0
   LD (ball_x_coord+$01),A		; Запись в object_ball_1+2
-  XOR A
+  ld a,1 ;DEBUG XOR A
   LD (current_level_number_1up),A
   LD (round_number_1up),A
   LD (player_number),A
@@ -6266,11 +6266,11 @@ game_restart:
   LD DE,current_level_copy
   LD HL,(current_level_addr)
   LD BC,$00B4			; 180 - количество ячеек на уровне
-  CALL LDIR8080
+  CALL LDIR8080		; LDIR
   LD DE,lives_2up
   LD HL,lives_1up
   LD BC,$0007
-  CALL LDIR8080
+  CALL LDIR8080		; LDIR
   LD A,(game_mode)
   AND A
   JP NZ,LB9E8_0
@@ -6557,7 +6557,8 @@ LBC10_2:
   SUB C
   LD (LBCE6+$01),A
   LD A,(object_bat_1+$0C)	; ширина объекта без тени в пикселях
-  SRL A
+  or a
+  rra		; SRL A
   ADD A,C
   SUB $0C
   LD C,A
@@ -6638,7 +6639,7 @@ LBC10_5:
   CALL pause_long
   LD A,(lives_1up)
 live_dec:
-  DEC A			; Отнимаем жизнь
+  or a;DEBUG DEC A			; Отнимаем жизнь
   LD (lives_1up),A
   JP Z,LBC10_6
   LD A,(game_mode)
@@ -6847,7 +6848,7 @@ hi_score_update_1:
   LD DE,hi_score
   LD HL,current_score_1up
   LD BC,$0003
-  CALL LDIR8080
+  CALL LDIR8080		; LDIR
   RET
 
 ; Used by the routine at game_restart.

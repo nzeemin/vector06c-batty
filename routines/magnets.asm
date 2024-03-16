@@ -74,7 +74,7 @@ magnet_properties:
 magnets:
   DEFW magnet_level_03		; Данные для первого уровня берутся из 3-го
   DEFW magnet_level_02
-  DEFW magnet_level_03		
+  DEFW magnet_level_03
   DEFW magnet_level_04
   DEFW magnet_level_05
   DEFW magnet_level_06
