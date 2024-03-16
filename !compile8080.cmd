@@ -23,7 +23,7 @@ if exist batty0.exp del batty0.exp
 @if errorlevel 1 goto Failed
 
 @echo on
-tools\sjasmplus batty.asm --raw=batty.bin --target=Z80 --lst=batty.lst
+tools\sjasmplus batty.asm --raw=batty.bin --target=i8080 --lst=batty.lst
 @if errorlevel 1 goto Failed
 @echo off
 

@@ -138,7 +138,7 @@ play_sound_LC122:
   LD B,A
   CALL sound_beep2
   DEC C
-  JR NZ,play_sound_LC122
+  JP NZ,play_sound_LC122
   RET
 
 ; Used by the routines at play_sound_LC122, play_sound_choose_ctrl and play_sound_choose_letter.
@@ -174,7 +174,7 @@ play_sound_magnet:
   LD E,$18
   LD C,$18
   LD D,$40
-  JR play_sound_choose_ctrl_0
+  JP play_sound_choose_ctrl_0
 
 ; Used by the routine at input_new_record_name.
 play_sound_choose_letter:
@@ -187,7 +187,7 @@ play_sound_choose_letter_0:
   DEC D
   INC C
   DEC E
-  JR NZ,play_sound_choose_letter_0
+  JP NZ,play_sound_choose_letter_0
   RET
 
 ; Used by the routine at input_new_record_name.
@@ -228,13 +228,13 @@ play_sound_LC190_0:
   LD A,E
   SUB L
   LD E,A
-  JR NC,play_sound_LC190_0
+  JP NC,play_sound_LC190_0
   LD A,$04
   ADD A,L
   LD L,A
   EX AF,AF'
   DEC A
-  JR NZ,play_sound_LC190
+  JP NZ,play_sound_LC190
   ;DI
   RET
 ;-----------------------------
@@ -250,7 +250,7 @@ play_sound_06:
   ADD A,$08
   LD (IX+$01),A
   CP $A1
-  JR Z,play_sound_06_0
+  JP Z,play_sound_06_0
   CP $60
   RET NZ
   LD (IX+$01),$21
@@ -262,7 +262,7 @@ play_sound_06_0:
 play_sound_live_add:
   LD A,(IX+$01)
   AND $03
-  JR NZ,play_sound_07_0
+  JP NZ,play_sound_07_0
   LD A,(IX+$01)
   ADD A,$14
   LD E,A
@@ -347,7 +347,7 @@ sound_beep:
 sound_beep_cont_d:
 ;   CALL sound_beep
 ;   DEC D
-;   JR NZ,sound_beep_cont_d
+;   JP NZ,sound_beep_cont_d
   RET
 
 ; Used by the routines at play_sound_08 and play_sound_bat_resize_2.
@@ -357,5 +357,5 @@ sound_beep_cont_de:
   ADD A,E
   LD E,A
   DEC D
-  JR NZ,sound_beep_cont_de
+  JP NZ,sound_beep_cont_de
   RET
