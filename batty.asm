@@ -2528,12 +2528,12 @@ handling_ball:
   LD BC,LA270
   LD HL,object_ball_1
   AND A
-  SBC HL,DE
+  CALL SBCHLDE8080	; SBC HL,DE
   JP Z,LA27E_0
   LD BC,LA274
   LD HL,object_ball_2
   AND A
-  SBC HL,DE
+  CALL SBCHLDE8080	; SBC HL,DE
   JP Z,LA27E_0
   LD BC,LA278
 LA27E_0:
@@ -2633,7 +2633,7 @@ LA27E_9:
   POP HL
   LD DE,magnet_properties
   AND A
-  SBC HL,DE
+  CALL SBCHLDE8080	; SBC HL,DE
   LD E,L
   LD HL,(LA27C)
   LD (HL),$00
@@ -5923,7 +5923,7 @@ LB765_0:
   LD L,(IX+$00)
   LD H,(IX+$01)
   XOR A
-  SBC HL,DE
+  CALL SBCHLDE8080	; SBC HL,DE
 
   CALL Z,one_play_sound_metal_brik
 

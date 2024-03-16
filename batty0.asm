@@ -2,7 +2,7 @@
 
 	.EXPORT KeyLine0, KeyLine7, JoystickP
 	.EXPORT BorderColor
-	.EXPORT LDIR8080, LDDR8080
+	.EXPORT LDIR8080, LDDR8080, SBCHLDE8080
 	.EXPORT dzx0, BATTY0_END
 
 ;----------------------------------------------------------------------------
@@ -160,6 +160,7 @@ PaletteGame:		; Palette
 
 ;----------------------------------------------------------------------------
 
+; LDIR
 LDIR8080:
 	push psw
 LDIR8080_1:
@@ -174,6 +175,7 @@ LDIR8080_1:
 	pop psw
 	ret
 
+; LDDR
 LDDR8080:
 	push psw
 LDDR8080_1:
@@ -187,6 +189,25 @@ LDDR8080_1:
 	jnz LDDR8080_1
 	pop psw
 	ret
+
+; SBC HL,DE
+SBCHLDE8080:
+		sta SBCHLDE8080_TMP
+		mov a,l
+		sbb e
+		mov l,a
+		mov a,h
+		sbb d
+		mov h,a
+		jc $+7
+		ora l
+		jmp $+5
+		ora l
+		stc
+		lda SBCHLDE8080_TMP
+		ret
+SBCHLDE8080_TMP:
+		.DB	0
 
 ;----------------------------------------------------------------------------
 
