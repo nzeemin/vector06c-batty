@@ -699,7 +699,6 @@ clear_screen_pix:		; Vector ready
   LD HL,$0000
   LD D,H
   LD E,L
-  ;ld de,$5555 ;DEBUG
   ADD HL,SP
   LD (clear_screen_1+$01),HL
   LD HL,zx_scr+$2000	; поправка для Вектора
@@ -4117,9 +4116,10 @@ LADAC_0:
 ; В IX указатель на текущий спрайт анимации перелива кирпича
 ; В HL - адрес в экранной области
 print_frame_metal_brik:
-  BIT 7,(IY+$00)
+  ld a,(IY+$00)
+  BIT 7,a
   RET NZ	; Возвращаемся, если BIT7 = 1
-  BIT 4,(IY+$00)
+  BIT 4,a
   RET NZ	; Возвращаемся, если BIT4 = 1
 
 	; Выясняем и установка цвет кирпича
@@ -5821,7 +5821,7 @@ LB6A9_11:
   LD (HL),A			; Экран
   LD (BC),A			; Буфер
   DEC H
-  INC L
+  dec L			; Изменено направление для Вектора
   INC DE
 	dec b
 	inc c
@@ -6258,7 +6258,7 @@ game_restart:
   LD (lives_1up),A
   LD A,$C0
   LD (ball_x_coord+$01),A		; Запись в object_ball_1+2
-  ld a,1 ;DEBUG XOR A
+  XOR A		; Начальный уровень = 0
   LD (current_level_number_1up),A
   LD (round_number_1up),A
   LD (player_number),A
@@ -6639,7 +6639,7 @@ LBC10_5:
   CALL pause_long
   LD A,(lives_1up)
 live_dec:
-  or a;DEBUG DEC A			; Отнимаем жизнь
+  DEC A			; Отнимаем жизнь
   LD (lives_1up),A
   JP Z,LBC10_6
   LD A,(game_mode)
