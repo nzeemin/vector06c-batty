@@ -6,45 +6,54 @@
   ;CALL cls ;DEBUG
 
 ; -----------------
-; Генерируется таблица по адресу $F200-$FFFF ($E00 байт)
+; Генерируется таблица по адресу $F200-$FFFF (7 * 2 * $100 = $E00 байт)
 ; По этой таблице сдвигаются спрайты по горизонтали, кроме шарика и всех видов кареток.
   LD HL,table_shifts
-  LD B,$01
+  LD B,$01	; 1..7
 table_gen_0:
-  LD C,$00
+  LD C,$00	; $00..$FF
 table_gen_1:
   LD D,C
-  LD E,B
-  XOR A
+  push BC
+  ld E,$00
 table_gen_2:
-  SRL D
-  RRA
-  DEC E
+  ld A,D
+  or A
+  rra		; SRL D
+  ld D,A
+  ld A,E
+  rra		; RR E
+  ld E,A
+  DEC B
   JP NZ,table_gen_2
   INC H
-  LD (HL),A
+  LD (HL),E
   DEC H
   LD (HL),D
   INC HL
+  pop BC
   INC C
   JP NZ,table_gen_1
   INC H
   INC B
-  BIT 3,B
-  JP Z,table_gen_0
+  ld A,B
+  cp 8		; BIT 3,B
+  jp nz,table_gen_0
 
   CALL spr_shift_gen	; Генерация сдвинутых спрайтов шарика и всех видов кареток
 
 ; Инвертируется некоторая графика
-  LD IX,gfx_bat
+  LD HL,gfx_bat
 gfx_inverse_1:
-  LD L,(IX+$00)
-  LD H,(IX+$01)
-  LD A,L
-  OR H
+  ld E,(HL)
+  inc HL
+  ld D,(HL)
+  inc HL
+  ld A,E
+  or D
   JP Z,L6800_6	; Прекращаем, если вместо адреса следующего спрайта нули
-  INC IX
-  INC IX
+  push HL	; save
+  ex DE,HL
   LD C,(HL)
   INC HL
   LD E,(HL)
@@ -57,10 +66,11 @@ gfx_inverse_3:
   XOR (HL)
   LD (HL),A
   INC HL
-  dec b
+  dec B
   jp nz,gfx_inverse_3
   DEC E
   JP NZ,gfx_inverse_2
+  pop HL	; restore
   JP gfx_inverse_1
 
 L6800_6:
@@ -72,17 +82,27 @@ L6800_6:
 ; Used by the routine at 6800.
 ; Формирование сдвинутых спрайтов для мяча и разных видов кареток
 spr_shift_gen:
-  LD IX,L68D7
+  ld HL,L68D7
 L6800_8:
-  LD L,(IX+$00)
-  LD H,(IX+$01)
-  LD A,H
-  OR L
+  ld E,(HL)	; (IX+$00)
+  inc HL
+  ld D,(HL)	; (IX+$01)
+  inc HL
+  ld A,D
+  or E
   RET Z
-  LD C,(IX+$02)
-  SRL C
-  LD E,(IX+$03)
-  LD D,(IX+$04)
+  ld C,(HL)	; (IX+$02)
+  inc HL
+  ld A,C
+  or A
+  rra		; SRL C
+  ld C,A
+  ld A,(HL)	; (IX+$03)
+  inc HL
+  push HL
+  ld H,(HL)	; (IX+$04)
+  ld L,A
+  ex DE,HL
   LD A,$01
   LD (L68A4+1),A
 L6800_9:
@@ -98,15 +118,14 @@ L6800_9:
   LD (L68A4+1),A
   JP L6800_9
 L6800_10:
-  LD DE,$0005
-  ADD IX,DE
+  pop HL
+  inc HL
   JP L6800_8
 
 ; Генерация одной фазы сдвига спрайта
 ; HL - адрес спрайта
 ; DE - адрес пустого спрайта
 ; C - сдвиг
-
 one_spr_shift_gen:
   PUSH HL
   LD A,(HL)
@@ -133,15 +152,29 @@ L6800_13:
   INC HL
   LD D,$00
   LD C,D
+
 L68A4:
   LD B,$00
 L6800_14:
-  SRL E
-  RR D
+  ld (L6800_20+1),A ; save A
+  ld A,E
+  or A
+  rra		; SRL E
+  ld E,A
+  ld A,D
+  rra		; RR D
+  ld D,A
+L6800_20: ld A,$00 ; restore A
+  or a
   rra		; SRL A
-  RR C
+  ld (L6800_22+1),A ;TODO: save A
+  ld A,C
+  rra		; RR C
+  ld C,A
+L6800_22: ld A,$00 ; restore A
   dec b
   jp nz,L6800_14
+
   LD B,A
   LD A,D
   LD (L68C8+1),A

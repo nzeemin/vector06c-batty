@@ -181,8 +181,8 @@ draw_frame_0:
   LD (HL),$C0
   LD A,$03
   LD (DE),A
-  inc E
-  inc L
+  inc E			; поправлено направление для Вектора
+  inc L			; поправлено направление для Вектора
   DEC B
   JP NZ,draw_frame_0
 
@@ -193,12 +193,12 @@ draw_frame_0:
   LD A,$FF
 draw_frame_1:
   LD (HL),A
-  dec L
+  dec L			; поправлено направление для Вектора
   LD (HL),A
   inc L
 
   LD (DE),A
-  dec E
+  dec E			; поправлено направление для Вектора
   LD (DE),A
   inc E
 

@@ -566,12 +566,15 @@ print_digit_0:
   EXX
   LD (print_digit_ld_hl+$01),HL		; Адрес в буфере
   EX DE,HL
-  ld hl,$0090
 
+  ld hl,$0000
+  add hl,sp
+  LD (print_digit_ld_sp_2+$01),hl	; сохраняем SP
+  di
+
+  ld hl,$0090
   ADD HL,DE
   LD A,$08
-  LD (print_digit_ld_sp_2+$01),SP
-  di
 print_digit_ld_sp_1:
   LD SP,$0000		; Адрес спрайта цифры
 print_digit_1:
@@ -1178,7 +1181,8 @@ new_line_bytes_2:
 put_byte_1:
   JP NZ,put_byte_1
 byte_put_width_0:
-  LD SP,(sp_storage)
+  LD HL,(sp_storage)
+  ld SP,HL
   ei
   RET
 
@@ -1321,7 +1325,8 @@ put_byte_3:
   JP put_byte_3
 
 byte_put_width_shift_end:
-  LD SP,(sp_storage)
+  LD HL,(sp_storage)
+  ld SP,HL
   ei
   RET
 ;----------------------------------------------------------------
