@@ -4,18 +4,18 @@
 ; Used by the routines at L965D, L9F64, LA27E, LA65B, LA67B, LA860, LAB13 and
 ; LAFFC.
 ; Ищет первый свободный слот для звука в очереди звуков
-; На выходе в IX - адрес свободного слота
+; На выходе в HL - адрес свободного слота
 get_free_sound_slot:
-  LD IX,sounds_queue
-;   LD B,$04
-;   LD DE,$0007
-; LC064_0:
-;   LD A,(IX+$00)
-;   AND A
-;   RET Z
-;   ADD IX,DE
-;   dec b
-;   jp nz,LC064_0
+  ld HL,sounds_queue
+  LD B,$04
+  LD DE,$0007
+LC064_0:
+  ld A,(HL)
+  AND A
+  RET Z
+  add HL,DE
+  dec B
+  jp nz,LC064_0
   RET
 
 ; Used by the routines at LAF81, LBAED, LBB97, LBBFB and LBC10.
@@ -54,6 +54,7 @@ play_sounds_queue:
 
 ; Used by the routine at play_sounds_queue.
 ; Проигрывает звук, номер которого задан в А
+; A = $01..$0C
 play_selected_sound:
   LD HL,play_sounds_list-2
   ADD A,A
@@ -146,12 +147,12 @@ play_sound_LC122:
 ; Used by the routines at play_sound_LC122, play_sound_choose_ctrl and play_sound_choose_letter.
 sound_beep2:	; Specialist ready
   ld a,$0b
-  ld (sound_port),a
+  ;ld (sound_port),a
 sound_beep2_0:
   DEC B
   JP NZ,sound_beep2_0
   dec a
-  ld (sound_port),a
+  ;ld (sound_port),a
   LD B,D
 sound_beep2_1:
   DEC B

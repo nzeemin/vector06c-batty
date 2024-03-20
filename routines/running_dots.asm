@@ -1,6 +1,3 @@
-; Кадр рисования точек на каретке для второго игрока
-running_dot_frame_2up:
-  DEFB $0E
 
 ; Used by the routine at LBAED.
 ; Обмен содержимым ячеек running_dot_frame_1up и running_dot_frame_2up
@@ -15,16 +12,24 @@ running_dot_frame_swap:
 
 ; Used by the routine at LBAED.
 ; Рисование двух бегающих точек на каретке
+; HL = <object_bat_1 либо object_bat_2> + 2
 running_dot:
+  ld A,(HL)		; Координата X для печати
+  ld (running_dot_batx),A
+  ld DE,$000A	; переходим к IX+$0C
+  add HL,DE
+  ld A,(HL)		; ширина объекта
+  ld (running_dot_batw),A
+
   LD DE,scr_buff+$b3 ; $F060 - адрес строки в буфере, где бегают точки по каретке
   LD A,(running_dot_frame_1up)
   AND $7F
   LD B,A
-  LD A,(IX+$0C)
+  LD A,(running_dot_batw)	; ширина объекта
   SUB B
   CP $09
   JP NC,LB8E6_0
-  LD A,(IX+$0C)
+  LD A,(running_dot_batw)	; ширина объекта
   SUB $0B
   LD B,A		; В В константа для расчёта обеих точек
   LD A,(running_dot_frame_1up)
@@ -32,15 +37,15 @@ running_dot:
   OR B
   LD (running_dot_frame_1up),A
 LB8E6_0:
-  LD A,(IX+$02)	; Координата X для печати
+  LD A,(running_dot_batx)		; Координата X для печати
   ADD A,B
   LD C,A
   RRA
   RRA
   RRA
   AND $1F
-	add a,d
-	ld d,a
+    add a,d
+    ld d,a
   LD A,C	; Положение точки внутри каретки
   AND $07
   LD HL,running_dot_mask
@@ -49,9 +54,9 @@ LB8E6_0:
   AND (HL)
   LD (DE),A		; Запись первой точки
 
-  LD A,(IX+$02)	; Координата X для печати
+  LD A,(running_dot_batx)	; Координата X для печати
   ld d,a
-  LD A,(IX+$0C)
+  LD A,(running_dot_batw)	; ширина объекта
   add a,d
   SUB B
   DEC A
@@ -83,7 +88,7 @@ LB8E6_0:
 LB8E6_1:
   INC A
   LD B,A
-  LD A,(IX+$0C)
+  LD A,(running_dot_batw)	; ширина объекта
   SUB B
   CP $0A
   JP NZ,LB8E6_3
@@ -97,6 +102,9 @@ LB8E6_3:
   LD (running_dot_frame_1up),A
   RET
 
+running_dot_batx: DEFB 0	; временная переменная под координату X
+running_dot_batw: DEFB 0	; временная переменная под ширину
+
 ; Бегающая по каретке точка
 running_dot_mask:
   DEFB %01111111	; $7F
@@ -109,4 +117,7 @@ running_dot_mask:
   DEFB %11111110	; $FE
 ; Кадр рисования точек на каретке
 running_dot_frame_1up:
+  DEFB $0E
+; Кадр рисования точек на каретке для второго игрока
+running_dot_frame_2up:
   DEFB $0E

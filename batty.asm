@@ -30,7 +30,7 @@ kb_port_1 EQU $ffe1
 kb_port_2 EQU $ffe2
 kb_port_3 EQU $ffe3
 
-sound_port EQU $ffe3
+;sound_port EQU $ffe3
 
 ; Цвета для Специалиста MX
 c00 EQU %00000000 ; $00 - 00 000 000 Чёрный
@@ -64,7 +64,7 @@ kb_port_1 EQU $ff01
 kb_port_2 EQU $ff02
 kb_port_3 EQU $ff03
 
-sound_port EQU $ff03
+;sound_port EQU $ff03
 
 ; Цвета для стандартного Специалиста
 c00 EQU $d0 ; $00 - 00 000 000 Чёрный
@@ -177,9 +177,11 @@ random_generate:		; Specialist ready
 ; Bit 3
 ; Bit 4 $10 - огонь
 ctrl_btns_pressed:
-  DEFB $06
+  DEFB $00
+
 
 ; Расшифровываем биты клавиатуры и джойстика Вектора
+;TODO: Вынести в файл процедур Вектора
 read_keyboard:
   ld hl,read_keyboard_map	; Point HL at the keyboard list
   ld b,$0C
@@ -215,6 +217,9 @@ read_keyboard_map:                    ; 7   6   5   4   3   2   1   0
   ; JoystickP
   DB $10,$10,$00,$00,$00,$00,$02,$01  ; Fr  Fr  --  --  Dn  Up  Lt  Rt
 
+;TODO: Расшифровка клавиш 1..4 используя KeyLine2
+
+
 ; Used by the routines at clear_hl_buff16, all_var_init and game_start.
 ; Очищает буфер адресуемый HL размером, заданным в B
 clear_hl_buff:
@@ -237,7 +242,7 @@ spr_level_textures:
 ; Вывод окна с номером уровня и игрока перед началом раунда
 show_window_round_number:
 ; Рисуем чёрное окно
-  LD HL,$8458		; Координаты на экране
+  LD HL,$A458		; Координаты на экране
   CALL screen_addr_calc
   LD C,$20		; Высота окна а пикселях
 next_win_line:
@@ -245,11 +250,11 @@ next_win_line:
   PUSH HL
 next_win_column:
   LD (HL),$00
-  INC H
+  INC H			; next column
   dec b
   jp nz,next_win_column
   POP HL
-  DEC HL   ; Was CALL dec_scr_line
+  inc L   	; поправил направление для Вектора
   DEC C
   JP NZ,next_win_line
 
@@ -523,8 +528,9 @@ score_update_3:
   INC A
   LD (lives_1up),A
   CALL get_free_sound_slot
-  LD (IX+$00),sound_live_add
-  LD (IX+$01),$20
+  ld (HL),sound_live_add
+  inc HL
+  ld (HL),$20
   POP IX
   POP HL
 ;--------------------------------
@@ -597,7 +603,7 @@ print_digit_ld_hl:
   inc h
 
 print_digit_ld_sp_2:
-  LD SP,$0000
+  LD SP,$0000		; restore SP
   ei
   EXX
   RET
@@ -981,11 +987,11 @@ objs_width:
 ;
 ; Used by the routines at print_magnets, print_one_magnet, add_points_to_score, bonus_extra_life and game_screen_draw_to_buffer.
 ; Печатает спрайт с маской в буфер
-; На входе: IX  - адрес объекта (спрайт с маской)
+; На входе: IX = адрес объекта (спрайт с маской)
 print_obj_to_buff:
   LD A,(IX+$00)
   BIT 7,A
-  RET NZ					; Возвращаемся, если объект невидим (за пределами экрана)
+  RET NZ			; Возвращаемся, если объект невидим (за пределами экрана)
   CP $02
   JP NZ,obj_processing_1	; Переходим, если объект не шарик
 
@@ -1717,8 +1723,8 @@ L9D5A_1:
   LD (IX+$12),$F0
   LD (IX+$13),$60
   LD (IX+$11),$00
-  LD (IX+$0C),$10	; Ширина в пикселях
-  LD (IX+$0D),$08	; Высота в пикселях
+  LD (IX+$0C),$10		; Ширина в пикселях = 16
+  LD (IX+$0D),$08		; Высота в пикселях = 8
 generate_new_bonus:
   CALL random_generate
   LD A,(random_number+$01)
@@ -1786,7 +1792,7 @@ L9D5A_8:
   JP NZ,generate_new_bonus	; Если ракета уже включена, то генерировать новый приз
   LD A,(round_number_1up)
   CP $06
-  JP C,L9D5A_9				; Пропускаем, если раунд с 0-го по 5-й
+  JP C,L9D5A_9			; Пропускаем, если раунд с 0-го по 5-й
   LD A,(random_number)
   AND $C0
   JP NZ,generate_new_bonus	; Сокращаем вероятность выпадения ракеты
@@ -1799,7 +1805,7 @@ L9D5A_9:
 ; Дополнительная обработка пулемёта
   LD A,(game_mode)
   CP $02
-  JP NZ,L9D5A_10			; Уходим, если не два игрока одновременно
+  JP NZ,L9D5A_10		; Уходим, если не два игрока одновременно
   LD A,(object_bat_1+$14)
   DEC A
   JP Z,generate_new_bonus	; Если уже есть пулемёт на первой каретке, то генерировать новый приз
@@ -1809,9 +1815,9 @@ L9D5A_9:
 
 ; Обработка всех бонусов
 L9D5A_10:
-  LD A,(HL)					; Берёт код бонуса
-  LD (IX+$14),A				; Помещает код бонуса
-  LD (IX+$01),A				; Помещает код бонуса
+  LD A,(HL)			; Берёт код бонуса
+  LD (IX+$14),A			; Помещает код бонуса
+  LD (IX+$01),A			; Помещает код бонуса
   CALL calc_write_spr_addr
   EXX
   POP IY
@@ -1942,7 +1948,7 @@ handling_table_routines:
   DEFW handling_bullet		; $05 gfx_bullet
   DEFW handling_rocket		; $06 anim_rocket
   DEFW handling_spark		; $07 anim_spark
-  DEFW handling_ufo			; $08 anim_ufo
+  DEFW handling_ufo		; $08 anim_ufo
   DEFW handling_bird		; $09 anim_bird
   DEFW handling_blast		; $0A anim_alien_blast
   DEFW handling_400pts		; $0B gfx_last_sprite
@@ -2234,11 +2240,12 @@ free_bullet_2:
   ADD A,$16
   LD (bullet),A
 
-  PUSH IX
+  push HL
   CALL get_free_sound_slot
-  LD (IX+$00),sound_shot
-  LD (IX+$01),$02
-  POP IX
+  ld (HL),sound_shot
+  inc HL
+  ld (HL),$02
+  pop HL
 
   RET
 
@@ -2726,11 +2733,12 @@ LA27E_17:
   LD A,(IX+$12)
   AND $80
   LD (IX+$12),A
-  PUSH IX
+  push HL
   CALL get_free_sound_slot
-  LD (IX+$00),sound_ball_start
-  LD (IX+$01),$02
-  POP IX
+  ld (HL),sound_ball_start
+  inc HL
+  ld (HL),$02
+  pop HL
   JP LA27E_25
 LA27E_18:
   LD A,(ctrl_btns_pressed_copy)
@@ -3017,12 +3025,13 @@ smash_counter:
 
 ; Used by the routine at get_bonus.
 ; Постановка в очередь звука расширения каретки
-push_resize_sound
-  PUSH IX
+push_resize_sound:
+  push HL
   CALL get_free_sound_slot
-  LD (IX+$00),sound_bat_resize_2
-  LD (IX+$01),$02
-  POP IX
+  ld (HL),sound_bat_resize_2
+  inc HL
+  ld (HL),$02
+  pop HL
   RET
 
 bonus_flag_copy:
@@ -3135,11 +3144,12 @@ LA67B_4:
   LD (object_bat_temp+$11),A
   LD (IY+$15),$4E
   LD (IY+$01),$04			; spr_bonus_slow
-  PUSH IX
+  push HL
   CALL get_free_sound_slot
-  LD (IX+$00),sound_triple_ball
-  LD (IX+$01),$10
-  POP IX
+  ld (HL),sound_triple_ball
+  inc HL
+  ld (HL),$10
+  pop HL
   LD A,(counter_misc)
   AND $FE
   LD (counter_misc),A
@@ -3275,11 +3285,12 @@ bonus_resize:
   LD A,$0A				; spr_bat_gun
 LA67B_13:
   LD (IY+$01),A			; spr_bat_normal
-  PUSH IX
+  push HL
   CALL get_free_sound_slot
-  LD (IX+$00),sound_bat_resize_1
-  LD (IX+$01),$C0
-  POP IX
+  ld (HL),sound_bat_resize_1
+  inc HL
+  ld (HL),$C0
+  pop HL
   LD A,(counter_misc)
   AND $FE
   LD (counter_misc),A
@@ -3308,8 +3319,9 @@ bonus_extra_life:
   LD (IX+$02),A
 LA860_0:
   CALL get_free_sound_slot
-  LD (IX+$00),sound_live_add
-  LD (IX+$01),$20
+  ld (HL),sound_live_add
+  inc HL
+  ld (HL),$20
   POP IX
   LD A,$01
   LD (flag_extra_life),A
@@ -3689,10 +3701,10 @@ calc_write_spr_addr:
 
 ; Used by the routines at handling_ball and LAB1F.
 set_sound_bat_beat:
-  PUSH IX
+  push HL
   CALL get_free_sound_slot
-  LD (IX+$00),sound_bat_beat
-  POP IX
+  ld (HL),sound_bat_beat
+  pop HL
   RET
 
 ; Used by the routine at handling_ball.
@@ -4935,11 +4947,16 @@ brik_value_0:
   AND $7F
   CP $05
   JP Z,LB2D8
-  EXX
+  push HL
+  push DE
+  push BC
   CALL get_free_sound_slot
-  LD (IX+$00),sound_normall_brik
-  LD (IX+$01),$04
-  EXX
+  ld (HL),sound_normall_brik
+  inc HL
+  ld (HL),$04
+  pop BC
+  pop DE
+  pop HL
 LB2D8:
   LD IX,wins_recovery_data
   LD (IX+$01),L		; Координата окна - X
@@ -5431,7 +5448,7 @@ LAFFC_72:
 col_zm_rest:
 	push hl
 	; Устанавливаем текущий цвет для знакоместа
-	ld a,(hl)
+;	ld a,(hl)
 ;	ld (color_port),a
 	; Из адреса знакоместа буфере получаем адрес байта на экране
 	ld a,l
@@ -5480,7 +5497,7 @@ print_line:			; Specialist ready
   AND %1000000	;  BIT 6,B
   JP NZ,print_line_0
 
-  LD A,LB55D/256
+  LD A,LB55D/256			; Адрес процедуры удвоения символов по высоте при печати
   LD (symbol_call_jump+$02),A
   LD A,LB55D%256
   LD (symbol_call_jump+$01),A 		; Переход на LB55D
@@ -5577,7 +5594,6 @@ screen_addr_calc:		; Vector ready
 	rra
 	rra
 	and %11111
-	;dec a
 	ld b,a
 	ld a,h
 	ld c,0
@@ -5585,18 +5601,17 @@ screen_addr_calc:		; Vector ready
 	add hl,bc
 	neg
 	add l
-	;inc a
 	ld l,a
 	ret
 
 ; Used by the routines at print_magnets, print_one_magnet, fill_color_current_game_mode, print_obj_to_buff, set_bonus, enemy_prepare, handling_object,
 ; handling_ball, LAB1F, hl_bc_calc_direction, print_one_brik_buf, points_calc_and_add, running_dot and game_screen_draw_to_buffer.
 hl_add_a:
-  ADD A,L
-  LD L,A
-  RET NC
-  INC H
-  RET
+	ADD A,L
+	LD L,A
+	RET NC
+	INC H
+	RET
 
 ; Used by the routine at game_screen_draw_to_buffer.
 ; Вывод ч/б спрайта без маски в буфер
@@ -5695,6 +5710,7 @@ print_sprite_attrib_3:
 
 ; Used by the routines at game_restart, LBAED, LBB97 and LBC10.
 ; Вызов процедуры, переданной в HL, для 11 свойств спрайтов
+; HL = адрес процедуры
 call_hl_for_all_obj:
   LD (LB678+$01),HL
   LD IX,object_ball_1
@@ -5704,7 +5720,7 @@ LB66A_0:
   LD A,(IX+$00)
   ADD A,A
 LB678:
-  CALL NZ,LB678	; Вызов подпрограммы поданной на вход этой процедуры в HL
+  CALL NZ,LB678		; Вызов подпрограммы поданной на вход этой процедуры в HL
   LD DE,$0016
   ADD IX,DE
   POP BC
@@ -5713,8 +5729,8 @@ LB678:
   RET
 
 ; Used by the routines at print_magnets, add_points_to_score, bonus_extra_life and game_screen_draw_to_buffer.
-; Вычисляем адрес в буфере из координат IX+2 и IX+$04
-; Кладём адрес в IX+A и IX+B
+; Вычисляем адрес в буфере из координат IX+$02 и IX+$04
+; Кладём адрес в IX+$0A и IX+$0B
 ix_buf_addr_calc:
   LD L,(IX+$02)
   LD H,(IX+$04)
@@ -6393,15 +6409,16 @@ LBAED_3:
   call pause_short
 
 LBAED_4:
-  LD IX,object_bat_1
+  LD HL,object_bat_1+2
   CALL running_dot
   LD A,(game_mode)
   CP $02
   JP NZ,LBAED_5
   CALL running_dot_frame_swap
-  LD IX,object_bat_2
+  LD HL,object_bat_2+2
   CALL running_dot
   CALL running_dot_frame_swap
+
 LBAED_5:
   LD HL,print_obj_from_buf_to_scr
   CALL call_hl_for_all_obj
@@ -6411,6 +6428,7 @@ LBAED_5:
   CALL restore_objs_and_magnet
   CALL pause_game
   JP LB9E8_2
+
 LBAED_6:
   LD B,$0B
   LD DE,$0016
@@ -7007,8 +7025,8 @@ LBE8B_8:
   PUSH BC
   CALL ix_buf_addr_calc
   CALL print_obj_to_buff
-  LD A,(object_lives_indicator+$02)
-  ADD A,$10
+  LD A,(object_lives_indicator+$02)	; Координата X
+  ADD A,$10		; на 16 правее
   CP $E9		; Если жизни не помещаются на экран, то не рисуем
   JP NC,LBE8B_9
   LD (object_lives_indicator+$02),A
