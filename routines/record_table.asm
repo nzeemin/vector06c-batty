@@ -211,7 +211,7 @@ draw_frame_1:
 ; Used by the routines at input_new_record_name and L927F.
 disp_high_score_table_screen:
 
-  	ld a,c42
+;  	ld a,c42
 ;	ld (color_port),a	; Красный цвет
 
   CALL draw_frame
@@ -225,19 +225,19 @@ disp_hs_table_and_wait_keys:
   CALL disp_high_score_table_screen
 check_0_button:
 		ld a,$82
-		ld (kb_port_3),a	; Переключаем ВВ55 на чтение рядов
-		ld a,(kb_port_1)	; Проверка ряда цифр
+;		ld (kb_port_3),a	; Переключаем ВВ55 на чтение рядов
+;		ld a,(kb_port_1)	; Проверка ряда цифр
 		and %01000000
 		jp nz,any_key
 		ld a,$91
-		ld (kb_port_3),a	; Переключаем ВВ55 на чтение столбцов
-		ld a,(kb_port_0)
+;		ld (kb_port_3),a	; Переключаем ВВ55 на чтение столбцов
+;		ld a,(kb_port_0)
 		and %00000010	; Проверка клавиши 0
 		ret z			; Выход из общей процедуры (запуск игры), если нажат 0
 any_key:
 		ld		a,$82
-		ld		(kb_port_3),a
-		ld		a,(kb_port_1)
+;		ld		(kb_port_3),a
+;		ld		a,(kb_port_1)
 		or		$01
 		inc a
   JP NZ,disp_main_menu_and_wait_keys

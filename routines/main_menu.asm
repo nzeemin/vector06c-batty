@@ -3,12 +3,12 @@ disp_main_menu_and_wait_keys:
   LD HL,$0000
   LD (back_counters),HL
 
-	ld a,c43
+;	ld a,c43
 ;	ld (color_port),a	; Фиолетовый цвет
 
   CALL draw_frame
 
-	ld a,c47
+;	ld a,c47
 ;	ld (color_port),a	; Белый цвет
 
   LD HL,$4718		; Адрес на экране
@@ -29,8 +29,8 @@ disp_main_menu_and_wait_keys:
   LD DE,txt_main_menu
   LD B,$0F				; Количество строк в сообщении
   CALL print_message
- 
-  	ld a,c47
+
+;  	ld a,c47
 ;	ld (color_port),a	; Белый цвет
 
   LD HL,(coord_ctrl_1up)
@@ -49,24 +49,23 @@ L93F8_0:
   AND %1000000 ; BIT 6,H
 
   JP NZ,disp_hs_table_and_wait_keys		; Переход на отображение таблицы рекордов
-  
+
 ;  call cheat ;DEBUG
-  
+
   CALL random_generate
   LD HL,(game_mode)
   EX HL,DE
-		ld a,$82	
-		ld (kb_port_3),a	; Переключаем ВВ55 на чтение рядов
-		ld a,(kb_port_1)	; Проверка ряда цифр
-		and %01000000
-		jp nz,L93F8_4	; Не нажата ни одна цифра
-		ld a,$91
-		ld (kb_port_3),a	; Переключаем ВВ55 на чтение столбцов
-		ld a,(kb_port_2)
-		and %111
-		cp %011			; Нажата ли клавиша 1?
-  JP NZ,L93F8_1
 
+	ld A,(KEYLINE2)
+	cpl
+	and %00001110		; клавиши 1, 2, 3
+	jp z,L93F8_4		; Не нажата ни одна цифра
+
+	ld A,(KEYLINE2)
+	cpl
+	and %00000010		; Нажата ли клавиша 1?
+	jp z,L93F8_1
+; Нажата '1'
   LD A,E
   AND A
   JP Z,L93F8_4
@@ -75,9 +74,11 @@ L93F8_0:
   JP L93F8_3
 
 L93F8_1:
-		cp %110		; Нажата ли клавиша 3?
-  JP NZ,L93F8_2
-
+	ld A,(KEYLINE2)
+	cpl
+	and %00001000		; Нажата ли клавиша 3?
+	jp z,L93F8_2
+; Нажата '3'
   LD A,E
   CP $02
   JP Z,L93F8_4
@@ -86,15 +87,17 @@ L93F8_1:
   JP L93F8_3
 
 L93F8_2:
-		cp %101		; Нажата ли клавиша 2?
-  JP NZ,L93F8_4
-
+	ld A,(KEYLINE2)
+	cpl
+	and %00000100		; Нажата ли клавиша 2?
+	jp z,L93F8_4
+; Нажата '2'
   DEC E
   JP Z,L93F8_4
   LD E,$01
   LD HL,txt_2_players
+
 L93F8_3:
-  
   LD A,E
   LD (game_mode),A
   ADD A,A
@@ -124,23 +127,23 @@ L93F8_4:
   JP L93F8_7
 
 L93F8_5:
-;		ld a,$82	
+;		ld a,$82
 ;		ld (kb_port_3),a	; Переключаем ВВ55 на чтение рядов
 ;		ld a,(kb_port_1)	; Проверка ряда c кнопкой А
 ;		and %00010000
 ;		jp nz,L93F8_7
 ;		ld a,$91
 ;		ld (kb_port_3),a	; Переключаем ВВ55 на чтение столбцов
-;		
+;
 ;		ld a,%11101111  	; Без этого дополнения А может срабатывать ложно
 ;		ld (kb_port_1),a
-;		
+;
 ;		ld a,(kb_port_2)
 ;		and %00000001	; Проверка клавиши А
 ;		jp nz,L93F8_7
 		jp L93F8_7 ;DEBUG
 ; Нажата кнопка A
-  LD A,(ctrl_type_1up)	
+  LD A,(ctrl_type_1up)
   INC A
   AND $03
   LD (ctrl_type_1up),A
@@ -154,7 +157,7 @@ L93F8_5:
   LD A,$6C
 L93F8_6:
   LD (coord_ctrl_1up+1),A
-    ld a,c47
+;    ld a,c47
 ;	ld (color_port),a	; Белый цвет
   LD HL,(coord_ctrl_1up)
   LD DE,spr_pointer_1
@@ -170,18 +173,18 @@ L93F8_7:
   LD (back_counters+1),A
   JP L93F8_10
 L93F8_8:
-		ld a,$82	
-		ld (kb_port_3),a	; Переключаем ВВ55 на чтение рядов
-		ld a,(kb_port_1)	; Проверка ряда c кнопкой B
+		ld a,$82
+;		ld (kb_port_3),a	; Переключаем ВВ55 на чтение рядов
+;		ld a,(kb_port_1)	; Проверка ряда c кнопкой B
 		and %00001000
 		jp nz,L93F8_10
 		ld a,$91
-		ld (kb_port_3),a	; Переключаем ВВ55 на чтение столбцов
-		
+;		ld (kb_port_3),a	; Переключаем ВВ55 на чтение столбцов
+
 		ld a,%11110111  	; Без этого дополнения B может срабатывать ложно
-		ld (kb_port_1),a
-		
-		ld a,(kb_port_0)
+;		ld (kb_port_1),a
+
+;		ld a,(kb_port_0)
 		and %00010000	; Проверка клавиши B
 		jp nz,L93F8_10
 ; Нажата кнопка B
@@ -199,7 +202,7 @@ L93F8_8:
   LD A,$6C
 L93F8_9:
   LD (coord_ctrl_2up+1),A
-    ld a,c47
+;    ld a,c47
 ;	ld (color_port),a	; Белый цвет
   LD HL,(coord_ctrl_2up)
   LD DE,spr_pointer_2

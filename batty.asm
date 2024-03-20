@@ -8,27 +8,10 @@
 start_bin:
 ;=================================
 
-; Цвета Специалиста
-; 0 - $d0 Чёрный
-; 1 - $c0 Синий
-; 2 - $50 Красный
-; 3 - $40 Фиолетовый (Маджента)
-; 4 - $90 Зелёный
-; 5 - $80 Голубой (Циан)
-; 6 - $10 Жёлтый
-; 7 - $00 Белый
-
 ; Адрес начала окна ZX-экрана на экране Специалиста
 zx_scr EQU $C0E0	; поправка для Вектора
 
 	IFDEF MX
-
-;color_port EQU $fff8
-
-kb_port_0 EQU $ffe0
-kb_port_1 EQU $ffe1
-kb_port_2 EQU $ffe2
-kb_port_3 EQU $ffe3
 
 ;sound_port EQU $ffe3
 
@@ -56,13 +39,6 @@ c5F EQU %11111101 ; $5f - 01 011 111 Фиолетовый-Белый
 c70 EQU %00001110 ; $70 - 01 110 000 Жёлтый-Чёрный
 
 	ELSE
-
-;color_port EQU $ff02
-
-kb_port_0 EQU $ff00
-kb_port_1 EQU $ff01
-kb_port_2 EQU $ff02
-kb_port_3 EQU $ff03
 
 ;sound_port EQU $ff03
 
@@ -225,7 +201,7 @@ read_keyboard_map:                    ; 7   6   5   4   3   2   1   0
 clear_hl_buff:
   LD (HL),$00
   INC HL
-  dec b
+  dec B
   jp nz,clear_hl_buff
   RET
 
@@ -251,7 +227,7 @@ next_win_line:
 next_win_column:
   LD (HL),$00
   INC H			; next column
-  dec b
+  dec B
   jp nz,next_win_column
   POP HL
   inc L   	; поправил направление для Вектора
@@ -266,7 +242,7 @@ next_win_column:
 next_round_number:
   ADD A,$01
   DAA
-  dec b
+  dec B
   jp nz,next_round_number
   LD B,A
   RRA
@@ -409,7 +385,7 @@ nac_1:
 	add $08
 	ld l,a
 	inc h
-	dec b
+	dec B
 	JP NZ,next_attr_column
 	push hl
 nac_2:
@@ -555,7 +531,7 @@ next_digit:
   ADD A,A
   CALL print_digit
   DEC HL
-  dec b
+  dec B
   jp nz,next_digit
   RET
 
@@ -669,35 +645,12 @@ pause_game_2:
   RET
 
 ; Проверка нажатия клавиш 1-4
+; Выход: Z=1: нет нажатия, Z=0: есть нажатие
 press_1_4_check:
-;		ld a,#82
-;		ld (kb_port_3),a	; Переключаем ВВ55 на чтение рядов
-;		ld a,(kb_port_1)	; Проверка ряда цифр
-;		cpl				; Необходимо для правильно установки флага на выходе
-;		and %01000000
-;		ret z			; Ни одна клавиша цифрового ряда не нажата
-;		ld a,#91
-;		ld (kb_port_3),a	; Переключаем ВВ55 на чтение столбцов
-;
-;		ld a,%10111111	; Для исключения коллизий с другими клавишами
-;		ld (kb_port_1),a
-;
-;		ld a,(kb_port_2)
-;		or %11111000	; Проверка клавиш 1, 2 и 3
-;		ld b,a
-;		ld a,(kb_port_0)
-;		or %01111111	; Проверка клавиши 4
-;		xor b
-		xor a ;DEBUG
-		ret
-
-; Used by the routines at disp_hs_table_and_wait_keys, disp_main_menu_and_wait_keys, press_1_4_check and get_control_state_1up.
-; ДЛЯ УДАЛЕНИЯ (нигде не используется)
-; in_a_fe:
-;   IN A,($FE)
-;   CPL
-;   AND $1F
-;   RET
+	ld A,(KEYLINE2)
+	cpl			; Необходимо для правильно установки флага на выходе
+	and %00011110		; Маска для клавиш 1..4
+	ret
 
 ; Used by the routines at input_new_record_name, draw_frame, pause_clear_screen_attrib, print_kinnock, game_restart and LBC10.
 clear_screen_attrib:	; Specialist ready
@@ -760,7 +713,7 @@ next_obj_to_buff:
   POP BC
   LD DE,$0016
   ADD IX,DE
-  dec b
+  dec B
   jp nz,next_obj_to_buff
   LD (save_obj_buff_end),HL	; Бесполезная команда
   RET
@@ -837,7 +790,7 @@ save_obj_01:
 	ld (de),a
 	inc l
 	inc de
-	dec b
+	dec B
 	jp nz,save_obj_01
 	ld a,l
 save_obj_03:
@@ -900,7 +853,7 @@ rest_obj_01:
 	ld (de),a
 	inc hl
 	inc e
-	dec b
+	dec B
 	jp nz,rest_obj_01
 	ld a,e
 rest_obj_03:
@@ -940,7 +893,7 @@ rest_obj_03:
   ; JP NC,next_line_restore_obj
   ; INC D
 ; next_line_restore_obj:
-  ; dec b
+  ; dec B
   ; jp nz,next_line_restore_obj
   ; JP check_next_obj
 
@@ -1679,7 +1632,7 @@ win_bg_recovery_4:
 	ld e,a
 	inc h
 	inc d
-	dec b
+	dec B
 	jp nz,win_bg_recovery_1
 	ret
 
@@ -1986,7 +1939,8 @@ zero_direction:
   LD (need_change_player),A	; Если координата X меньше 128, то будет 0
 
 ; Обработка нажатия клавиш и изменение координат каретки
-  LD BC,(ctrl_btns_pressed)
+  LD A,(ctrl_btns_pressed)
+  ld C,A
   BIT 1,C		; Нажато Влево
   LD A,(IX+$02)	; Координата X биты
   JP Z,moving_right
@@ -2636,7 +2590,7 @@ LA27E_7:
 LA27E_8:
   LD DE,$0010
   ADD IY,DE
-  dec b
+  dec B
   jp nz,LA27E_7
   JP LA27E_12
 LA27E_9:
@@ -4107,7 +4061,7 @@ LAD8F_0:
   LD L,A
 LAD8F_1:
   POP BC
-  dec b
+  dec B
   jp nz,LAD8F_0
   RET
 
@@ -4124,7 +4078,7 @@ LADAC_0:
   INC H
   POP BC
   INC IY
-  dec b
+  dec B
   jp nz,LADAC_0
   RET
 
@@ -4199,7 +4153,7 @@ LADBC_02:
   LD (HL),D
   DEC H
   dec L			; поправлено направление для Вектора
-  dec b
+  dec B
   jp nz,LADBC_0
 LADDD:
   LD SP,$0000
@@ -4239,7 +4193,7 @@ LADE1_0:
   ld b,$0f
 LADE1_01:
   inc iy
-  dec b
+  dec B
   jp nz,LADE1_01
 	ENDIF
 
@@ -4252,7 +4206,7 @@ LADE1_01:
   inc l
   LD (brik_attr_buf),HL
   POP BC
-  dec b
+  dec B
   jp nz,LADE1_0
   RET
 
@@ -4270,7 +4224,7 @@ LAE13_0:
   INC H
   INC IY
   POP BC
-  dec b
+  dec B
   jp nz,LAE13_0
   RET
 
@@ -4301,7 +4255,7 @@ brik_shadow_1:
 brik_shadow_2:
   inc h
   INC IY
-  dec b
+  dec B
   jp nz,brik_shadow_0
   RET
 	ENDIF
@@ -4361,7 +4315,7 @@ LAE82_0:
 	ENDIF
 
   inc l
-  dec b
+  dec B
   jp nz,LAE82_0
 LAE82_1:
 
@@ -4426,7 +4380,7 @@ LAE82_3:
   ; В обеих версиях рисуем эту линию
   RES 7,(HL)		; Сброс стороны слева кирпича
   dec l
-  dec b
+  dec B
   jp nz,LAE82_3
   RET
 
@@ -4507,7 +4461,7 @@ add_points_for_left_briks_2:
   CALL pause_short
   INC IY
   POP BC
-  dec b
+  dec B
   jp nz,add_points_for_left_briks_1
   LD A,(brik_value+$01)
   INC A
@@ -4528,7 +4482,7 @@ points_calc_and_add:
   LD C,(HL)		; В BC нужное количество очков
   LD A,(IY+$00)	; В IY текущий элемент уровня
   AND $0F
-  CP $06					; Если цвет меньше 6 (то есть обычный кирпич), то
+  CP $06			; Если цвет меньше 6 (то есть обычный кирпич), то
   JP C,add_points_to_score	; добавляем одинарное количество очков
   LD A,C
   ADD A,C
@@ -4586,7 +4540,7 @@ LAFFC_2:
   ADD A,$08
   LD C,A
   INC H
-  dec b
+  dec B
   jp nz,LAFFC_0
   RET
 
@@ -4853,7 +4807,7 @@ LAFFC_35:
   AND A
   JP Z,LAFFC_36
   ADD IX,DE
-  dec b
+  dec B
   jp nz,LAFFC_35
   JP LAFFC_37
 LAFFC_36:
@@ -5088,7 +5042,7 @@ LAFFC_54:
   AND C
   LD (HL),A
   inc l
-  dec b
+  dec B
   jp nz,LAFFC_54
 	ld a,l
 	add $1c
@@ -5099,7 +5053,7 @@ LAFFC_55:
   AND C
   LD (HL),A
   inc l
-  dec b
+  dec B
   jp nz,LAFFC_55
 ;=======================================
 
@@ -5214,7 +5168,7 @@ LAFFC_61:
   RES 7,(HL)
 
 	inc l
-  dec b
+  dec B
   jp nz,LAFFC_61
   POP HL
 
@@ -5249,7 +5203,7 @@ LAFFC_63:
   RES 0,(HL)
 	ENDIF
 	inc l
-  dec b
+  dec B
   jp nz,LAFFC_63
   POP HL
 
@@ -5464,10 +5418,10 @@ col_zm_rest:
 	; Освежаем данные на экране
 	ld b,$08
 col_zm_rest_0:
-	ld a,(hl)
+	;ld a,(hl)
 	;ld (hl),a
 	inc l
-	dec b
+	dec B
 	jp nz,col_zm_rest_0
 	pop hl
 	ret
@@ -5633,7 +5587,7 @@ print_sprite_pix_2:
 	ld (hl),a
 	inc de
 	dec l		; НЕ поправлено направление для Вектора (рисуем в буфер)
-	dec b
+	dec B
 	jp nz,print_sprite_pix_2
 	ld a,l
 print_sprite_pix_3:
@@ -5696,7 +5650,7 @@ print_sprite_attrib_2:
 	ld (hl),a
 	inc de
 	dec l
-	dec b
+	dec B
 	jp nz,print_sprite_attrib_2
 	ld a,l
 print_sprite_attrib_3:
@@ -5724,7 +5678,7 @@ LB678:
   LD DE,$0016
   ADD IX,DE
   POP BC
-  dec b
+  dec B
   jp nz,LB66A_0
   RET
 
@@ -5750,7 +5704,7 @@ next_brik:
   CALL NZ,metal_brik_anim
   LD DE,$0007
   ADD IY,DE
-  dec b
+  dec B
   jp nz,next_brik
   RET
 
@@ -5786,7 +5740,7 @@ LB6A9_0:
 	inc b
 	ld a,(bc)
 	ld (LB6A9_11+$01),a
-	dec b
+	dec B
 	ld c,d
 
 	; Индивидуальная обработка чёрного кирпича
@@ -5844,7 +5798,7 @@ LB6A9_11:
   DEC H
   dec L			; Изменено направление для Вектора
   INC DE
-	dec b
+	dec B
 	inc c
   EX AF,AF'
   DEC A
@@ -5885,7 +5839,7 @@ LB717_0:
   LD BC,$0004
   ADD IX,BC
   POP BC
-  dec b
+  dec B
   jp nz,LB717_0
   XOR A
   LD (wins_counter),A
@@ -5906,7 +5860,7 @@ LB74A:
   AND $90
   JP Z,LB754
   INC HL
-  dec b
+  dec B
   jp nz,LB74A
   JP LB764
 LB754:
@@ -6018,7 +5972,7 @@ score_2up_in_game:
 ; Used by the routine at LBC10.
 pause_clear_screen_attrib:
   CALL pause_short
-  dec b
+  dec B
   jp nz,pause_clear_screen_attrib
   JP clear_screen_attrib
 
@@ -6027,7 +5981,7 @@ pause_clear_screen_attrib:
 pause_long:
   LD D,$00
   CALL pause_short
-  dec b
+  dec B
   jp nz,pause_long
   RET
 
@@ -6184,11 +6138,11 @@ bricks_reset_0:
   SET 4,(HL)			; Устанавливаем признак обычного кирпича
   AND $0F
   CP $06
-  JP C,bricks_reset_1	; Если цвет меньше 6 (то есть обычный кирпич), то пропускаем
+  JP C,bricks_reset_1		; Если цвет меньше 6 (то есть обычный кирпич), то пропускаем
   RES 4,(HL)			; Всем цветам 6 и выше (до невыбиваемых) сбрасываем признак обычного кирпича
 bricks_reset_1:
   INC HL
-  dec b
+  dec B
   jp nz,bricks_reset_0
   RET
 
@@ -6440,7 +6394,7 @@ LBAED_7:
   SET 7,(IX+$00)
 LBAED_8:
   ADD IX,DE
-  dec b
+  dec B
   jp nz,LBAED_7
   LD A,$01
 LBB83:
@@ -6552,7 +6506,7 @@ LBC10_1:
   SET 7,(IX+$00)
 LBC10_2:
   ADD IX,DE
-  dec b
+  dec B
   jp nz,LBC10_1
   POP AF
   LD (object_rocket),A
@@ -6612,7 +6566,7 @@ LBC10_3:
   INC C
   INC C
   INC C
-  dec b
+  dec B
   jp nz,LBC10_3
 
   LD A,(game_mode)
@@ -6628,7 +6582,7 @@ LBCE6:
   LD (IX+$02),A
   ADD IX,DE
   ADD IX,DE
-  dec b
+  dec B
   jp nz,LBC10_4
 LBC10_5:
   CALL random_generate
@@ -6750,7 +6704,7 @@ buff_to_screen_pixs_3:
 	ld (hl),a
 	inc e
 	dec l		; поправка направления для Вектора
-	dec b
+	dec B
 	jp nz,buff_to_screen_pixs_3
 	dec c
 	jp nz,buff_to_screen_pixs_2
@@ -6779,7 +6733,7 @@ hl_swap_de:
   LD (DE),A
   INC HL
   INC DE
-  dec b
+  dec B
   jp nz,hl_swap_de
   RET
 
@@ -6846,7 +6800,7 @@ briks_calc_0:
   INC C
 briks_calc_1:
   INC HL
-  dec b
+  dec B
   jp nz,briks_calc_0
   LD A,C
   LD (briks_quantity_1up),A
@@ -6865,7 +6819,7 @@ hi_score_update_0:
   JP NZ,hi_score_update_1
   DEC DE
   DEC HL
-  dec b
+  dec B
   jp nz,hi_score_update_0
 hi_score_update_1:
   LD DE,hi_score
@@ -6889,9 +6843,9 @@ game_screen_draw_to_buffer:
 
 ;-----------------------------------
 ; Заполняем буфер текстурой
-  LD HL,$0F00		;Координата в экранном буфере
+  LD HL,$0F00			; Координата в экранном буфере
 current_texture:
-  LD DE,spr_level_texture_1		; Текстура первого уровня
+  LD DE,spr_level_texture_1	; Текстура первого уровня
   CALL print_sprite_pix
   CALL print_sprite_attrib
   LD A,$10
@@ -6907,19 +6861,19 @@ current_texture:
 
 ;-----------------------------------
 ; Рисуем обрамление игрового поля
-  LD HL,$9F00		;Координата в экранном буфере
+  LD HL,$9F00			; Координата в экранном буфере
   LD DE,spr_bord_left_thin
   EXX
-  LD HL,$BF00		;Координата в экранном буфере
+  LD HL,$BF00			; Координата в экранном буфере
   LD DE,spr_bord_left_bold
   LD B,$07
 LBE8B_1:
   PUSH BC
   PUSH DE
-  LD L,$00	; Координата X левого края
+  LD L,$00			; Координата X левого края
   CALL print_sprite_pix
   CALL print_sprite_attrib
-  LD L,$F8	; Координата X правого края
+  LD L,$F8			; Координата X правого края
   CALL print_sprite_pix
   CALL print_sprite_attrib
   POP DE
@@ -6928,7 +6882,7 @@ LBE8B_1:
   LD H,A
   EXX
   POP BC
-  dec b
+  dec B
   jp nz,LBE8B_1
 
 ;-------------------------
@@ -6942,7 +6896,7 @@ LBE8B_2:
 LBE8B_3:
   RES 7,(HL)	; Слева
   inc l
-  dec b
+  dec B
   jp nz,LBE8B_3
   POP HL
   PUSH HL
@@ -6953,7 +6907,7 @@ LBE8B_3:
 LBE8B_4:
   RES 0,(HL)	; Справа
   inc l
-  dec b
+  dec B
   jp nz,LBE8B_4
   POP HL
   LD B,$07
@@ -6974,7 +6928,7 @@ LBE8B_4:
 ; LBE8B_5:
   ; LD (HL),A
   ; ADD HL,DE
-  ; dec b
+  ; dec B
   ; jp nz,LBE8B_5
 
 ;-------------------------
@@ -7009,7 +6963,7 @@ LBE8B_7:
   LD (HL),A
   INC H
   INC DE
-  dec b
+  dec B
   jp nz,LBE8B_7
 
 ;-----------------------------------------
@@ -7032,7 +6986,7 @@ LBE8B_8:
   LD (object_lives_indicator+$02),A
 LBE8B_9:
   POP BC
-  dec b
+  dec B
   jp nz,LBE8B_8
 
 ;---------------------------------
@@ -7093,7 +7047,7 @@ LBFCF_0:
 	and %01110111
 	ld (hl),a
 	inc l
-	dec b
+	dec B
 	jp nz,LBFCF_0
 	; Горизонталь
 	LD HL,attr_buff+$0201
@@ -7103,7 +7057,7 @@ LBFCF_1:
 	and %01110111
 	ld (hl),a
 	INC h
-	dec b
+	dec B
 	jp nz,LBFCF_1
 	ENDIF
 

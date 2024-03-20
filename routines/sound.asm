@@ -333,26 +333,26 @@ play_sound_bat_resize_2:
 
 ; Used by the routines at sound_beep_cont_d and sound_beep_cont_de.
 sound_beep:
-;   LD B,E
-;   ld a,$0b
+  LD B,E
+  ld a,$0b
 ;   ld (sound_port),a
-; sound_beep_0:
-;   dec b
-;   jp nz,sound_beep_0
-;   LD B,E
-;   ld a,$0a
+sound_beep_0:
+  dec b
+  jp nz,sound_beep_0
+  LD B,E
+  ld a,$0a
 ;   ld (sound_port),a
-; sound_beep_1:
-;   dec b
-;   jp nz,sound_beep_1
+sound_beep_1:
+  dec b
+  jp nz,sound_beep_1
   RET
 
 ; Used by the routines at L9F64, play_sound_normall_brik, play_sound_metal_brik, play_sound_bat_beat, play_sound_05, play_sound_06, play_sound_live_add,
 ; play_sound_bat_resize_1 and play_sound_triple_ball.
 sound_beep_cont_d:
-;   CALL sound_beep
-;   DEC D
-;   JP NZ,sound_beep_cont_d
+  CALL sound_beep
+  DEC D
+  JP NZ,sound_beep_cont_d
   RET
 
 ; Used by the routines at play_sound_08 and play_sound_bat_resize_2.
