@@ -5689,13 +5689,34 @@ LB678_1:
 ; Used by the routines at print_magnets, add_points_to_score, bonus_extra_life and game_screen_draw_to_buffer.
 ; Вычисляем адрес в буфере из координат IX+$02 и IX+$04
 ; Кладём адрес в IX+$0A и IX+$0B
+; Вход: IX = адрес объекта
 ix_buf_addr_calc:
-  LD L,(IX+$02)
-  LD H,(IX+$04)
-  CALL scr_buff_addr_calc
-  LD (IX+$0A),H
-  LD (IX+$0B),L
-  RET
+  push IX
+  pop HL
+; Вход: HL = адрес объекта
+hl_buf_addr_calc:
+	push HL
+	ld DE,$000A
+	add HL,DE
+	ld (hl_buf_addr_calc_1+1),HL
+	pop HL		; IX
+	inc HL
+	inc HL
+	LD E,(HL)	; IX+$02
+	inc HL
+	inc HL
+	LD D,(HL)	; IX+$04
+	ex DE,HL
+; Координаты в HL
+	CALL scr_buff_addr_calc
+; Результат в HL
+	ex DE,HL
+hl_buf_addr_calc_1:
+	ld HL,$0000	; IX+$0A
+	LD (HL),D	; IX+$0A
+	inc HL
+	LD (HL),E	; IX+$0B
+	RET
 
 ; Used by the routines at game_restart, LBB97 and LBC10.
 ; Заполняет briks_data данными
@@ -7007,42 +7028,42 @@ LBE8B_10:
 ;------------------------------
 ; Рисуем 1UP, HI и 2UP
 LBE8B_11:
-  LD IX,object_score_indicator
-  LD (IX+$02),$1C
-  LD (IX+$01),$01		; spr_1up
-  CALL ix_buf_addr_calc
-  CALL print_obj_to_buff
-  INC (IX+$01)			; spr_2up
-  LD (IX+$02),$CC
-  CALL ix_buf_addr_calc
-  CALL print_obj_to_buff
-  INC (IX+$01)			; spr_hi
-  LD (IX+$02),$78
-  CALL ix_buf_addr_calc
-  CALL print_obj_to_buff
+	LD IX,object_score_indicator
+	LD (IX+$02),$1C
+	LD (IX+$01),$01		; spr_1up
+	CALL ix_buf_addr_calc
+	CALL print_obj_to_buff
+	INC (IX+$01)		; spr_2up
+	LD (IX+$02),$CC
+	CALL ix_buf_addr_calc
+	CALL print_obj_to_buff
+	INC (IX+$01)		; spr_hi
+	LD (IX+$02),$78
+	CALL ix_buf_addr_calc
+	CALL print_obj_to_buff
 
 ;----------------------------
 ; Рисуем цифры счетов игроков и рекорда
-  LD HL,(score_1up_in_game)
-  EXX
-  LD HL,current_score_1up+2
-  CALL print_score_in_game
+	LD HL,(score_1up_in_game)
+	EXX
+	LD HL,current_score_1up+2
+	CALL print_score_in_game
 
-  LD HL,(score_2up_in_game)
-  EXX
-  LD HL,current_score_2up+2
-  CALL print_score_in_game
+	LD HL,(score_2up_in_game)
+	EXX
+	LD HL,current_score_2up+2
+	CALL print_score_in_game
 
-  LD HL,(hi_score_in_game)
-  EXX
-  LD HL,hi_score+2
-  CALL print_score_in_game
+	LD HL,(hi_score_in_game)
+	EXX
+	LD HL,hi_score+2
+	CALL print_score_in_game
 
-  CALL print_magnets
+	CALL print_magnets
 
-  CALL print_briks
+	CALL print_briks
 
-	IFDEF MX
+  IFDEF MX
 ; Рисует на поле тень от бордюра
 	; Вертикаль
 	LD HL,attr_buff+$0101
@@ -7064,7 +7085,7 @@ LBFCF_1:
 	INC h
 	dec B
 	jp nz,LBFCF_1
-	ENDIF
+  ENDIF
 
 	ret
 
