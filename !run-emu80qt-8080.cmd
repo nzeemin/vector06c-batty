@@ -1,0 +1,1 @@
+start x-emu80qt\emu80qt.exe -v batty.rom

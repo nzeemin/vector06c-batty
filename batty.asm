@@ -2074,9 +2074,9 @@ handling_bat_no_transform:
   AND A
   JP Z,no_bonus
 
-  EX AF,AF'
+  push AF
   CALL check_right_margin
-  EX AF,AF'
+  pop AF
 
   BIT 6,A		; BIT6 bonus_flag
   JP Z,no_bit6

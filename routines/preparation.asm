@@ -2,7 +2,7 @@
 
   DI
   LD SP,stack
-  LD A,c00  ; Чёрный
+  ;LD A,c00  ; Чёрный
   ;CALL cls ;DEBUG
 
 ; -----------------
@@ -106,7 +106,10 @@ L6800_8:
   LD A,$01
   LD (L68A4+1),A
 L6800_9:
-  SRL C
+	ld A,C
+	or A
+	rra	; SRL C
+	ld C,A
   PUSH BC
   CALL C,one_spr_shift_gen
   POP BC
@@ -139,7 +142,7 @@ one_spr_shift_gen:
   INC HL
   INC DE
 L6800_12:
-  EX AF,AF'
+	push AF	; EX AF,AF'
 
 L6899:
   LD B,$00		; Начинается цикл по ширине спрайта
@@ -204,7 +207,7 @@ L68C8:
   jp nz,L6800_13
   INC DE
   INC DE
-  EX AF,AF'
+	pop AF	; EX AF,AF'
   DEC A
   JP NZ,L6800_12
   POP HL
