@@ -193,8 +193,6 @@ read_keyboard_map:                    ; 7   6   5   4   3   2   1   0
   ; JoystickP
   DB $10,$10,$00,$00,$00,$00,$02,$01  ; Fr  Fr  --  --  Dn  Up  Lt  Rt
 
-;TODO: Расшифровка клавиш 1..4 используя KeyLine2
-
 
 ; Used by the routines at clear_hl_buff16, all_var_init and game_start.
 ; Очищает буфер адресуемый HL размером, заданным в B
@@ -647,9 +645,9 @@ pause_game_2:
 ; Проверка нажатия клавиш 1-4
 ; Выход: Z=1: нет нажатия, Z=0: есть нажатие
 press_1_4_check:
-	ld A,(KEYLINE2)
+	ld A,(KEYLINE2)		; Проверка ряда цифр '0'..'7'
 	cpl			; Необходимо для правильно установки флага на выходе
-	and %00011110		; Маска для клавиш 1..4
+	and %00011110		; Маска для клавиш '1'..'4'
 	ret
 
 ; Used by the routines at input_new_record_name, draw_frame, pause_clear_screen_attrib, print_kinnock, game_restart and LBC10.
@@ -2275,11 +2273,11 @@ get_right_player_ctrl_state:
   LD A,(game_mode)
   CP $02
   LD A,(ctrl_type_2up)
-  JP NZ,get_control_state		; Уходим, если не два игрока одновременно
+  JP NZ,get_control_state	; Уходим, если не два игрока одновременно
   LD A,(ctrl_type_1up)
   AND A
   LD A,(ctrl_type_2up)
-  JP NZ,get_control_state		; Уходим, если у второго игрока не клавиатура
+  JP NZ,get_control_state	; Уходим, если у второго игрока не клавиатура
 ;  LD C,A
 ;
 ;		ld a,#82
@@ -3749,10 +3747,10 @@ LAB1F_9:
   RET
 LAB1F_10:
   AND $03
-  ADD A,A
+  ADD A,A		; *2
   LD B,A
-  ADD A,A
-  ADD A,B
+  ADD A,A		; *4
+  ADD A,B		; *6
   LD HL,LAC0A
   CALL hl_add_a
   LD A,$04
@@ -5666,21 +5664,27 @@ print_sprite_attrib_3:
 ; Вызов процедуры, переданной в HL, для 11 свойств спрайтов
 ; HL = адрес процедуры
 call_hl_for_all_obj:
-  LD (LB678+$01),HL
-  LD IX,object_ball_1
-  LD B,$0B
+	LD (LB678+$01),HL
+	LD HL,object_ball_1
+	LD B,$0B
 LB66A_0:
-  PUSH BC
-  LD A,(IX+$00)
-  ADD A,A
+	PUSH BC
+	LD A,(HL)
+	ADD A,A
+	JP Z,LB678_1
+  push HL
+  pop IX	;NOTE для передачи в подпрограмму
+	push HL
 LB678:
-  CALL NZ,LB678		; Вызов подпрограммы поданной на вход этой процедуры в HL
-  LD DE,$0016
-  ADD IX,DE
-  POP BC
-  dec B
-  jp nz,LB66A_0
-  RET
+	CALL LB678		; Вызов подпрограммы поданной на вход этой процедуры в HL
+	pop HL
+LB678_1:
+	LD DE,$0016
+	ADD HL,DE
+	POP BC
+	dec B
+	jp nz,LB66A_0
+	RET
 
 ; Used by the routines at print_magnets, add_points_to_score, bonus_extra_life and game_screen_draw_to_buffer.
 ; Вычисляем адрес в буфере из координат IX+$02 и IX+$04
@@ -5696,36 +5700,38 @@ ix_buf_addr_calc:
 ; Used by the routines at game_restart, LBB97 and LBC10.
 ; Заполняет briks_data данными
 fill_briks_data:
-  LD IY,briks_data
-  LD B,$05
+	LD HL,briks_data
+	LD B,$05
 next_brik:
-  LD A,(IY+$00)
-  AND A
-  CALL NZ,metal_brik_anim
-  LD DE,$0007
-  ADD IY,DE
-  dec B
-  jp nz,next_brik
-  RET
+	push BC
+	LD A,(HL)
+	AND A
+	CALL NZ,metal_brik_anim
+	LD DE,$0007
+	ADD HL,DE
+	pop BC
+	dec B
+	jp nz,next_brik
+	RET
 
 ; Used by the routine at fill_briks_data.
 ; Рисуем один кадр переливания кирпича одновременно в буфер и на экран
+; Вход: HL, на выходе то же значение!
 metal_brik_anim:
-  LD L,(IY+$05)
-  LD H,(IY+$06)
-  BIT 7,(HL)		; Проверяем 7 бит (пустота) текущего элемента
-  JP Z,LB6A9_0
-  LD (IY+$00),$00	; Помечаем текущий слот данных свободным
-  RET
-
+  push HL
+  pop IY
+	LD L,(IY+$05)
+	LD H,(IY+$06)
+	BIT 7,(HL)		; Проверяем 7 бит (пустота) текущего элемента
+	JP Z,LB6A9_0
+	LD (IY+$00),$00		; Помечаем текущий слот данных свободным
+	RET
 LB6A9_0:
-  EXX
-
-  ld e,a
+	ld e,a
 
 ; Установка цвета для переливающегося кирпича
-  LD C,(IY+$03)
-  LD B,(IY+$04)
+	LD C,(IY+$03)
+	LD B,(IY+$04)
 ; BC - адрес кирпич в буфере
 	ld d,c
 	ld a,c
@@ -5735,18 +5741,17 @@ LB6A9_0:
 	or %11000000
 	ld c,a
 ; BC - адрес атрибута кирпича
-	ld a,(bc)
-	ld (LB6A9_10+$01),a
-	inc b
-	ld a,(bc)
-	ld (LB6A9_11+$01),a
-	dec B
+	;ld a,(bc)
+	;ld (LB6A9_10+$01),a	; Цвет левой половины кирпича
+	;inc b
+	;ld a,(bc)
+	;ld (LB6A9_11+$01),a	; Цвет правой половины кирпича
+	;dec B
 	ld c,d
-
-	; Индивидуальная обработка чёрного кирпича
-	IFDEF MX
+; Индивидуальная обработка чёрного кирпича
+  IFDEF MX
 	; Ничего не делаем
-	ELSE
+  ELSE
 	or a
 	jp nz,LB6A9_01
 	ld a,e
@@ -5754,62 +5759,62 @@ LB6A9_0:
 	jp nz,LB6A9_03
 	ld hl,anim_brik_black
 	jp LB6A9_02
-	ENDIF
-
+  ENDIF
 LB6A9_01:
 	ld a,e
 LB6A9_03:
-  INC A
-  AND $FE
-  LD HL,anim_brik-$02
-  LD E,A
-  LD D,$00
-  ADD HL,DE
-  ; В HL ссылка на спрайт текущей анимации переливания кирпича
+	INC A
+	AND $FE
+	LD HL,anim_brik-$02
+	LD E,A
+	LD D,$00
+	ADD HL,DE
+; В HL ссылка на спрайт текущей анимации переливания кирпича
 LB6A9_02:
-  LD E,(HL)
-  INC HL
-  LD D,(HL)
-  LD L,(IY+$01)
-  LD H,(IY+$02)
-
+	LD E,(HL)
+	INC HL
+	LD D,(HL)
+	LD L,(IY+$01)
+	LD H,(IY+$02)
 ; DE - адрес спрайта текущего кадра анимации
 ; HL - адрес на экране
 ; BC - адрес в буфере
 ;-----------------------
-  LD A,$07
+	LD A,$07
 LB6A9_1:
-  EX AF,AF'
+	EX AF,AF'
 LB6A9_10:
-  ld a,$00
+;  ld a,$00
 ;  ld (color_port),a	; Цвет левой половины кирпича (на случай тени)
-  LD A,(DE)
-  LD (HL),A			; Экран
-  LD (BC),A			; Буфер
-  INC H
-  inc b
-  INC DE
+	LD A,(DE)		; байт из спрайта
+	LD (HL),A		; Экран
+	LD (BC),A		; Буфер
+	INC H
+	inc b
+	INC DE
 LB6A9_11:
-  ld a,$00
+;  ld a,$00
 ;  ld (color_port),a	; Цвет правой половины кирпича
-  LD A,(DE)
-  LD (HL),A			; Экран
-  LD (BC),A			; Буфер
-  DEC H
-  dec L			; Изменено направление для Вектора
-  INC DE
+	LD A,(DE)		; байт из спрайта
+	LD (HL),A		; Экран
+	LD (BC),A		; Буфер
+	DEC H
+	dec L			; Изменено направление для Вектора
+	INC DE
 	dec B
 	inc c
-  EX AF,AF'
-  DEC A
-  JP NZ,LB6A9_1
+	EX AF,AF'
+	DEC A
+	JP NZ,LB6A9_1
 ;-----------------------
-  EXX
-  LD A,(IY+$00)
-  INC A
-  AND $0F
-  LD (IY+$00),A
-  RET
+  push IY
+  pop HL
+	LD A,(HL)
+	INC A
+	AND $0F
+	LD (HL),A
+	RET
+; -- end of metal_brik_anim -------
 
 ; 5 строк по 7 элементов каждая
 ; Сведения о 5 кирпичах

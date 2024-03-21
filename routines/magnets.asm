@@ -148,16 +148,20 @@ L8E72_1:
   CALL hl_add_a
   LD (current_magnet_prop),HL
   PUSH HL
-  POP IX
-  LD A,(IX+$01)
+  POP IX ;NOTE: нужен для print_obj_to_buff
+  inc HL
+  LD A,(HL)		; IX+$01
   XOR $01
-  LD (IX+$01),A
-  LD A,(IX+$02)
+  LD (HL),A		; IX+$01
+  inc HL
+  LD A,(HL)		; IX+$02
   PUSH AF
   SUB $05
-  LD (IX+$02),A
+  LD (HL),A		; IX+$02
+  push HL
   CALL print_obj_to_buff
+  pop HL
   POP AF
-  LD (IX+$02),A
-  CALL play_sound_magnet
-  RET
+  LD (HL),A		; IX+$02
+  JP play_sound_magnet
+  ;RET

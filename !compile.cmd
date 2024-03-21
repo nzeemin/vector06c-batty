@@ -23,10 +23,6 @@ if exist batty0.exp del batty0.exp
 @if errorlevel 1 goto Failed
 
 @echo on
-tools\sjasmplus --nobanner batty.asm --raw=batty.bin --target=i8080 --nofakes --lst=batty8080.lst >error8080.txt
-@echo off
-
-@echo on
 tools\sjasmplus --nobanner batty.asm --raw=batty.bin --target=Z80 --nofakes --lst=batty.lst
 @if errorlevel 1 goto Failed
 @echo off
@@ -39,6 +35,12 @@ copy /b batty0.bin+batty.bin batty.rom >nul
 dir /-c batty.rom|findstr /R /C:"batty.rom"
 
 echo %ESCchar%[92mSUCCESS%ESCchar%[0m
+
+@echo on
+tools\sjasmplus --nobanner batty.asm --raw=batty8080.bin --target=i8080 --nofakes --lst=batty8080.lst >error8080.txt
+@echo off
+findstr /B "Errors:" error8080.txt
+
 exit
 
 :Failed

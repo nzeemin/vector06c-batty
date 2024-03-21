@@ -222,18 +222,12 @@ disp_high_score_table_screen:
 
 ; Used by the routine at disp_main_menu_and_wait_keys.
 disp_hs_table_and_wait_keys:
-  CALL disp_high_score_table_screen
+	CALL disp_high_score_table_screen
 check_0_button:
-		ld a,$82
-;		ld (kb_port_3),a	; Переключаем ВВ55 на чтение рядов
-;		ld a,(kb_port_1)	; Проверка ряда цифр
-		and %01000000
-		jp nz,any_key
-		ld a,$91
-;		ld (kb_port_3),a	; Переключаем ВВ55 на чтение столбцов
-;		ld a,(kb_port_0)
-		and %00000010	; Проверка клавиши 0
-		ret z			; Выход из общей процедуры (запуск игры), если нажат 0
+	ld A,(KEYLINE2)		; Проверка ряда цифр '0'..'7'
+	cpl
+	and %00000001		; '0'?
+	ret nz			; Выход из общей процедуры (запуск игры), если нажат 0
 any_key:
 		ld		a,$82
 ;		ld		(kb_port_3),a
@@ -245,7 +239,7 @@ any_key:
   LD A,$49		; Цикл задержки $80
 L927F_1:		; Цикл задержки
   DEC A			; Цикл задержки
-  JP NZ,L927F_1	; Цикл задержки
+  JP NZ,L927F_1		; Цикл задержки
 
   LD HL,(counter_misc)
   INC HL

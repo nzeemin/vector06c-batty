@@ -1,6 +1,6 @@
 ;----------------------------------------------------------------------------
 
-	.EXPORT KeyLine0, KeyLine2, KeyLine7, JoystickP
+	.EXPORT KeyLine0, KeyLine2, KeyLine4, KeyLine7, JoystickP
 	.EXPORT BorderColor
 	.EXPORT LDIR8080, LDDR8080, SBCHLDE8080
 	.EXPORT BATTY0_END
@@ -95,6 +95,10 @@ KEYINT:
 	out	3
 	in	2
 	sta	KeyLine2
+	mvi	a, 0EFh
+	out	3
+	in	2
+	sta	KeyLine4
 	mvi	a, 07Fh
 	out	3
 	in	2
@@ -129,8 +133,9 @@ IntCount .EQU 0E000h
 
 KeyLineEx:	.db 11111111b
 KeyLine0:	.db 11111111b
-KeyLine2:	.db 11111111b
-KeyLine7:	.db 11111111b
+KeyLine2:	.db 11111111b	;   7   6   5   4   3   2   1   0
+KeyLine4:	.db 11111111b	;   G   F   E   D   C   B   A   @
+KeyLine7:	.db 11111111b	;  SPC  ^   ]   \   [   Z   Y   X
 JoystickP:	.db 11111111b
 
 BorderColor:	.db 0		; border color number 0..15
