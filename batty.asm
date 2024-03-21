@@ -957,7 +957,9 @@ print_obj_to_buff:
 ; Установка большого шарика
 set_big_ball:
   LD (IX+$01),$08			; spr_big_ball
-  RES 7,(IX+$15)
+  ld A,(IX+$15)
+  and %01111111	; RES 7,(IX+$15)
+  ld (IX+$15),A
 
 ; Обработка длительности действия приза
   LD A,(counter_misc)
@@ -1507,7 +1509,6 @@ obj_has_height_4:
 ; С - высота спрайта с тенью в пикселях
 ; H - координата Y объекта
 ; L - координата Х объекта
-
 ready_for_restore:
   LD A,L
   AND $F8
@@ -3887,7 +3888,9 @@ LACAD:
   CP $80
   RET NC
   LD (IX+$02),$80
-  RES 0,(IX+$01)
+  ld A,(IX+$01)
+  and %11111110	; RES 0,(IX+$01)
+  ld (IX+$01),A
   RET
 
 ; Used by the routines at handling_bat, handling_400pts, check_margins and bounce_wall.
@@ -4303,14 +4306,16 @@ print_one_brik_buf:
   LD B,$08
 LAE82_0:
 
-	IFDEF MX
-  RES 0,(HL)	; Сброс стороны справа от кирпича
-	ELSE
+  IFDEF MX
+	ld A,(HL)
+	and %11111110	; RES 0,(HL)	; Сброс стороны справа от кирпича
+	ld (HL),A
+  ELSE
   ; SET 0,(HL)	; Сброс стороны справа от кирпича
-
-  RES 0,(HL)	; Сброс стороны справа от кирпича
-
-	ENDIF
+	ld A,(HL)
+	and %11111110	; RES 0,(HL)	; Сброс стороны справа от кирпича
+	ld (HL),A
+  ENDIF
 
   inc l
   dec B
@@ -4376,7 +4381,9 @@ LAEB4:
   LD B,$08
 LAE82_3:
   ; В обеих версиях рисуем эту линию
-  RES 7,(HL)		; Сброс стороны слева кирпича
+	ld A,(HL)
+	and %01111111	; RES 7,(HL)		; Сброс стороны слева кирпича
+	ld (HL),A
   dec l
   dec B
   jp nz,LAE82_3
@@ -5072,7 +5079,9 @@ LAFFC_56:
   BIT 7,(IY+$0E)
   JP NZ,LAFFC_57
 
-  RES 7,(HL)
+	ld A,(HL)
+	and %01111111	; RES 7,(HL)
+	ld (HL),A
 
   bit 0,b
   JP NZ,LAFFC_57
@@ -5099,7 +5108,10 @@ LAFFC_57:
   add a,b
   ld b,a
 
-  RES 0,(HL)
+	ld A,(HL)
+	and %11111110	; RES 0,(HL)
+	ld (HL),A
+	ld A,B
 
   AND $01
   JP Z,LAFFC_58
@@ -5127,7 +5139,9 @@ LB3E2:
   JP Z,LAFFC_59
   BIT 7,(IY-$10)
   JP NZ,LAFFC_59
-  RES 7,(HL)
+	ld A,(HL)
+	and %01111111	; RES 7,(HL)
+	ld (HL),A
   bit 0,b
   JP NZ,LAFFC_59
   XOR A
@@ -5139,7 +5153,9 @@ LAFFC_59:
   BIT 7,(IY-$0E)
   JP NZ,LAFFC_60
   inc h
-  RES 0,(HL)
+	ld A,(HL)
+	and %11111110	; RES 0,(HL)
+	ld (HL),A
   LD A,(IX+$02)
   DEC A
   add a,b
@@ -5163,7 +5179,9 @@ LAFFC_60:
   LD B,$08
 LAFFC_61:
 
-  RES 7,(HL)
+	ld A,(HL)
+	and %01111111	; RES 7,(HL)
+	ld (HL),A
 
 	inc l
   dec B
@@ -5186,7 +5204,6 @@ LAFFC_62:
   AND $08
   JP Z,LAFFC_64
 
-
   PUSH HL
   LD A,(IX+$02)
   DEC A
@@ -5194,17 +5211,20 @@ LAFFC_62:
   ld h,a
   LD B,$08
 LAFFC_63:
-	IFDEF MX
-  RES 0,(HL)
-	ELSE
+  IFDEF MX
+	ld A,(HL)
+	and %11111110	; RES 0,(HL)
+	ld (HL),A
+  ELSE
   ; SET 0,(HL)
-  RES 0,(HL)
-	ENDIF
+	ld A,(HL)
+	and %11111110	; RES 0,(HL)
+	ld (HL),A
+  ENDIF
 	inc l
-  dec B
-  jp nz,LAFFC_63
-  POP HL
-
+	dec B
+	jp nz,LAFFC_63
+	POP HL
 
 ;-----------------------------------------------
 ; Обработка стороны кирпича над и под выбитым кирпичом
@@ -5536,11 +5556,11 @@ LB55D:		; Specialist ready
 ; Used by the routines at fill_color_current_game_mode and fill_gen_win_attrib.
 ; Вычисляет координаты в экранной области
 ; На входе в HL координаты, на выходе там же адрес в атрибутах
-screen_coord_attrib:	; Specialist ready
+screen_coord_attrib:
 
 ; Used by the routines at show_window_round_number, print_obj_from_buf_to_scr, LAFFC, print_line and print_sprite.
 ; На входе в HL координаты, на выходе там же адрес на экране
-screen_addr_calc:		; Vector ready
+screen_addr_calc:
 	ld a,l
 	rra
 	rra
@@ -5568,7 +5588,7 @@ hl_add_a:
 ; Used by the routine at game_screen_draw_to_buffer.
 ; Вывод ч/б спрайта без маски в буфер
 ; Спрайт рисуется снизу вверх
-print_sprite_pix:	; Specialist ready
+print_sprite_pix:
 	push hl
 	call scr_buff_addr_calc
 	ld a,(de)	; Ширина спрайта
@@ -5599,7 +5619,7 @@ print_sprite_pix_3:
 
 ; Used by the routine at disp_main_menu_and_wait_keys.
 ; Вывод ч/б спрайта без маски на экран
-print_sprite:	; Vector ready
+print_sprite:
   PUSH HL
   CALL screen_addr_calc
   LD A,(DE)
@@ -5628,7 +5648,7 @@ print_sprite_1:
 
 ; Used by the routine at game_screen_draw_to_buffer.
 ; Вывод атрибутов цветного спрайта в буфер
-print_sprite_attrib:	; Specialist ready
+print_sprite_attrib:
 	push hl
 	call scr_buff_attr_calc
 	ld a,(de)		; Ширина
@@ -5689,7 +5709,7 @@ LB678_1:
 ; Used by the routines at print_magnets, add_points_to_score, bonus_extra_life and game_screen_draw_to_buffer.
 ; Вычисляем адрес в буфере из координат IX+$02 и IX+$04
 ; Кладём адрес в IX+$0A и IX+$0B
-; Вход: IX = адрес объекта
+; Вход: IX = адрес объекта (сохраняется после возврата)
 ix_buf_addr_calc:
   push IX
   pop HL
@@ -6077,6 +6097,7 @@ LB7F8_0:
   CALL LDIR8080		; LDIR
   DEC A
   JP NZ,LB7F8_0
+; A = 0
   LD (LBAEB+$01),A		; меняем параметр команды JR
   LD (bonus_flag),A
   LD (bonus_flag_copy),A
@@ -6084,10 +6105,12 @@ LB7F8_0:
   LD (ctrl_btns_pressed),A
   LD (ctrl_btns_pressed_copy),A
   INC A
+; A = 1
   LD (balls_quantity),A
   LD A,(game_mode)
   CP $02
   JP NZ,LB7F8_1
+; Режим двух игроков
   LD A,$01
   LD (object_bat_2),A
   LD A,$38
@@ -6151,26 +6174,29 @@ LB7F8_3:
 ; Сброс свойств всех кирпичей на уровне
 ; На входе в HL - адрес уровня
 bricks_reset:
-  LD B,$B4				; 180 - количество всех ячеек на уровне
+	LD B,$B4		; 180 - количество всех ячеек на уровне
 bricks_reset_0:
-  LD A,(HL)
-  CP $C0
-  JP Z,bricks_reset_1	; Если пустое место, то пропускаем
-  BIT 5,A
-  JP NZ,bricks_reset_1	; Если невыбиваемый, то пропускаем
-
-  RES 7,(HL)			; Сбрасываем бит пустоты
-  RES 6,(HL)			; Сбрасываем бит пустоты
-  SET 4,(HL)			; Устанавливаем признак обычного кирпича
-  AND $0F
-  CP $06
-  JP C,bricks_reset_1		; Если цвет меньше 6 (то есть обычный кирпич), то пропускаем
-  RES 4,(HL)			; Всем цветам 6 и выше (до невыбиваемых) сбрасываем признак обычного кирпича
+	LD A,(HL)
+	CP $C0
+	JP Z,bricks_reset_1	; Если пустое место, то пропускаем
+	ld C,A		; save A
+	or  %00100000	; BIT 5,A
+	JP NZ,bricks_reset_1	; Если невыбиваемый, то пропускаем
+	ld A,C
+	and %00111111	; RES 7,(HL) / RES 6,(HL)  Сбрасываем бит пустоты
+	or  %00010000	; SET 4,(HL)  Устанавливаем признак обычного кирпича
+	ld (HL),A
+	AND $0F
+	CP $06
+	JP C,bricks_reset_1	; Если цвет меньше 6 (то есть обычный кирпич), то пропускаем
+	ld A,(HL)
+	and %11101111	; RES 4,(HL)  Всем цветам 6 и выше (до невыбиваемых) сбрасываем признак обычного кирпича
+	ld (HL),A
 bricks_reset_1:
-  INC HL
-  dec B
-  jp nz,bricks_reset_0
-  RET
+	INC HL
+	dec B
+	jp nz,bricks_reset_0
+	RET
 
 ; Рисование бегающих точек на каретках
   INCLUDE "./routines/running_dots.asm"
@@ -6560,8 +6586,8 @@ LBC10_2:
   SUB C
   LD (LBCE6+$01),A
   LD A,(object_bat_1+$0C)	; ширина объекта без тени в пикселях
-  or a
-  rra		; SRL A
+	or a
+	rra		; SRL A
   ADD A,C
   SUB $0C
   LD C,A
@@ -6920,7 +6946,9 @@ LBE8B_2:
   LD B,$1C
   PUSH HL
 LBE8B_3:
-  RES 7,(HL)	; Слева
+	ld A,(HL)
+	and %01111111	; RES 7,(HL)	; Слева
+	ld (HL),A
   inc l
   dec B
   jp nz,LBE8B_3
@@ -6931,7 +6959,9 @@ LBE8B_3:
   LD H,A
   LD B,$1C
 LBE8B_4:
-  RES 0,(HL)	; Справа
+	ld A,(HL)
+	and %11111110	; RES 0,(HL)	; Справа
+	ld (HL),A
   inc l
   dec B
   jp nz,LBE8B_4
