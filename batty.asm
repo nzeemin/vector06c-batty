@@ -98,11 +98,11 @@ counter_misc:
 ; random_number+$00 - всегда одинаковая последовательность чисел
 ; random_number+$01 - в последовательность вносят коррективы нажатые кнопки управления
 random_number:
-  DEFW $8E17
+	DEFW $8E17
 
 ; Счётчик, значение которого $8000-$9FFF
 random_seed:
-  DEFW $8000
+	DEFW $8000
 
 ; Used by the routine at game_screen_draw_to_buffer.
 ; Рисует в буфере все магниты на уровне
@@ -112,39 +112,39 @@ random_seed:
 
 ; Генератор случайных чисел
 random_generate:		; Specialist ready
-  EX HL,DE
-  LD HL,(random_number)		; 8E17
-  EX HL,DE
-  LD HL,(random_seed)		; 8000
+	EX HL,DE
+	LD HL,(random_number)	; 8E17
+	EX HL,DE
+	LD HL,(random_seed)	; 8000
 
-  LD A,(HL)					; 81 отсюда bat_increase_size_ready LD (IX+$15),$81
-  ADD A,$05
-  LD B,A
-  LD A,(ctrl_btns_pressed)
-  ADD A,B
-  ADD A,E
-  LD E,A			; E += (HL) + $05 + (ctrl_btns_pressed)
+	LD A,(HL)		; 81 отсюда bat_increase_size_ready LD (IX+$15),$81
+	ADD A,$05
+	LD B,A
+	LD A,(ctrl_btns_pressed)
+	ADD A,B
+	ADD A,E
+	LD E,A			; E += (HL) + $05 + (ctrl_btns_pressed)
 
-  LD A,(HL)
-  CPL
-  ADD A,$16
-  ADD A,D
-  ADD A,L
-  LD D,A			; D += !(HL) + $16 + L
+	LD A,(HL)
+	CPL
+	ADD A,$16
+	ADD A,D
+	ADD A,L
+	LD D,A			; D += !(HL) + $16 + L
 
 ; D - всегда одинаковая последовательность чисел
 ; E - в последовательность вносят коррективы нажатые кнопки управления
 
-  EX HL,DE
-  LD (random_number),HL
-  EX HL,DE
+	EX HL,DE
+	LD (random_number),HL
+	EX HL,DE
 
-  INC HL
-  LD A,H
-  AND $9F
-  LD H,A			; HL = (HL + 1) & $9FFF
-  LD (random_seed),HL
-  RET
+	INC HL
+	LD A,H
+	AND $9F
+	LD H,A			; HL = (HL + 1) & $9FFF
+	LD (random_seed),HL
+	RET
 
 ; Состояние нажатых кнопок джойстика и управления
 ; Bit 0 $01 - вправо
@@ -153,7 +153,7 @@ random_generate:		; Specialist ready
 ; Bit 3
 ; Bit 4 $10 - огонь
 ctrl_btns_pressed:
-  DEFB $00
+	DEFB $00
 
 
 ; Расшифровываем биты клавиатуры и джойстика Вектора
@@ -197,17 +197,17 @@ read_keyboard_map:                    ; 7   6   5   4   3   2   1   0
 ; Used by the routines at clear_hl_buff16, all_var_init and game_start.
 ; Очищает буфер адресуемый HL размером, заданным в B
 clear_hl_buff:
-  LD (HL),$00
-  INC HL
-  dec B
-  jp nz,clear_hl_buff
-  RET
+	LD (HL),$00
+	INC HL
+	dec B
+	jp nz,clear_hl_buff
+	RET
 
 spr_level_textures:
-  DEFW spr_level_texture_1
-  DEFW spr_level_texture_2
-  DEFW spr_level_texture_3
-  DEFW spr_level_texture_4
+	DEFW spr_level_texture_1
+	DEFW spr_level_texture_2
+	DEFW spr_level_texture_3
+	DEFW spr_level_texture_4
 
 ; Текстуры уровней 2,3,4 (текстура 1 дальше по тексту)
   INCLUDE "./gfx/sprites_color_2.asm"
@@ -216,56 +216,56 @@ spr_level_textures:
 ; Вывод окна с номером уровня и игрока перед началом раунда
 show_window_round_number:
 ; Рисуем чёрное окно
-  LD HL,$A458		; Координаты на экране
-  CALL screen_addr_calc
-  LD C,$20		; Высота окна а пикселях
+	LD HL,$A458		; Координаты на экране
+	CALL screen_addr_calc
+	LD C,$20		; Высота окна а пикселях
 next_win_line:
-  LD B,$0A		; Ширина окна в знакоместах
-  PUSH HL
+	LD B,$0A		; Ширина окна в знакоместах
+	PUSH HL
 next_win_column:
-  LD (HL),$00
-  INC H			; next column
-  dec B
-  jp nz,next_win_column
-  POP HL
-  inc L   	; поправил направление для Вектора
-  DEC C
-  JP NZ,next_win_line
+	LD (HL),$00
+	INC H			; next column
+	dec B
+	jp nz,next_win_column
+	POP HL
+	inc L   	; поправил направление для Вектора
+	DEC C
+	JP NZ,next_win_line
 
 ; Вписываем двузначный номер раунда в сообщение в 10-тичной системе
-  LD A,(round_number_1up)
-  INC A
-  LD B,A
-  XOR A
+	LD A,(round_number_1up)
+	INC A
+	LD B,A
+	XOR A
 next_round_number:
-  ADD A,$01
-  DAA
-  dec B
-  jp nz,next_round_number
-  LD B,A
-  RRA
-  RRA
-  RRA
-  RRA
-  AND $0F
-  LD (txt_round_xx+10),A
-  LD A,B
-  AND $0F
-  LD (txt_round_xx+11),A
+	ADD A,$01
+	DAA
+	dec B
+	jp nz,next_round_number
+	LD B,A
+	RRA
+	RRA
+	RRA
+	RRA
+	AND $0F
+	LD (txt_round_xx+10),A
+	LD A,B
+	AND $0F
+	LD (txt_round_xx+11),A
 ; Вписываем номер игрока в сообщение
-  LD A,(player_number)
-  INC A
-  LD (txt_player_x+11),A
-  LD DE,txt_player_x
+	LD A,(player_number)
+	INC A
+	LD (txt_player_x+11),A
+	LD DE,txt_player_x
 ; Печатаем сообщение поверх чёрного окна
-  LD B,$02
-  CALL print_message
+	LD B,$02
+	CALL print_message
 
-  LD A,(game_mode)
-  CP $02
-  RET NZ
-  LD DE,txt_game_on
-  JP print_line
+	LD A,(game_mode)
+	CP $02
+	RET NZ
+	LD DE,txt_game_on
+	JP print_line
 
   INCLUDE "./txt/txt_player_x.asm"
   INCLUDE "./txt/txt_round_xx.asm"
@@ -275,7 +275,7 @@ next_round_number:
 
 ; Сюда счёт преобразуется в шесть 10-тичных цифр
 score_six_digits:
-  DEFB $00,$00,$00,$00,$00,$00
+	DEFB $00,$00,$00,$00,$00,$00
 
   INCLUDE "./txt/txt_player_0_enter_your_name.asm"
 
@@ -285,40 +285,40 @@ score_six_digits:
 ; Used by the routine at disp_main_menu_and_wait_keys.
 ; Преобразует цифры в текст и помещает текст в сообщение
 score_to_text:		; Specialist ready
-  LD B,$03
+	LD B,$03
 next_double_digit:
-  LD A,(HL)
-  RRA
-  RRA
-  RRA
-  RRA
-  AND $0F
-  LD (DE),A
-  INC DE
-  LD A,(HL)
-  AND $0F
-  LD (DE),A
-  INC DE
-  DEC HL
-  DEC B
-  JP NZ,next_double_digit
-  RET
+	LD A,(HL)
+	RRA
+	RRA
+	RRA
+	RRA
+	AND $0F
+	LD (DE),A
+	INC DE
+	LD A,(HL)
+	AND $0F
+	LD (DE),A
+	INC DE
+	DEC HL
+	DEC B
+	JP NZ,next_double_digit
+	RET
 
 ; Мусор?
-  DEFB $04,$03,$47,$04,$03,$00
+	DEFB $04,$03,$47,$04,$03,$00
 
 coord_ctrl_1up:
-  DEFW $6C28		; Координаты (X,Y) указателя игрока 1
+	DEFW $6C28		; Координаты (X,Y) указателя игрока 1
 
 coord_ctrl_2up:
-  DEFW $6CB8		; Координаты (X,Y) указателя игрока 2
+	DEFW $6CB8		; Координаты (X,Y) указателя игрока 2
 
 ; Указатели управления игроков
   INCLUDE "./gfx/sprites_no_masks_1.asm"
 
 ; Два независимых байта для обратного отсчёта
 back_counters:
-  DEFW $0000
+	DEFW $0000
 
 ; Надписи PRESS A и PRESS B
   INCLUDE "./gfx/sprites_no_masks_2.asm"
@@ -336,30 +336,30 @@ back_counters:
 
 ; Сюда сохраняется указатель на текст перед выводом на экран при смене режима игры
 pointer_game_mode_text:
-  DEFW txt_1_player
-  DEFW txt_controls
+	DEFW txt_1_player
+	DEFW txt_controls
 
 ; +00 - координата Y
 ; +01 - указатель на текущий атрибут в таблице
 current_game_mode_line_prop:
-  DEFB $2F,$00
+	DEFB $2F,$00
 
-  DEFB $67,$08		; Мусор?
+	DEFB $67,$08		; Мусор?
 
 ; Used by the routine at disp_main_menu_and_wait_keys.
 ; Закрашивает текущий режим игры в главном меню нужным цветом (для мигания)
 fill_color_current_game_mode:		; Specialist ready
-  LD A,(DE)
-  LD H,A
-  LD L,$70
-  CALL screen_coord_attrib
-  INC DE
-  LD A,(DE)
-  PUSH HL
-  LD HL,flash_colors
-  CALL hl_add_a
-  LD A,(HL)
-  INC DE
+	LD A,(DE)
+	LD H,A
+	LD L,$70
+	CALL screen_coord_attrib
+	INC DE
+	LD A,(DE)
+	PUSH HL
+	LD HL,flash_colors
+	CALL hl_add_a
+	LD A,(HL)
+	INC DE
 
 	ld hl,last_color
 	cp (HL)
@@ -387,17 +387,17 @@ nac_1:
 	JP NZ,next_attr_column
 	push hl
 nac_2:
-	pop	hl
-  LD A,(counter_misc)
-  AND $1F
-  RET NZ
-  DEC DE
-  LD A,(DE)
-  INC A
-  AND $0F
-  LD (DE),A
-  INC DE
-  RET
+	pop hl
+	LD A,(counter_misc)
+	AND $1F
+	RET NZ
+	DEC DE
+	LD A,(DE)
+	INC A
+	AND $0F
+	LD (DE),A
+	INC DE
+	RET
 
 ; Последний используемый цвет в мигалке
 last_color:
@@ -406,175 +406,181 @@ last_color:
 ; Чередующиеся цвета для мигания надписи режима игры в главном меню
 ; $10 цветов крутятся по кругу
 flash_colors:
-  DEFB c00,c00,c00,c00,c00,c00,c00,c00	; Чёрный
-  DEFB c47,c47,c47,c47,c47,c47,c47,c47	; Яркий белый
+	DEFB c00,c00,c00,c00,c00,c00,c00,c00	; Чёрный
+	DEFB c47,c47,c47,c47,c47,c47,c47,c47	; Яркий белый
 
 ; Признак необходимости смены игрока, которому зачислять счёт при Double Play
 ; Если 0, то менять игрока не нужно
 need_change_player:
-  DEFB $00
+	DEFB $00
 
 ; Шаги очков, за которые будет добавляться дополнительная жизнь: 03(0000), 06(0000), 10(0000) и т.д.
 live_add_steps:
-  DEFB $03,$06,$10,$15,$20,$25,$50,$75
-  DEFB $FF
+	DEFB $03,$06,$10,$15,$20,$25,$50,$75
+	DEFB $FF
 
 ; Used by the routines at kill_enemy_by_bat, handling_bullet, get_bonus and points_calc_and_add.
 ; Добавление очков из BC текущему игроку
 add_points_to_score:
-  LD A,(game_mode)
-  CP $02
-  JP NZ,score_update	; Пропускаем, если режим не Double Play
-  LD A,(need_change_player)
-  AND A
-  JP Z,score_update ; Пропускаем, если в need_change_player ноль
+	LD A,(game_mode)
+	CP $02
+	JP NZ,score_update	; Пропускаем, если режим не Double Play
+	LD A,(need_change_player)
+	AND A
+	JP Z,score_update ; Пропускаем, если в need_change_player ноль
 
 ; Если Double Play и в need_change_player не ноль
 ; Обмениваем игроков
-  PUSH BC
-  LD HL,score_1up_in_game
-  LD DE,score_2up_in_game
-  LD B,$0A
-  CALL hl_swap_de
-  LD HL,current_score_1up
-  LD DE,current_score_2up
-  LD B,$03
-  CALL hl_swap_de
-  POP BC
+	PUSH BC
+	LD HL,score_1up_in_game
+	LD DE,score_2up_in_game
+	LD B,$0A
+	CALL hl_swap_de
+	LD HL,current_score_1up
+	LD DE,current_score_2up
+	LD B,$03
+	CALL hl_swap_de
+	POP BC
 ; Обновляем счёт
-  CALL score_update
+	CALL score_update
 ; Меняем игроков обратно
-  LD HL,score_1up_in_game
-  LD DE,score_2up_in_game
-  LD B,$0A
-  CALL hl_swap_de
-  LD HL,current_score_1up
-  LD DE,current_score_2up
-  LD B,$03
-  JP hl_swap_de
+	LD HL,score_1up_in_game
+	LD DE,score_2up_in_game
+	LD B,$0A
+	CALL hl_swap_de
+	LD HL,current_score_1up
+	LD DE,current_score_2up
+	LD B,$03
+	JP hl_swap_de
 
 ; Добавление очков из ВС к счёту текущего игрока, добавление жизни, если нужно, и обновление цифр на поле
 score_update:
-  LD HL,live_add_steps
-  LD A,(current_score_1up+$02)
+	LD HL,live_add_steps
+	LD A,(current_score_1up+$02)
 score_update_1:
-  CP (HL)
-  JP C,score_update_2
-  INC HL
-  JP score_update_1
+	CP (HL)
+	JP C,score_update_2
+	INC HL
+	JP score_update_1
 score_update_2:
-  LD E,(HL)
+	LD E,(HL)
 
-  LD HL,current_score_1up
-  LD A,C
-  ADD A,(HL)
-  DAA
-  LD (HL),A
-  INC HL
-  LD A,B
-  ADC A,(HL)
-  DAA
-  LD (HL),A
-  INC HL
-  LD A,$00
-  ADC A,(HL)
-  DAA
-  LD (HL),A
-  CP E
-  JP C,score_update_4
+	LD HL,current_score_1up
+	LD A,C
+	ADD A,(HL)
+	DAA
+	LD (HL),A
+	INC HL
+	LD A,B
+	ADC A,(HL)
+	DAA
+	LD (HL),A
+	INC HL
+	LD A,$00
+	ADC A,(HL)
+	DAA
+	LD (HL),A
+	CP E
+	JP C,score_update_4
 
 ;--------------------------------
 ; Добавление ещё одной жизни
-  PUSH HL
-  PUSH IX
-  LD IX,object_lives_indicator
-	ld (IXobj),IX
-  CALL ix_buf_addr_calc
-  CALL print_obj_to_buff
-  CALL print_obj_from_buf_to_scr
-  LD (IX+$11),$00
-  LD A,(IX+$02)
-  ADD A,$10
-  CP $E9
-  JP NC,score_update_3
-  LD (IX+$02),A
+	PUSH HL
+	PUSH IX
+	LD HL,object_lives_indicator
+	ld (IXobj),HL
+	CALL hl_buf_addr_calc
+	CALL print_obj_to_buff
+	CALL print_obj_from_buf_to_scr
+	ld HL,(IXobj)
+	ld DE,$0011
+	add HL,DE
+	LD (HL),D		; (IX+$11) = $00
+	ld HL,(IXobj)
+	inc HL
+	inc HL
+	LD A,(HL)		; IX+$02
+	ADD A,$10
+	CP $E9
+	JP NC,score_update_3
+	LD (HL),A		; IX+$02
 score_update_3:
-  LD A,(lives_1up)
-  INC A
-  LD (lives_1up),A
-  CALL get_free_sound_slot
-  ld (HL),sound_live_add
-  inc HL
-  ld (HL),$20
-  POP IX
-  POP HL
+	LD A,(lives_1up)
+	INC A
+	LD (lives_1up),A
+	CALL get_free_sound_slot
+	ld (HL),sound_live_add
+	inc HL
+	ld (HL),$20
+	POP IX
+	POP HL
 ;--------------------------------
 
 score_update_4:
-  LD HL,(score_1up_in_game)
-  EXX
-  LD HL,current_score_1up+2
-  LD A,$01
-  LD (scr_score_need_upd),A
+	LD HL,(score_1up_in_game)
+	EXX
+	LD HL,current_score_1up+2
+	LD A,$01
+	LD (scr_score_need_upd),A
 ; This entry point is used by the routine at game_screen_draw_to_buffer.
 print_score_in_game:
-  LD B,$03
+	LD B,$03
 next_digit:
-  LD A,(HL)
-  AND $F0
-  CALL print_digit
-  LD A,(HL)
-  ADD A,A
-  ADD A,A
-  ADD A,A
-  ADD A,A
-  CALL print_digit
-  DEC HL
-  dec B
-  jp nz,next_digit
-  RET
+	LD A,(HL)
+	AND $F0
+	CALL print_digit
+	LD A,(HL)
+	ADD A,A
+	ADD A,A
+	ADD A,A
+	ADD A,A
+	CALL print_digit
+	DEC HL
+	dec B
+	jp nz,next_digit
+	RET
 
 ; Used by the routine at add_points_to_score.
 ; Печать цифры счёта на поле
 print_digit:
-  LD DE,spr_score_digits+2
-  ADD A,E
-  LD E,A
-  JP NC,print_digit_0
-  INC D
+	LD DE,spr_score_digits+2
+	ADD A,E
+	LD E,A
+	JP NC,print_digit_0
+	INC D
 print_digit_0:
-  ex DE,HL
-  LD (print_digit_ld_sp_1+$01),HL	; Адрес спрайта цифры
-  ex DE,HL
-  EXX
-  LD (print_digit_ld_hl+$01),HL		; Адрес в буфере
-  EX DE,HL			; HL свободен
+	ex DE,HL
+	LD (print_digit_ld_sp_1+$01),HL	; Адрес спрайта цифры
+	ex DE,HL
+	EXX
+	LD (print_digit_ld_hl+$01),HL	; Адрес в буфере
+	EX DE,HL			; HL свободен
 
 	ld hl,$0000
 	add hl,sp
 	ld (print_digit_ld_sp_2+$01),hl	; сохраняем SP
 	di
 
-  ld hl,$0090
-  ADD HL,DE
-  LD A,$08
+	ld hl,$0090
+	ADD HL,DE
+	LD A,$08
 print_digit_ld_sp_1:
-  LD SP,$0000			; Адрес спрайта цифры
+	LD SP,$0000			; Адрес спрайта цифры
 print_digit_1:
-  ld (print_digit_2+1),A	; save A
-  POP BC			; берём пиксели и маску
-  LD A,C
-  OR (HL)
-  XOR B
-  LD (DE),A
-  inc l
-  ;EX DE,HL
-  inc E			; НЕ поправлено направление для Вектора
-  ;EX DE,HL
+	ld (print_digit_2+1),A	; save A
+	POP BC			; берём пиксели и маску
+	LD A,C
+	OR (HL)
+	XOR B
+	LD (DE),A
+	inc l
+	;EX DE,HL
+	inc E			; НЕ поправлено направление для Вектора
+	;EX DE,HL
 print_digit_2:
-  ld A,$00		; restore A
-  DEC A
-  JP NZ,print_digit_1
+	ld A,$00		; restore A
+	DEC A
+	JP NZ,print_digit_1
 
 print_digit_ld_hl:
 	LD HL,$0000		; Адрес в буфере
@@ -583,35 +589,35 @@ print_digit_ld_hl:
 print_digit_ld_sp_2:
 	ld SP,$0000		; restore SP
 	ei
-  EXX
+	EXX
 	RET
 
 ; Used by the routines at add_points_for_left_briks and play_sounds_queue.
 ; Обновляет участок экрана со счётом текущего игрока
 scr_score_update:
-  XOR A
-  LD (scr_score_need_upd),A
-  LD BC,$0608
-  LD A,(game_mode)
-  CP $02
-  JP NZ,scr_score_update_0
-  LD HL,$1510
-  CALL win_bg_recovery
-  LD BC,$0608
-  LD HL,$15C0
-  JP win_bg_recovery
+	XOR A
+	LD (scr_score_need_upd),A
+	LD BC,$0608
+	LD A,(game_mode)
+	CP $02
+	JP NZ,scr_score_update_0
+	LD HL,$1510
+	CALL win_bg_recovery
+	LD BC,$0608
+	LD HL,$15C0
+	JP win_bg_recovery
 scr_score_update_0:
-  LD HL,$1510
-  LD A,(player_number)
-  AND A
-  JP Z,win_bg_recovery
-  LD L,$C0
-  JP win_bg_recovery
+	LD HL,$1510
+	LD A,(player_number)
+	AND A
+	JP Z,win_bg_recovery
+	LD L,$C0
+	JP win_bg_recovery
 
 ; Used by the routines at game_restart and briks_calc.
 ; Поиск адреса уровня по номеру, заданному в ячейке current_level_number_1up
 level_addr_calc:
-  LD A,(current_level_number_1up)
+	LD A,(current_level_number_1up)
 ; This entry point is used by the routine at current_level_2up_copier.
 ; Поиск адреса уровня по номеру, заданному в А
 level_addr_calc_a:
@@ -628,23 +634,23 @@ level_addr_calc_a:
 	RET
 
 current_level_addr:
-  DEFW $0000
+	DEFW $0000
 
 ; Used by the routines at LBAED, LBB97 and LBC10.
 ; Постановка игры на паузу клавишами 1, 2, 3 или 4
 pause_game:
-  CALL press_1_4_check
-  RET Z			; Возвращаемся, если не нажата клавиша 1-4
+	CALL press_1_4_check
+	RET Z			; Возвращаемся, если не нажата клавиша 1-4
 pause_game_0:
-  CALL press_1_4_check	; Если нажата, то крутиться здесь, пока не отпустят
-  JP NZ,pause_game_0
+	CALL press_1_4_check	; Если нажата, то крутиться здесь, пока не отпустят
+	JP NZ,pause_game_0
 pause_game_1:
-  CALL press_1_4_check	; Если отпустили, то крутится здесь, пока не нажмут
-  JP Z,pause_game_1
+	CALL press_1_4_check	; Если отпустили, то крутится здесь, пока не нажмут
+	JP Z,pause_game_1
 pause_game_2:
-  CALL press_1_4_check	; Если нажали, то крутится здесь, пока не отпустят
-  JP NZ,pause_game_2
-  RET
+	CALL press_1_4_check	; Если нажали, то крутится здесь, пока не отпустят
+	JP NZ,pause_game_2
+	RET
 
 ; Проверка нажатия клавиш 1-4
 ; Выход: Z=1: нет нажатия, Z=0: есть нажатие
@@ -660,124 +666,123 @@ clear_screen_attrib:	; Specialist ready
 
 ; Used by the routines at input_new_record_name, draw_frame, game_restart and LBC10.
 clear_screen_pix:		; Vector ready
-  LD HL,$0000
-  LD D,H
-  LD E,L
-  ADD HL,SP
-  LD (clear_screen_1+$01),HL
-  LD HL,zx_scr+$2000	; поправка для Вектора
-  LD C,$20
-  di
+	LD HL,$0000
+	LD D,H
+	LD E,L
+	ADD HL,SP
+	LD (clear_screen_1+1),HL
+	LD HL,zx_scr+$2000	; поправка для Вектора
+	LD C,$20
+	di
 clear_screen_3:
-  DEC H
-  LD SP,HL
-  LD B,$60
+	DEC H
+	LD SP,HL
+	LD B,$60
 clear_screen_2:
-  PUSH DE
-  DEC B
-  JP NZ,clear_screen_2
-  DEC C
-  JP NZ,clear_screen_3
+	PUSH DE
+	DEC B
+	JP NZ,clear_screen_2
+	DEC C
+	JP NZ,clear_screen_3
 clear_screen_1:
-  LD SP,$0000
-  ei
-  RET
+	LD SP,$0000
+	ei
+	RET
 
 ; Used by the routines at input_new_record_name, add_points_for_left_briks, pause_clear_screen_attrib, pause_long and print_kinnock.
 ; Пауза. Длительность задаётся в регистре D.
 pause_short:
-  LD E,$FF
+	LD E,$FF
 pause_short_0:
-  DEC E
-  JP NZ,pause_short_0
-  DEC D
-  JP NZ,pause_short
-  RET
+	DEC E
+	JP NZ,pause_short_0
+	DEC D
+	JP NZ,pause_short
+	RET
 
 ; Сюда временно сохраняется SP
 sp_storage:
-  DEFW $0000
+	DEFW $0000
 
 ; Used by the routines at LBAED, LBB97 and LBC10.
 ; Сохранение объектов с экранного буфера с тенью и фоном в save_objs_buff
 ; Перенос объектов (макс. $0B) в буфер
 save_objs_to_buff:
-  LD IX,object_ball_1
-  LD B,$0B
-  XOR A
-  LD (save_objs_buff),A		; В первой ячейке хранится количество объектов
-  LD HL,save_objs_buff+$01
+	LD IX,object_ball_1
+	LD B,$0B		; 11
+	XOR A
+	LD (save_objs_buff),A		; В первой ячейке хранится количество объектов
+	LD HL,save_objs_buff+$01
 next_obj_to_buff:
-  PUSH BC
-  LD A,(IX+$00)
-  AND A
-  CALL NZ,save_one_obj_to_buff
-  POP BC
-  LD DE,$0016
-  ADD IX,DE
-  dec B
-  jp nz,next_obj_to_buff
-  LD (save_obj_buff_end),HL	; Бесполезная команда
-  RET
+	PUSH BC
+	LD A,(IX+$00)
+	AND A
+	CALL NZ,save_one_obj_to_buff
+	POP BC
+	LD DE,$0016
+	ADD IX,DE
+	dec B
+	jp nz,next_obj_to_buff
+	LD (save_obj_buff_end),HL	; Бесполезная команда
+	RET
 
 ; Сюда один раз сохраняется указатель на конец буфера save_objs_buff,
 ; но потом это значение никогда не считывается
 ; Без записи в эту ячейку всё работает без проблем
 ; Скорее всего сделано для отладки, чтобы выяснить сколько максимум занимает буфер
 save_obj_buff_end:
-  DEFW $0000
+	DEFW $0000
 
 ; Routine at 9801
 ;
 ; Used by the routine at save_objs_to_buff.
 ; Сохранение одного объекта с тенью и фоном в текущее место (HL) буфера
 save_one_obj_to_buff:
-
-  LD A,(IX+$04)			; координата Y объекта
-  CP $C0
-  JP C,out_of_bottom	; Переходим, если координата не ниже границы экрана
-  SET 7,(IX+$00)		; Делаем объект невидимым (он за пределами экрана)
+	LD A,(IX+$04)		; координата Y объекта
+	CP $C0
+	JP C,out_of_bottom	; Переходим, если координата не ниже границы экрана
+	SET 7,(IX+$00)		; Делаем объект невидимым (он за пределами экрана)
 out_of_bottom:
-  BIT 7,(IX+$00)
-  RET NZ				; Выходим, если объект за пределами экрана
-  LD A,(save_objs_buff)
-  INC A
-  LD (save_objs_buff),A
-  LD C,(IX+$08)			; ширина спрайта с тенью в байтах
-  LD A,(IX+$02)			; координата Х объекта
-  AND $07
-  JP Z,sprite_width_const
-  INC C					; если спрайт сдвинут, то увеличиваем его ширину
+	BIT 7,(IX+$00)
+	RET NZ			; Выходим, если объект за пределами экрана
+	LD A,(save_objs_buff)
+	INC A
+	LD (save_objs_buff),A
+	LD C,(IX+$08)		; ширина спрайта с тенью в байтах
+	LD A,(IX+$02)		; координата Х объекта
+	AND $07
+	JP Z,sprite_width_const
+	INC C			; если спрайт сдвинут, то увеличиваем его ширину
 sprite_width_const:
-  LD A,C
-  ADD A,A
-  ADD A,A
-  ADD A,A
-  ADD A,(IX+$02)		; координата Х правого края объекта
-  JP NC,no_cross_right_margin	; переход если не вышло за границы правого края экрана (255)
+	LD A,C
+	ADD A,A
+	ADD A,A
+	ADD A,A
+	ADD A,(IX+$02)		; координата Х правого края объекта
+	JP NC,no_cross_right_margin	; переход если не вышло за границы правого края экрана (255)
 
-  LD A,$FF
-  SUB (IX+$02)			; координата Х объекта
-  SRL A
-  SRL A
-  SRL A
-  INC A
-  LD C,A				; номер столбца (1-32)
+	LD A,$FF
+	SUB (IX+$02)		; координата Х объекта
+	SRL A
+	SRL A
+	SRL A
+	INC A
+	LD C,A			; номер столбца (1-32)
 
 no_cross_right_margin:
-  LD D,(IX+$0A)			; старший адрес в экранном буфере
-  LD E,(IX+$0B)			; младший адрес в экранном буфере
-  LD (HL),E
-  INC HL
-  LD (HL),D
-  INC HL
+	LD D,(IX+$0A)		; старший адрес в экранном буфере
+	LD E,(IX+$0B)		; младший адрес в экранном буфере
+	LD (HL),E
+	INC HL
+	LD (HL),D
+	INC HL
 	ld a,c
-  LD (HL),A				; Ширина сохраняемого окна в байтах
-  INC HL
-  LD B,(IX+$09)			; высота спрайта с тенью в пикселях
-  LD (HL),B
-  INC HL
-  EX DE,HL
+	LD (HL),A		; Ширина сохраняемого окна в байтах
+	INC HL
+	LD B,(IX+$09)		; высота спрайта с тенью в пикселях
+	LD (HL),B
+	INC HL
+	EX DE,HL
 
 ; HL - адрес в экранном буфере
 ; DE - адрес в save_objs_buff
@@ -786,7 +791,7 @@ no_cross_right_margin:
 	ld (save_obj_02+$01),a
 	ld (save_obj_03+$01),a
 save_obj_02:
-	ld b,$00	; Высота сохраняемого окна
+	ld b,$00		; Высота сохраняемого окна
 save_obj_01:
 	ld a,(hl)
 	ld (de),a
@@ -796,7 +801,7 @@ save_obj_01:
 	jp nz,save_obj_01
 	ld a,l
 save_obj_03:
-	sub $00		; Высота сохраняемого окна
+	sub $00			; Высота сохраняемого окна
 	ld l,a
 	inc h
 	dec c
@@ -808,21 +813,25 @@ save_obj_03:
 ; Used by the routine at LBAED.
 ; Восстанавливает магнит и все объекты
 restore_objs_and_magnet:
-  LD A,(current_magnet_prop+$01)
+  LD A,(current_magnet_prop+1)
   AND A
   JP Z,restore_objs
 ; Восстанавливаем магнит с фоном и с припуском 5 пикселей
-  LD IX,(current_magnet_prop)
-  LD A,(IX+$02)			; координата Х объекта
+  LD HL,(current_magnet_prop)
+  inc HL
+  inc HL
+  LD A,(HL)			; IX+$02 координата Х объекта
   SUB $05
   LD L,A
-  LD A,(IX+$04)			; координата Y объекта
+  inc HL
+  inc HL
+  LD A,(HL)			; IX+$04 координата Y объекта
   SUB $05
   LD H,A
   LD BC,$0417
   CALL win_bg_recovery
   XOR A
-  LD (current_magnet_prop+$01),A
+  LD (current_magnet_prop+1),A
 
 ; This entry point is used by the routines at LBB97 and LBC10.
 ; Восстанавливает объекты из save_objs_buff в экранный буфер
@@ -902,23 +911,23 @@ rest_obj_04:
 ; Data block at 98DA
 ; Таблица для настройки процедуры вывода спрайта в зависимости от его размера
 table_proc:
-  DEFW byte_put_width_1
-  DEFW byte_put_width_2
-  DEFW byte_put_width_3
-  DEFW byte_put_width_4
-  DEFW byte_put_width_5
-  DEFW byte_put_width_6
-  DEFW byte_put_width_7
-  DEFW byte_put_width_8
+	DEFW byte_put_width_1
+	DEFW byte_put_width_2
+	DEFW byte_put_width_3
+	DEFW byte_put_width_4
+	DEFW byte_put_width_5
+	DEFW byte_put_width_6
+	DEFW byte_put_width_7
+	DEFW byte_put_width_8
 
-  DEFW byte_put_width_shift_1
-  DEFW byte_put_width_shift_2
-  DEFW byte_put_width_shift_3
-  DEFW byte_put_width_shift_4
-  DEFW byte_put_width_shift_5
-  DEFW byte_put_width_shift_6
-  DEFW byte_put_width_shift_7
-  DEFW byte_put_width_shift_8
+	DEFW byte_put_width_shift_1
+	DEFW byte_put_width_shift_2
+	DEFW byte_put_width_shift_3
+	DEFW byte_put_width_shift_4
+	DEFW byte_put_width_shift_5
+	DEFW byte_put_width_shift_6
+	DEFW byte_put_width_shift_7
+	DEFW byte_put_width_shift_8
 
 ; Data block at 98FA
 ; Свойства всех 11-ти наборов спрайтов
@@ -926,17 +935,17 @@ table_proc:
 ; +$00 - значение для объекта без сдвига по X
 ; +$01 - значение для объекта со сдвигом по X
 objs_width:
-  DEFB $08,$0A	; $01 gfx_bat
-  DEFB $04,$06	; $02 gfx_ball
-  DEFB $00,$00	; $03 gfx_screen_elements
-  DEFB $06,$00	; $04 gfx_bonuses
-  DEFB $02,$02	; $05 gfx_bullet
-  DEFB $04,$04	; $06 anim_rocket
-  DEFB $00,$00	; $07 anim_spark
-  DEFB $09,$10	; $08 anim_ufo
-  DEFB $06,$0C	; $09 anim_bird
-  DEFB $04,$09	; $0A anim_alien_blast
-  DEFB $05,$07	; $0B gfx_last_sprite
+	DEFB $08,$0A	; $01 gfx_bat
+	DEFB $04,$06	; $02 gfx_ball
+	DEFB $00,$00	; $03 gfx_screen_elements
+	DEFB $06,$00	; $04 gfx_bonuses
+	DEFB $02,$02	; $05 gfx_bullet
+	DEFB $04,$04	; $06 anim_rocket
+	DEFB $00,$00	; $07 anim_spark
+	DEFB $09,$10	; $08 anim_ufo
+	DEFB $06,$0C	; $09 anim_bird
+	DEFB $04,$09	; $0A anim_alien_blast
+	DEFB $05,$07	; $0B gfx_last_sprite
 
 ; Routine at 9910
 ;
@@ -945,79 +954,79 @@ objs_width:
 ; На входе: (IXobj) = адрес объекта (спрайт с маской)
 print_obj_to_buff:
 	ld IX,(IXobj)
-  LD A,(IX+$00)
-  BIT 7,A
-  RET NZ			; Возвращаемся, если объект невидим (за пределами экрана)
-  CP $02
-  JP NZ,obj_processing_1	; Переходим, если объект не шарик
+	LD A,(IX+$00)
+	BIT 7,A
+	RET NZ			; Возвращаемся, если объект невидим (за пределами экрана)
+	CP $02
+	JP NZ,obj_processing_1	; Переходим, если объект не шарик
 
 ; Обработка объекта шарик
-  LD A,(object_bat_1+$14)	; применённый к объекту бонус
-  CP $07					; spr_bonus_smash
-  JP Z,set_big_ball
-  LD A,(object_bat_2+$14)	; применённый к объекту бонус
-  CP $07					; spr_bonus_smash
-  JP NZ,obj_processing
+	LD A,(object_bat_1+$14)	; применённый к объекту бонус
+	CP $07					; spr_bonus_smash
+	JP Z,set_big_ball
+	LD A,(object_bat_2+$14)	; применённый к объекту бонус
+	CP $07					; spr_bonus_smash
+	JP NZ,obj_processing
 
 ; Установка большого шарика
 set_big_ball:
-  LD (IX+$01),$08			; spr_big_ball
-  ld A,(IX+$15)
-  and %01111111	; RES 7,(IX+$15)
-  ld (IX+$15),A
+	LD (IX+$01),$08		; spr_big_ball
+	ld A,(IX+$15)
+	and %01111111		; RES 7,(IX+$15)
+	ld (IX+$15),A
 
 ; Обработка длительности действия приза
-  LD A,(counter_misc)
-  RRA
-  JP C,obj_processing		; Переход, если нечётное значение counter_misc
-  LD A,(smash_counter)
-  INC A
-  LD (smash_counter),A		; Увеличение счётчика длительности приза Smash
-  CP $F8					; Длительность действия приза Smash
-  JP C,obj_processing
+	LD A,(counter_misc)
+	RRA
+	JP C,obj_processing	; Переход, если нечётное значение counter_misc
+	LD A,(smash_counter)
+	INC A
+	LD (smash_counter),A	; Увеличение счётчика длительности приза Smash
+	CP $F8			; Длительность действия приза Smash
+	JP C,obj_processing
 
 ; Отключение действия приза, если пришло время
-  LD A,(object_bat_1+$14)	; применённый к объекту бонус
-  CP $07					; spr_bonus_smash
-  JP NZ,not_smash
-  LD A,$FF
-  LD (object_bat_1+$14),A	; применённый к объекту бонус
+	LD A,(object_bat_1+$14)	; применённый к объекту бонус
+	CP $07				; spr_bonus_smash
+	JP NZ,not_smash
+	LD A,$FF
+	LD (object_bat_1+$14),A	; применённый к объекту бонус
 not_smash:
-  LD A,(object_bat_2+$14)	; применённый к объекту бонус
-  CP $07					; spr_bonus_smash
-  JP NZ,obj_processing
-  LD A,$FF
-  LD (object_bat_2+$14),A	; применённый к объекту бонус
+	LD A,(object_bat_2+$14)	; применённый к объекту бонус
+	CP $07				; spr_bonus_smash
+	JP NZ,obj_processing
+	LD A,$FF
+	LD (object_bat_2+$14),A	; применённый к объекту бонус
 
 ; Обработка любого объекта из списка
 obj_processing:
-  LD A,(IX+$00)
+	ld HL,(IXobj)
+	LD A,(HL)		; IX+$00
 obj_processing_1:
-  LD HL,objs_width-$02
-  ;ADD A,A
-  CALL hl_add_2a
-  LD A,(IX+$02)			; координата Х объекта
-  AND $07
-  JP Z,no_shift_obj
-  INC HL
+	LD HL,objs_width-$02
+	CALL hl_add_2a
+	LD A,(IX+$02)		; координата Х объекта
+	AND $07
+	JP Z,no_shift_obj
+	INC HL
 no_shift_obj:
-  LD A,(objs_width_sum)
-  ADD A,(HL)
-  LD (objs_width_sum),A	; Запись суммы ширин objs_width из всех объектов на экране
+	LD A,(objs_width_sum)
+	ADD A,(HL)
+	LD (objs_width_sum),A	; Запись суммы ширин objs_width из всех объектов на экране
 
-  CALL sprite_search
-  LD HL,table_proc-$02
-  LD A,(IX+$04)		; координата Y объекта
+	CALL sprite_search
+	LD HL,table_proc-$02
+	LD A,(IX+$04)		; координата Y объекта
 
-  CP $C0
-  RET NC		; Возвращаемся, если координата больше 192, то есть объект за пределами экрана
+	CP $C0
+	RET NC			; Возвращаемся, если координата больше 192, то есть объект за пределами экрана
 
-  LD (sp_storage),SP
+	LD (sp_storage),SP
 
-  BIT 7,(IX+$15)	; BIT7 = 1 - каретка не в процессе трансформации
-  LD A,$00
-  JP NZ,not_transform	; Переход, если каретка не в процессе трансформации
-  LD A,(IX+$02)		; координата Х объекта
+	BIT 7,(IX+$15)		; BIT7 = 1 - каретка не в процессе трансформации
+	LD A,$00
+	JP NZ,not_transform	; Переход, если каретка не в процессе трансформации
+	LD A,(IX+$02)		; координата Х объекта
 not_transform:
   AND $07
   LD C,A
@@ -1027,7 +1036,6 @@ not_transform:
   ADD A,$08
 
 no_shift_obj_2:
-  ;ADD A,A
   CALL hl_add_2a
   LD A,(HL)
   INC HL
@@ -1295,6 +1303,7 @@ byte_put_width_shift_end:
   ld SP,HL
   ei
   RET
+
 ;----------------------------------------------------------------
 ; Routine at 9AC0
 ; Этот код нигде не вызывается. Дизассемблирован принудительно
@@ -1446,73 +1455,77 @@ wins_counter:
 ; Данные для вывода берутся из его свойств в IX
 ; Вход: (IXobj) = адрес объекта
 print_obj_from_buf_to_scr:
-	ld IX,(IXobj)
-  LD A,(IX+$00)
-  RLA
-  JP NC,obj_on_screen
-  LD (IX+$00),$00	; Если объект за пределами экрана, то обнуляем его
+	ld HL,(IXobj)
+	LD A,(HL)		; IX+$00
+	RLA
+	JP NC,obj_on_screen
+	LD (HL),$00		; Если объект за пределами экрана, то обнуляем его
 obj_on_screen:
-  LD L,(IX+$02)		; координата Х объекта
-  LD A,(IX+$11)		; предыдущая высота спрайта с тенью в пикселях
-  AND A
-  JP NZ,obj_has_height
+  push HL
+  pop IX
+	inc HL
+	inc HL
+	LD L,(HL)		; IX+$02: координата Х объекта
+	LD A,(IX+$11)		; предыдущая высота спрайта с тенью в пикселях
+	AND A
+	JP NZ,obj_has_height
 
 ; Предыдущая высота спрайта с тенью в пикселях = 0
-  LD H,(IX+$04)		; координата Y объекта
-  LD A,(IX+$08)		; ширина спрайта с тенью в байтах
-  ADD A,A
-  ADD A,A
-  ADD A,A
-  ADD A,L
-  LD B,A			; В - координата правой стороны объекта
-  LD C,(IX+$09)		; высота спрайта с тенью в пикселях
-  JP ready_for_restore
+	LD H,(IX+$04)		; координата Y объекта
+	LD A,(IX+$08)		; ширина спрайта с тенью в байтах
+	ADD A,A
+	ADD A,A
+	ADD A,A
+	ADD A,L
+	LD B,A		; В - координата правой стороны объекта
+	LD C,(IX+$09)		; высота спрайта с тенью в пикселях
+	JP ready_for_restore
 
 ; Спрайт имеет какую-то высоту
 obj_has_height:
-  LD E,L			; координата Х объекта
-  LD A,(IX+$0E)		; предыдущая координата Х объекта
-  LD D,A
-  CP L
-  JP NC,obj_has_height_1
-  LD L,A
+	LD E,L		; координата Х объекта
+	LD A,(IX+$0E)		; предыдущая координата Х объекта
+	LD D,A
+	CP L
+	JP NC,obj_has_height_1
+	LD L,A
 obj_has_height_1:
-  LD B,(IX+$08)		; ширина спрайта с тенью в байтах
-  SLA B
-  SLA B
-  SLA B
-  LD C,(IX+$10)		; предыдущая ширина спрайта с тенью в байтах
-  SLA C
-  SLA C
-  SLA C
-  LD A,E
-  ADD A,B
-  LD B,A
-  LD A,D
-  ADD A,C
-  CP B
-  JP C,obj_has_height_2
-  LD B,A
+	LD B,(IX+$08)		; ширина спрайта с тенью в байтах
+	SLA B
+	SLA B
+	SLA B
+	LD C,(IX+$10)		; предыдущая ширина спрайта с тенью в байтах
+	SLA C
+	SLA C
+	SLA C
+	LD A,E
+	ADD A,B
+	LD B,A
+	LD A,D
+	ADD A,C
+	CP B
+	JP C,obj_has_height_2
+	LD B,A
 obj_has_height_2:
-  LD H,(IX+$04)		; координата Y объекта
-  LD D,H
-  LD A,(IX+$0F)		; предыдущая координата Y объекта
-  LD E,A
-  CP H
-  JP NC,obj_has_height_3
-  LD H,A
+	LD H,(IX+$04)		; координата Y объекта
+	LD D,H
+	LD A,(IX+$0F)		; предыдущая координата Y объекта
+	LD E,A
+	CP H
+	JP NC,obj_has_height_3
+	LD H,A
 obj_has_height_3:
-  LD A,D
-  ADD A,(IX+$09)	; высота спрайта с тенью в пикселях
-  LD D,A
-  LD A,E
-  ADD A,(IX+$11)	; предыдущая высота спрайта с тенью в пикселях
-  CP D
-  JP NC,obj_has_height_4
-  LD A,D
+	LD A,D
+	ADD A,(IX+$09)	; высота спрайта с тенью в пикселях
+	LD D,A
+	LD A,E
+	ADD A,(IX+$11)	; предыдущая высота спрайта с тенью в пикселях
+	CP D
+	JP NC,obj_has_height_4
+	LD A,D
 obj_has_height_4:
-  SUB H
-  LD C,A
+	SUB H
+	LD C,A
 
 ; В - координата правой стороны объекта
 ; С - высота спрайта с тенью в пикселях
@@ -1599,14 +1612,14 @@ ready_for_restore_5:
 ; HL - Координаты
 ; BC - Размеры окна
 win_bg_recovery:
-  PUSH BC
-  PUSH HL
-  CALL scr_buff_addr_calc
-  EX DE,HL
-  POP HL
-  CALL screen_addr_calc
-  EX DE,HL
-  POP BC
+	PUSH BC
+	PUSH HL
+	CALL scr_buff_addr_calc
+	EX DE,HL
+	POP HL
+	CALL screen_addr_calc
+	EX DE,HL
+	POP BC
 	ld a,c
 	ld (win_bg_recovery_1+$01),a
 	ld (win_bg_recovery_3+$01),a
@@ -1646,274 +1659,274 @@ win_bg_recovery_4:
 
 ; Сюда сохраняется текущий бонус
 current_bonus:
-  DEFB $00
+	DEFB $00
 
 ; Used by the routine at LAFFC.
 ; Выбор и установка бонуса
 set_bonus:
-  LD A,(object_bonus)
-  AND A
-  RET NZ
-  LD A,(game_mode)
-  CP $02
-  JP NZ,L9D5A_0
-  LD A,(LB28F+$01)
-  CP $78
-  RET Z
+	LD A,(object_bonus)
+	AND A
+	RET NZ
+	LD A,(game_mode)
+	CP $02
+	JP NZ,L9D5A_0
+	LD A,(LB28F+$01)
+	CP $78
+	RET Z
 L9D5A_0:
-  PUSH IY
-  EXX
-  LD IX,object_bonus
-  LD (IX+$00),$04
-  LD HL,$0000
-  LD (LA557),HL
-  LD HL,(LB28F+$01)
-  LD (IX+$02),L
-  LD (IX+$04),H
-  LD A,(object_bat_1+$14)
-  LD (current_bonus),A
-  LD A,(game_mode)
-  CP $02
-  JP NZ,L9D5A_1
-  LD A,L
-  CP $80
-  JP C,L9D5A_1
-  LD A,(object_bat_2+$14)
-  LD (current_bonus),A
+	PUSH IY
+	EXX
+	LD IX,object_bonus
+	LD (IX+$00),$04
+	LD HL,$0000
+	LD (LA557),HL
+	LD HL,(LB28F+$01)
+	LD (IX+$02),L
+	LD (IX+$04),H
+	LD A,(object_bat_1+$14)
+	LD (current_bonus),A
+	LD A,(game_mode)
+	CP $02
+	JP NZ,L9D5A_1
+	LD A,L
+	CP $80
+	JP C,L9D5A_1
+	LD A,(object_bat_2+$14)
+	LD (current_bonus),A
 L9D5A_1:
-  LD (IX+$12),$F0
-  LD (IX+$13),$60
-  LD (IX+$11),$00
-  LD (IX+$0C),$10		; Ширина в пикселях = 16
-  LD (IX+$0D),$08		; Высота в пикселях = 8
+	LD (IX+$12),$F0
+	LD (IX+$13),$60
+	LD (IX+$11),$00
+	LD (IX+$0C),$10		; Ширина в пикселях = 16
+	LD (IX+$0D),$08		; Высота в пикселях = 8
 generate_new_bonus:
-  CALL random_generate
-  LD A,(random_number+$01)
-  AND $0F
-  LD HL,bonus_table_current
-  CALL hl_add_a
-  LD A,(current_bonus)
-  CP (HL)
-  JP Z,generate_new_bonus
-  LD A,(HL)
-  CP $04			; $04 - spr_bonus_slow
-  JP NZ,L9D5A_6
+	CALL random_generate
+	LD A,(random_number+$01)
+	AND $0F
+	LD HL,bonus_table_current
+	CALL hl_add_a
+	LD A,(current_bonus)
+	CP (HL)
+	JP Z,generate_new_bonus
+	LD A,(HL)
+	CP $04			; $04 - spr_bonus_slow
+	JP NZ,L9D5A_6
 
 ; Дополнительная обработка замедления
-  LD A,(object_ball_1)
-  AND A
-  JP Z,L9D5A_3
-  LD A,(object_ball_1+$07)
-  CP $02
-  JP Z,generate_new_bonus	; Если шарик уже на самой низкой скорости, то генерировать новый приз
+	LD A,(object_ball_1)
+	AND A
+	JP Z,L9D5A_3
+	LD A,(object_ball_1+$07)
+	CP $02
+	JP Z,generate_new_bonus	; Если шарик уже на самой низкой скорости, то генерировать новый приз
 L9D5A_3:
-  LD A,(object_ball_2)
-  AND A
-  JP Z,L9D5A_4
-  LD A,(object_ball_2+$07)
-  CP $02
-  JP Z,generate_new_bonus	; Если второй шарик уже на самой низкой скорости, то генерировать новый приз
+	LD A,(object_ball_2)
+	AND A
+	JP Z,L9D5A_4
+	LD A,(object_ball_2+$07)
+	CP $02
+	JP Z,generate_new_bonus	; Если второй шарик уже на самой низкой скорости, то генерировать новый приз
 L9D5A_4:
-  LD A,(object_ball_3)
-  AND A
-  JP Z,L9D5A_5
-  LD A,(object_ball_3+$07)
-  CP $02
-  JP Z,generate_new_bonus	; Если третий шарик уже на самой низкой скорости, то генерировать новый приз
+	LD A,(object_ball_3)
+	AND A
+	JP Z,L9D5A_5
+	LD A,(object_ball_3+$07)
+	CP $02
+	JP Z,generate_new_bonus	; Если третий шарик уже на самой низкой скорости, то генерировать новый приз
 L9D5A_5:
-  JP L9D5A_8
+	JP L9D5A_8
 
 L9D5A_6:
-  CP $02					; $02 - spr_bonus_triple_ball
-  JP NZ,L9D5A_7
+	CP $02				; $02 - spr_bonus_triple_ball
+	JP NZ,L9D5A_7
 
 ; Дополнительная обработка растроения шарика
-  LD A,(balls_quantity)
-  DEC A
-  JP NZ,generate_new_bonus	; Если шариков больше одного, то генерировать новый приз
-  JP L9D5A_8
+	LD A,(balls_quantity)
+	DEC A
+	JP NZ,generate_new_bonus	; Если шариков больше одного, то генерировать новый приз
+	JP L9D5A_8
 
 L9D5A_7:
-  CP $05					; $05 - spr_bonus_extra_life
-  JP NZ,L9D5A_8
+	CP $05				; $05 - spr_bonus_extra_life
+	JP NZ,L9D5A_8
 
 ; Дополнительная обработка дополнительной жизни
-  LD A,(flag_extra_life)
-  AND A
-  JP NZ,generate_new_bonus	; Если в раунде жизнь уже выпадала, то генерировать новый приз
+	LD A,(flag_extra_life)
+	AND A
+	JP NZ,generate_new_bonus	; Если в раунде жизнь уже выпадала, то генерировать новый приз
 
 L9D5A_8:
-  LD A,(HL)
-  CP $06					; $06 - spr_bonus_rocket_1
-  JP NZ,L9D5A_9
+	LD A,(HL)
+	CP $06				; $06 - spr_bonus_rocket_1
+	JP NZ,L9D5A_9
 
 ; Дополнительная обработка ракеты
-  LD A,(object_rocket)
-  AND A
-  JP NZ,generate_new_bonus	; Если ракета уже включена, то генерировать новый приз
-  LD A,(round_number_1up)
-  CP $06
-  JP C,L9D5A_9			; Пропускаем, если раунд с 0-го по 5-й
-  LD A,(random_number)
-  AND $C0
-  JP NZ,generate_new_bonus	; Сокращаем вероятность выпадения ракеты
+	LD A,(object_rocket)
+	AND A
+	JP NZ,generate_new_bonus	; Если ракета уже включена, то генерировать новый приз
+	LD A,(round_number_1up)
+	CP $06
+	JP C,L9D5A_9		; Пропускаем, если раунд с 0-го по 5-й
+	LD A,(random_number)
+	AND $C0
+	JP NZ,generate_new_bonus	; Сокращаем вероятность выпадения ракеты
 
 L9D5A_9:
-  LD A,(HL)
-  DEC A						; $01 - spr_bonus_gun
-  JP NZ,L9D5A_10
+	LD A,(HL)
+	DEC A				; $01 - spr_bonus_gun
+	JP NZ,L9D5A_10
 
 ; Дополнительная обработка пулемёта
-  LD A,(game_mode)
-  CP $02
-  JP NZ,L9D5A_10		; Уходим, если не два игрока одновременно
-  LD A,(object_bat_1+$14)
-  DEC A
-  JP Z,generate_new_bonus	; Если уже есть пулемёт на первой каретке, то генерировать новый приз
-  LD A,(object_bat_2+$14)
-  DEC A
-  JP Z,generate_new_bonus	; Если уже есть пулемёт на второй каретке, то генерировать новый приз
+	LD A,(game_mode)
+	CP $02
+	JP NZ,L9D5A_10		; Уходим, если не два игрока одновременно
+	LD A,(object_bat_1+$14)
+	DEC A
+	JP Z,generate_new_bonus	; Если уже есть пулемёт на первой каретке, то генерировать новый приз
+	LD A,(object_bat_2+$14)
+	DEC A
+	JP Z,generate_new_bonus	; Если уже есть пулемёт на второй каретке, то генерировать новый приз
 
 ; Обработка всех бонусов
 L9D5A_10:
-  LD A,(HL)			; Берёт код бонуса
-  LD (IX+$14),A			; Помещает код бонуса
-  LD (IX+$01),A			; Помещает код бонуса
-  CALL calc_write_spr_addr
-  EXX
-  POP IY
-  RET
+	LD A,(HL)		; Берёт код бонуса
+	LD (IX+$14),A		; Помещает код бонуса
+	LD (IX+$01),A		; Помещает код бонуса
+	CALL calc_write_spr_addr
+	EXX
+	POP IY
+	RET
 
 ; Текущая таблица ($10 байт), из которой случайно выбирается бонус
 bonus_table_current:
-  DEFB $00,$01,$02,$03,$04,$05,$06,$07
-  DEFB $08,$09,$00,$04,$00,$03,$01,$02
+	DEFB $00,$01,$02,$03,$04,$05,$06,$07
+	DEFB $08,$09,$00,$04,$00,$03,$01,$02
 
-  DEFB $00,$01,$02,$03,$04,$05,$06,$02
-  DEFB $01,$03,$00,$04,$00,$03,$01,$02
+	DEFB $00,$01,$02,$03,$04,$05,$06,$02
+	DEFB $01,$03,$00,$04,$00,$03,$01,$02
 
 ; Таблица бонусов для первых 5-ти раундов (0-5)
 bonus_table_first:
-  DEFB $00,$01,$02,$03,$04,$05,$06,$07
-  DEFB $08,$09,$00,$04,$00,$03,$01,$02
+	DEFB $00,$01,$02,$03,$04,$05,$06,$07
+	DEFB $08,$09,$00,$04,$00,$03,$01,$02
 
-  DEFB $00,$01,$02,$03,$04,$05,$06,$02
-  DEFB $01,$03,$00,$04,$00,$03,$01,$02
+	DEFB $00,$01,$02,$03,$04,$05,$06,$02
+	DEFB $01,$03,$00,$04,$00,$03,$01,$02
 
 ; Таблица бонусов для 6-го и выше раундов (6-F)
 bonus_table_second:
-  DEFB $00,$01,$02,$03,$02,$00,$06,$07
-  DEFB $08,$09,$00,$03,$00,$02,$01,$03
+	DEFB $00,$01,$02,$03,$02,$00,$06,$07
+	DEFB $08,$09,$00,$03,$00,$02,$01,$03
 
-  DEFB $00,$01,$02,$03,$02,$00,$06,$02
-  DEFB $01,$03,$00,$03,$00,$02,$01,$03
+	DEFB $00,$01,$02,$03,$02,$00,$06,$02
+	DEFB $01,$03,$00,$03,$00,$02,$01,$03
 
 ; Used by the routine at game_restart.
 ; Делает необходимые приготовления для вывода врагов на раунде
 enemy_prepare:
-  LD A,(current_level_number_1up)
-  CP $04
-  RET Z		; Возвращаемся, если текущий уровень - 4
+	LD A,(current_level_number_1up)
+	CP $04
+	RET Z			; Возвращаемся, если текущий уровень - 4
 
-  LD A,(object_bat_1+$14)
-  CP $09
-  RET Z
+	LD A,(object_bat_1+$14)
+	CP $09
+	RET Z
 
-  LD A,(object_bat_2+$14)
-  CP $09
-  RET Z
+	LD A,(object_bat_2+$14)
+	CP $09
+	RET Z
 
-  LD A,(briks_quantity_1up)
-  CP $2C
-  RET NC	; Возвращаемся, если осталось 44 и больше кирпичей
+	LD A,(briks_quantity_1up)
+	CP $2C
+	RET NC			; Возвращаемся, если осталось 44 и больше кирпичей
 
-  LD A,(object_enemy)
-  AND A
-  RET NZ	; Возвращаемся, если object_enemy не пустой
+	LD A,(object_enemy)
+	AND A
+	RET NZ			; Возвращаемся, если object_enemy не пустой
 
-  LD HL,object_enemy
-  CALL clear_hl_buff16	; Очищаем object_enemy
-  LD IX,object_enemy
-  LD HL,prop_uneven	; Нечётный раунд
-  LD A,(round_number_1up)
-  RRA
-  JP NC,L9EAA_0
-  LD HL,prop_even	; Чётный раунд
+	LD HL,object_enemy
+	CALL clear_hl_buff16	; Очищаем object_enemy
+	LD IX,object_enemy
+	LD HL,prop_uneven	; Нечётный раунд
+	LD A,(round_number_1up)
+	RRA
+	JP NC,L9EAA_0
+	LD HL,prop_even		; Чётный раунд
 
 ; Заполнение object_enemy данными из нужной таблицы
 L9EAA_0:
-  LD A,(HL)
-  LD (IX+$00),A		; Тип врага: 9 - птица, 8 - UFO
-  LD (IX+$11),$00
-  INC HL
-  LD A,(HL)
-  LD (IX+$12),A
-  INC HL
-  LD A,(HL)
-  LD (IX+$13),A
-  INC HL
-  LD A,(HL)
-  LD (IX+$0C),A		; Ширина в пикселях
-  INC HL
-  LD A,(HL)
-  LD (IX+$0D),A		; Высота в пикселях
-  INC HL
-  LD A,(HL)
-  LD (IX+$07),A		; Скорость движения
-  LD (IX+$01),$00	; Номер спрайта в наборе
-  LD (IX+$04),$00	; Координата Y для печати
+	LD A,(HL)
+	LD (IX+$00),A		; Тип врага: 9 - птица, 8 - UFO
+	LD (IX+$11),$00
+	INC HL
+	LD A,(HL)
+	LD (IX+$12),A
+	INC HL
+	LD A,(HL)
+	LD (IX+$13),A
+	INC HL
+	LD A,(HL)
+	LD (IX+$0C),A		; Ширина в пикселях
+	INC HL
+	LD A,(HL)
+	LD (IX+$0D),A		; Высота в пикселях
+	INC HL
+	LD A,(HL)
+	LD (IX+$07),A		; Скорость движения
+	LD (IX+$01),$00		; Номер спрайта в наборе
+	LD (IX+$04),$00		; Координата Y для печати
 
-  LD A,(random_number)
-  LD HL,prop_x_coord
-  AND $03
-  CALL hl_add_a
-  LD A,(HL)
-  LD (IX+$02),A		; Координата X для печати
-  LD (IX+$06),$10
-  LD (IX+$14),$10
+	LD A,(random_number)
+	LD HL,prop_x_coord
+	AND $03
+	CALL hl_add_a
+	LD A,(HL)
+	LD (IX+$02),A		; Координата X для печати
+	LD (IX+$06),$10
+	LD (IX+$14),$10
 
-  LD HL,$0000
-  LD (LAA7B),HL
-  CALL calc_write_spr_addr
-  RET
+	LD HL,$0000
+	LD (LAA7B),HL
+	CALL calc_write_spr_addr
+	RET
 
 ; Свойство +$02 object_enemy для 4-х раундов подряд
 prop_x_coord:
-  DEFB $40,$A8,$40,$A8
+	DEFB $40,$A8,$40,$A8
 
 ; Некоторые свойства object_enemy
 ;+$00,+$12,+$13,+$0C,+$0D,+$07
 ; Для нечётных раундов
 ; 09 - птица
 prop_uneven:
-  DEFB $09,$F0,$70,$18,$0C,$01
+	DEFB $09,$F0,$70,$18,$0C,$01
 
 ; Для чётных раундов
 ; 08 - UFO
 prop_even:
-  DEFB $08,$60,$90,$18,$10,$01
+	DEFB $08,$60,$90,$18,$10,$01
 
 ; Used by the routine at enemy_prepare.
 ; Очищает $16 байт в буфере HL
 clear_hl_buff16:
-  LD BC,$0016
-  LD B,C
-  JP clear_hl_buff
+	LD BC,$0016
+	LD B,C
+	JP clear_hl_buff
 
 ; Таблица процедур обработки объектов
 ; все процедуры принимают на вход (IXobj)
 handling_table_routines:
-  DEFW handling_bat_stub	; $01 gfx_bat
-  DEFW handling_ball		; $02 gfx_ball
-  DEFW handling_ball		; $03 gfx_screen_elements
-  DEFW handling_bonus		; $04 gfx_bonuses
-  DEFW handling_bullet		; $05 gfx_bullet
-  DEFW handling_rocket		; $06 anim_rocket
-  DEFW handling_spark		; $07 anim_spark
-  DEFW handling_ufo		; $08 anim_ufo
-  DEFW handling_bird		; $09 anim_bird
-  DEFW handling_blast		; $0A anim_alien_blast
-  DEFW handling_400pts		; $0B gfx_last_sprite
+	DEFW handling_bat_stub	; $01 gfx_bat
+	DEFW handling_ball	; $02 gfx_ball
+	DEFW handling_ball	; $03 gfx_screen_elements
+	DEFW handling_bonus	; $04 gfx_bonuses
+	DEFW handling_bullet	; $05 gfx_bullet
+	DEFW handling_rocket	; $06 anim_rocket
+	DEFW handling_spark	; $07 anim_spark
+	DEFW handling_ufo	; $08 anim_ufo
+	DEFW handling_bird	; $09 anim_bird
+	DEFW handling_blast	; $0A anim_alien_blast
+	DEFW handling_400pts	; $0B gfx_last_sprite
 
 ; Обработка объекта
 ; Вход: (IXobj) = адрес объекта
@@ -1930,308 +1943,308 @@ handling_object:
 
 ; Заглушка для обработка каретки. Настоящая обработка ниже.
 handling_bat_stub:
-  RET
+	RET
 
 ; Used by the routine at game_restart.
 ; Реальная обработка текущего состояния каретки
 ; Вход: (IXobj) = адрес объекта
 handling_bat:
-  LD A,(object_bat_temp+$06)	; направление
-  CP $1C
-  LD A,$00
-  JP Z,zero_direction
-  LD A,$05
+	LD A,(object_bat_temp+$06)	; направление
+	CP $1C
+	LD A,$00
+	JP Z,zero_direction
+	LD A,$05
 zero_direction:
-  LD (objs_width_sum),A	; Записываем $00 или $05, в зависимости от направления
+	LD (objs_width_sum),A	; Записываем $00 или $05, в зависимости от направления
 
 	ld IX,(IXobj)
 ; На какой стороне всё происходит?
-  LD A,(IX+$02)	; Координата X биты
-  AND $80
-  LD (need_change_player),A	; Если координата X меньше 128, то будет 0
+	LD A,(IX+$02)		; Координата X биты
+	AND $80
+	LD (need_change_player),A	; Если координата X меньше 128, то будет 0
 
 ; Обработка нажатия клавиш и изменение координат каретки
-  LD A,(ctrl_btns_pressed)
-  ld C,A
-  BIT 1,C		; Нажато Влево
-  LD A,(IX+$02)	; Координата X биты
-  JP Z,moving_right
-  SUB $04		; Уменьшаем координату Х на 4
+	LD A,(ctrl_btns_pressed)
+	ld C,A
+	BIT 1,C			; Нажато Влево
+	LD A,(IX+$02)		; Координата X биты
+	JP Z,moving_right
+	SUB $04			; Уменьшаем координату Х на 4
 moving_right:
-  BIT 0,C		; Нажато Вправо
-  JP Z,moving_left
-  ADD A,$04		; Увеличиваем координату Х на 4
+	BIT 0,C			; Нажато Вправо
+	JP Z,moving_left
+	ADD A,$04		; Увеличиваем координату Х на 4
 moving_left:
-  LD (IX+$02),A	; Обновляем координату X каретки
+	LD (IX+$02),A		; Обновляем координату X каретки
 
 ; Проверка и убийство врага
-  CALL kill_enemy_by_bat
+	CALL kill_enemy_by_bat
 
 ; Требуется ли изменение размеров каретки?
-  LD A,(IX+$15)
-  CP $41			; %0100 0001
-  JP Z,handling_bat_no_transform
-  CP $61			; %0110 0001
-  JP Z,handling_bat_no_transform
-  AND $C1
-  CP $80			; %1000 0000 - Обычная каретка
-  JP Z,handling_bat_no_transform
-  CP $81			; %1000 0001 - Широкая каретка
-  JP Z,handling_bat_no_transform
+	LD A,(IX+$15)
+	CP $41			; %0100 0001
+	JP Z,handling_bat_no_transform
+	CP $61			; %0110 0001
+	JP Z,handling_bat_no_transform
+	AND $C1
+	CP $80			; %1000 0000 - Обычная каретка
+	JP Z,handling_bat_no_transform
+	CP $81			; %1000 0001 - Широкая каретка
+	JP Z,handling_bat_no_transform
 
-  LD B,A
-  AND $40			; BIT6 %0100 0000
-  JP NZ,bat_resize	; переход, если каретка в процессе уменьшения
+	LD B,A
+	AND $40			; BIT6 %0100 0000
+	JP NZ,bat_resize	; переход, если каретка в процессе уменьшения
 
-  LD A,(bonus_flag)
-  RLA
-  JP C,handling_bat_no_transform		; Переходим, если пулемёт
+	LD A,(bonus_flag)
+	RLA
+	JP C,handling_bat_no_transform		; Переходим, если пулемёт
 
 bat_resize:
-  LD (IX+$01),$02	; номер спрайта в наборе объекта - spr_bat_normal_shift
-  LD (IX+$08),$03	; ширина спрайта с тенью в байтах
-  LD A,$01
-  LD (object_bat_temp),A	; gfx_bat
-  LD A,(counter_misc)
-  LD E,A
-  LD A,B
-  AND $40
-  JP NZ,bat_decrease_size		; Переход, если в процессе уменьшения
+	LD (IX+$01),$02	; номер спрайта в наборе объекта - spr_bat_normal_shift
+	LD (IX+$08),$03	; ширина спрайта с тенью в байтах
+	LD A,$01
+	LD (object_bat_temp),A	; gfx_bat
+	LD A,(counter_misc)
+	LD E,A
+	LD A,B
+	AND $40
+	JP NZ,bat_decrease_size		; Переход, если в процессе уменьшения
 
 ; Каретка находится в процессе увеличения
-  BIT 0,E			; BIT0 счётчика
-  JP Z,no_x_decrease
-  DEC (IX+$02)		; Уменьшаем координату Х каретки
+	BIT 0,E			; BIT0 счётчика
+	JP Z,no_x_decrease
+	DEC (IX+$02)		; Уменьшаем координату Х каретки
 no_x_decrease:
-  CALL check_margins
-  LD A,(IX+$15)
-  LD B,A
-  AND $1E
-  ADD A,(IX+$02)
-  ADD A,$08
-  LD (object_bat_temp+$02),A
-  RR E
-  RET C
+	CALL check_margins
+	LD A,(IX+$15)
+	LD B,A
+	AND $1E
+	ADD A,(IX+$02)
+	ADD A,$08
+	LD (object_bat_temp+$02),A
+	RR E
+	RET C
 ; Увеличиваем ширину каретки на 2 пикселя
-  INC (IX+$0C)		; ширина объекта без тени в пикселях
-  INC (IX+$0C)		; ширина объекта без тени в пикселях
-  LD A,B			; в В(IX+$15)
-  ADD A,$02
-  OR $20			; Устанавливаем признак увеличения каретки
-  CP $30
-  JP Z,bat_increase_size_ready		; Если достигли предела увеличения, то переход
-  LD (IX+$15),A
-  RET
+	INC (IX+$0C)		; ширина объекта без тени в пикселях
+	INC (IX+$0C)		; ширина объекта без тени в пикселях
+	LD A,B			; в В(IX+$15)
+	ADD A,$02
+	OR $20			; Устанавливаем признак увеличения каретки
+	CP $30
+	JP Z,bat_increase_size_ready		; Если достигли предела увеличения, то переход
+	LD (IX+$15),A
+	RET
 bat_increase_size_ready:
-  LD (IX+$15),$81	; Каретка расширена
-  LD (IX+$0C),$2C	; Ширина объекта без тени в пикселях
-  JP bat_resize_ready
+	LD (IX+$15),$81	; Каретка расширена
+	LD (IX+$0C),$2C	; Ширина объекта без тени в пикселях
+	JP bat_resize_ready
 
 ; Каретка находится в процессе уменьшения
 bat_decrease_size:
-  BIT 0,E			; BIT0 счётчика
-  JP Z,no_x_increase
-  INC (IX+$02)		; Увеличиваем координату Х каретки
+	BIT 0,E			; BIT0 счётчика
+	JP Z,no_x_increase
+	INC (IX+$02)		; Увеличиваем координату Х каретки
 no_x_increase:
-  CALL check_margins
-  LD A,(IX+$15)
-  AND $3E
-  LD B,A
-  ADD A,(IX+$02)
-  ADD A,$08
-  LD (object_bat_temp+$02),A
-  RR E
-  RET C
-  DEC (IX+$0C)		; ширина объекта без тени в пикселях
-  DEC (IX+$0C)		; ширина объекта без тени в пикселях
-  LD A,B
-  SUB $02
-  JP C,bat_decrease_size_ready		; Если достигли предела уменьшения, то переход
-  OR $40
-  LD (IX+$15),A
-  RET
+	CALL check_margins
+	LD A,(IX+$15)
+	AND $3E
+	LD B,A
+	ADD A,(IX+$02)
+	ADD A,$08
+	LD (object_bat_temp+$02),A
+	RR E
+	RET C
+	DEC (IX+$0C)		; ширина объекта без тени в пикселях
+	DEC (IX+$0C)		; ширина объекта без тени в пикселях
+	LD A,B
+	SUB $02
+	JP C,bat_decrease_size_ready	; Если достигли предела уменьшения, то переход
+	OR $40
+	LD (IX+$15),A
+	RET
 bat_decrease_size_ready:
-  LD (IX+$0C),$1C	; ширина объекта без тени в пикселях
-  LD (IX+$15),$80	; Обычная каретка
+	LD (IX+$0C),$1C		; ширина объекта без тени в пикселях
+	LD (IX+$15),$80		; Обычная каретка
 
 bat_resize_ready:
-  LD A,(object_bat_temp)
-  OR $80
-  LD (object_bat_temp),A
+	LD A,(object_bat_temp)
+	OR $80
+	LD (object_bat_temp),A
 
-  LD A,(IX+$02)
-  INC A
-  AND $FC
-  LD (IX+$02),A		; Увеличиваем координату Х, но не больше $FC (252)
-  RRA
-  RRA
-  AND $01
-  LD B,A			; BIT2 координаты X - нужен сдвиг или нет
-  LD A,(IX+$15)
-  AND $01			; Широкая каретка или нет
+	LD A,(IX+$02)
+	INC A
+	AND $FC
+	LD (IX+$02),A		; Увеличиваем координату Х, но не больше $FC (252)
+	RRA
+	RRA
+	AND $01
+	LD B,A			; BIT2 координаты X - нужен сдвиг или нет
+	LD A,(IX+$15)
+	AND $01			; Широкая каретка или нет
 
-  ADD A,A			; 0 (2)
-  LD C,A
-  ADD A,A			; 0 (4)
-  ADD A,B			; 0(1) 4(5)
-  LD (IX+$01),A		; номер спрайта в наборе объекта (0-1, 4-5)
-  LD A,$04
-  ADD A,C			;4 (6)
-  LD (IX+$08),A		; ширина спрайта с тенью в байтах (4 или 6)
-  RET
+	ADD A,A			; 0 (2)
+	LD C,A
+	ADD A,A			; 0 (4)
+	ADD A,B			; 0(1) 4(5)
+	LD (IX+$01),A		; номер спрайта в наборе объекта (0-1, 4-5)
+	LD A,$04
+	ADD A,C			; 4 (6)
+	LD (IX+$08),A		; ширина спрайта с тенью в байтах (4 или 6)
+	RET
 
 ; Обработка каретки, когда не требуется её трансформация
 handling_bat_no_transform:
-  CALL check_left_margin
-  CALL check_right_margin
-  LD A,(bonus_flag)
-  AND A
-  JP Z,no_bonus
+	CALL check_left_margin
+	CALL check_right_margin
+	LD A,(bonus_flag)
+	AND A
+	JP Z,no_bonus
 
-  push AF
-  CALL check_right_margin
-  pop AF
+	push AF
+	CALL check_right_margin
+	pop AF
 
-  BIT 6,A		; BIT6 bonus_flag
-  JP Z,no_bit6
+	BIT 6,A			; BIT6 bonus_flag
+	JP Z,no_bit6
 
-  LD A,(counter_misc)
-  RRA
-  CALL C,LAAD2
+	LD A,(counter_misc)
+	RRA
+	CALL C,LAAD2
 
-  LD IY,(iy_storage)
-  LD DE,$01C8
-  CALL sound_beep_cont_d
-  ; DI
+	LD IY,(iy_storage)
+	LD DE,$01C8
+	CALL sound_beep_cont_d
+	; DI
 
-  LD A,(bonus_flag)
-  RLA
-  LD A,(IX+$01)
-  JP NC,no_bit7_1		; Переход, если BIT7 bonus_flag = 0
-  AND A
-  RET NZ
-  JP check_bat_increase_size
+	LD A,(bonus_flag)
+	RLA
+	LD A,(IX+$01)
+	JP NC,no_bit7_1		; Переход, если BIT7 bonus_flag = 0
+	AND A
+	RET NZ
+	JP check_bat_increase_size
 no_bit7_1:
-  SUB $0A
-  RET NZ
+	SUB $0A
+	RET NZ
 
 check_bat_increase_size:
-  BIT 5,(IX+$15)
-  JP Z,normal_bat		; Переход, если каретка не в процессе расширения
-  LD (bonus_flag),A
-  LD (IX+$15),$22		; Каретка в процессе расширения
-  RET
+	BIT 5,(IX+$15)
+	JP Z,normal_bat		; Переход, если каретка не в процессе расширения
+	LD (bonus_flag),A
+	LD (IX+$15),$22		; Каретка в процессе расширения
+	RET
 
 normal_bat:
-  LD (IX+$15),$80		; Обычная каретка
-  LD (bonus_flag),A
-  JP no_bonus
+	LD (IX+$15),$80		; Обычная каретка
+	LD (bonus_flag),A
+	JP no_bonus
 
 no_bit6:
-  RES 7,(IX+$15)		; Каретка в процессе трансформации
-  SET 0,(IX+$15)		; Широкая каретка
-  RES 1,(IX+$15)		; Каретка не в процессе расширения
-  SET 6,(IX+$15)		; Каретка в процессе уменьшения
-  RLA
-  JP NC,no_bit7_2
-  LD (IX+$01),$0C		; spr_bat_normal_shift
-  LD (IX+$13),$F0
-  LD A,$C0
-  LD (bonus_flag),A
-  RET
+	RES 7,(IX+$15)		; Каретка в процессе трансформации
+	SET 0,(IX+$15)		; Широкая каретка
+	RES 1,(IX+$15)		; Каретка не в процессе расширения
+	SET 6,(IX+$15)		; Каретка в процессе уменьшения
+	RLA
+	JP NC,no_bit7_2
+	LD (IX+$01),$0C		; spr_bat_normal_shift
+	LD (IX+$13),$F0
+	LD A,$C0
+	LD (bonus_flag),A
+	RET
 
 no_bit7_2:
-  LD (IX+$13),$AA
-  LD (IX+$01),$06		; spr_bat_gun_1
-  LD A,$41
-  LD (bonus_flag),A
-  RET
+	LD (IX+$13),$AA
+	LD (IX+$01),$06		; spr_bat_gun_1
+	LD A,$41
+	LD (bonus_flag),A
+	RET
 
 no_bonus:
-  LD A,(IX+$02)			; координата Х объекта
-  RRA
-  RRA
-  AND $01
-  LD B,A				; BIT2 координаты Х (сдвинута каретка или нет)
-  LD A,(IX+$15)
-  AND $01				; BIT0
-  ADD A,A
-  ADD A,A
-  ADD A,B
-  LD (IX+$01),A			; номер спрайта каретки (0-1,4-5)
+	LD A,(IX+$02)			; координата Х объекта
+	RRA
+	RRA
+	AND $01
+	LD B,A				; BIT2 координаты Х (сдвинута каретка или нет)
+	LD A,(IX+$15)
+	AND $01				; BIT0
+	ADD A,A
+	ADD A,A
+	ADD A,B
+	LD (IX+$01),A			; номер спрайта каретки (0-1,4-5)
 
-  LD A,(IX+$14)
-  DEC A
-  RET NZ				; Возвращаемся, если бонус не пулемёт
+	LD A,(IX+$14)
+	DEC A
+	RET NZ				; Возвращаемся, если бонус не пулемёт
 
 ; Обработка каретки с пулемётом
-  LD A,(IX+$01)
-  ADD A,$0A
-  LD (IX+$01),A			; Заменяем обычную каретку на соответствующую каретку с пулемётом
+	LD A,(IX+$01)
+	ADD A,$0A
+	LD (IX+$01),A			; Заменяем обычную каретку на соответствующую каретку с пулемётом
 
 ; Обработка выстрела
-  LD A,(bullet)
-  SUB $02
-  JP C,free_bullet_1
-  LD (bullet),A
-  RET
+	LD A,(bullet)
+	SUB $02
+	JP C,free_bullet_1
+	LD (bullet),A
+	RET
 free_bullet_1:
-  LD A,(ctrl_btns_pressed)
-  AND $10
-  RET Z
+	LD A,(ctrl_btns_pressed)
+	AND $10
+	RET Z
 ; Нажат Огонь
-  LD IY,object_bullet_1
-  LD A,(object_bullet_1)
-  AND A
-  JP Z,free_bullet_2
-  LD IY,object_bullet_2
-  LD A,(object_bullet_2)
-  AND A
-  RET NZ
+	LD IY,object_bullet_1
+	LD A,(object_bullet_1)
+	AND A
+	JP Z,free_bullet_2
+	LD IY,object_bullet_2
+	LD A,(object_bullet_2)
+	AND A
+	RET NZ
 ; Включаем пулю, если хотя бы одна из двух пуль свободна
 free_bullet_2:
-  LD (IY+$00),$05		; gfx_bullet
-  LD (IY+$01),$00		; spr_bullet_1
-  LD (IY+$09),$08		; высота спрайта с тенью в пикселях
-  LD A,(IX+$02)			; координата Х каретки
-  ADD A,$0C
-  LD (IY+$02),A			; Плюс 12 пикселей к X-координате каретки
-  LD (IY+$04),$AC		; 192 - координата Y объекта
-  LD (IY+$11),$00
-  LD (IY+$15),$00
+	LD (IY+$00),$05		; gfx_bullet
+	LD (IY+$01),$00		; spr_bullet_1
+	LD (IY+$09),$08		; высота спрайта с тенью в пикселях
+	LD A,(IX+$02)			; координата Х каретки
+	ADD A,$0C
+	LD (IY+$02),A			; Плюс 12 пикселей к X-координате каретки
+	LD (IY+$04),$AC		; 192 - координата Y объекта
+	LD (IY+$11),$00
+	LD (IY+$15),$00
 
-  LD A,(bullet)
-  CPL
-  AND $01
-  ADD A,$16
-  LD (bullet),A
+	LD A,(bullet)
+	CPL
+	AND $01
+	ADD A,$16
+	LD (bullet),A
 
-  push HL
-  CALL get_free_sound_slot
-  ld (HL),sound_shot
-  inc HL
-  ld (HL),$02
-  pop HL
+	push HL
+	CALL get_free_sound_slot
+	ld (HL),sound_shot
+	inc HL
+	ld (HL),$02
+	pop HL
 
-  RET
+	RET
 
 ; Счётчик активных пуль?
 bullet:
-  DEFB $00
+	DEFB $00
 
 ; Used by the routine at game_restart.
 ; Опрос управления левого игрока
 get_left_player_ctrl_state:
-  LD A,(game_mode)
-  CP $02
-  JP NZ,get_control_state_1up	; Переходим на стандартный опрос, если не два игрока одновременно
-  LD A,(ctrl_type_1up)
-  AND A
-  JP NZ,get_control_state_1up	; Переходим на стандартный опрос, если у первого игрока не клавиатура
-  LD A,(ctrl_type_2up)
-  AND A
-  JP NZ,get_control_state_1up	; Переходим на стандартный опрос, если у второго игрока не клавиатура
-  ; Опрос клавиатуры для двух игроков одновременно
+	LD A,(game_mode)
+	CP $02
+	JP NZ,get_control_state_1up	; Переходим на стандартный опрос, если не два игрока одновременно
+	LD A,(ctrl_type_1up)
+	AND A
+	JP NZ,get_control_state_1up	; Переходим на стандартный опрос, если у первого игрока не клавиатура
+	LD A,(ctrl_type_2up)
+	AND A
+	JP NZ,get_control_state_1up	; Переходим на стандартный опрос, если у второго игрока не клавиатура
+	; Опрос клавиатуры для двух игроков одновременно
 ;  LD C,A		; Обнуляем С
 ;
 ;		ld a,#82
@@ -2274,24 +2287,24 @@ get_left_player_ctrl_state:
 ;		ld c,a
 
 LA161_2:
-  LD A,C
-  call read_keyboard
-  LD (ctrl_btns_pressed),A
-  RET
+	LD A,C
+	call read_keyboard
+	LD (ctrl_btns_pressed),A
+	RET
 
 ; Used by the routine at game_restart.
 ; Опрос управления правого игрока
 get_right_player_ctrl_state:
-  AND A
-  JP NZ,get_control_state	; Уходим, если у второго игрока не клавиатура
-  LD A,(game_mode)
-  CP $02
-  LD A,(ctrl_type_2up)
-  JP NZ,get_control_state	; Уходим, если не два игрока одновременно
-  LD A,(ctrl_type_1up)
-  AND A
-  LD A,(ctrl_type_2up)
-  JP NZ,get_control_state	; Уходим, если у второго игрока не клавиатура
+	AND A
+	JP NZ,get_control_state	; Уходим, если у второго игрока не клавиатура
+	LD A,(game_mode)
+	CP $02
+	LD A,(ctrl_type_2up)
+	JP NZ,get_control_state	; Уходим, если не два игрока одновременно
+	LD A,(ctrl_type_1up)
+	AND A
+	LD A,(ctrl_type_2up)
+	JP NZ,get_control_state	; Уходим, если у второго игрока не клавиатура
 ;  LD C,A
 ;
 ;		ld a,#82
@@ -2334,24 +2347,24 @@ get_right_player_ctrl_state:
 ;		ld c,a
 
 LA19E_2:
-  LD A,C
-  call read_keyboard
-  LD (ctrl_btns_pressed),A
-  RET
+	LD A,C
+	call read_keyboard
+	LD (ctrl_btns_pressed),A
+	RET
 
 ; Used by the routines at input_new_record_name and get_left_player_ctrl_state.
 ; Опрос управления первого игрока
 get_control_state_1up:
-  LD A,(ctrl_type_1up)
+	LD A,(ctrl_type_1up)
 ; This entry point is used by the routine at get_right_player_ctrl_state.
 ; Опрос управления
 get_control_state:
-  AND A
-  JP Z,keyboard_ctrl
-  DEC A
-  JP Z,kempston_ctrl
-  DEC A
-  JP Z,cursor_ctrl
+	AND A
+	JP Z,keyboard_ctrl
+	DEC A
+	JP Z,kempston_ctrl
+	DEC A
+	JP Z,cursor_ctrl
 
 interface_ii_ctrl:
 ;		xor a
@@ -2419,8 +2432,8 @@ cursor_ctrl:
   JP LA1DB_71
 
 kempston_ctrl:
-  ; Заглушка для Kempston джойстика
-  JP LA1DB_71
+	; Заглушка для Kempston джойстика
+	JP LA1DB_71
 
 keyboard_ctrl:
 ;		ld c,a					; Обунляем С
@@ -2478,426 +2491,426 @@ LA1DB_7:
 ;  LD A,C
   ;ld a,$10 ;DEBUG
 LA1DB_71:
-  call read_keyboard
-  LD (ctrl_btns_pressed),A
-  RET
+	call read_keyboard
+	LD (ctrl_btns_pressed),A
+	RET
 
 LA270:
-  DEFB $00,$00,$00,$00
+	DEFB $00,$00,$00,$00
 LA274:
-  DEFB $00,$00,$00,$00
+	DEFB $00,$00,$00,$00
 LA278:
-  DEFB $00,$00,$00,$00
+	DEFB $00,$00,$00,$00
 LA27C:
-  DEFB $00,$00
+	DEFB $00,$00
 
 ; Обработка шарика
 handling_ball:
 	ld IX,(IXobj)
-  LD A,(IX+$12)
-  AND $80
-  LD (need_change_player),A
-  LD A,(counter_2)
-  INC A
-  LD (counter_2),A
-  LD (LA7A6+$02),IX
-  PUSH IX
-  POP DE
-  LD BC,LA270
-  LD HL,object_ball_1
-  AND A
-  CALL SBCHLDE8080	; SBC HL,DE
-  JP Z,LA27E_0
-  LD BC,LA274
-  LD HL,object_ball_2
-  AND A
-  CALL SBCHLDE8080	; SBC HL,DE
-  JP Z,LA27E_0
-  LD BC,LA278
+	LD A,(IX+$12)
+	AND $80
+	LD (need_change_player),A
+	LD A,(counter_2)
+	INC A
+	LD (counter_2),A
+	LD (LA7A6+$02),IX
+	PUSH IX
+	POP DE
+	LD BC,LA270
+	LD HL,object_ball_1
+	AND A
+	CALL SBCHLDE8080	; SBC HL,DE
+	JP Z,LA27E_0
+	LD BC,LA274
+	LD HL,object_ball_2
+	AND A
+	CALL SBCHLDE8080	; SBC HL,DE
+	JP Z,LA27E_0
+	LD BC,LA278
 LA27E_0:
-  LD L,C
-  LD H,B
+	LD L,C
+	LD H,B
 	ld (LA27C),HL
-  LD A,(HL)
-  AND A
-  JP Z,LA27E_1
-  DEC (HL)
-  JP LA27E_12
+	LD A,(HL)
+	AND A
+	JP Z,LA27E_1
+	DEC (HL)
+	JP LA27E_12
 LA27E_1:
-  INC HL
-  LD A,(HL)
-  AND A
-  JP Z,LA27E_6
-  ADD A,(IX+$06)
-  AND $3F
-  LD (IX+$06),A
-  INC HL
-  LD B,A
-  ADD A,$02
-  AND $3C
-  LD (HL),A
-  AND $0F
-  JP NZ,LA27E_4
-  LD A,B
-  AND $0C
-  LD A,(HL)
-  JP NZ,LA27E_2
-  ADD A,$04
-  JP LA27E_3
+	INC HL
+	LD A,(HL)
+	AND A
+	JP Z,LA27E_6
+	ADD A,(IX+$06)
+	AND $3F
+	LD (IX+$06),A
+	INC HL
+	LD B,A
+	ADD A,$02
+	AND $3C
+	LD (HL),A
+	AND $0F
+	JP NZ,LA27E_4
+	LD A,B
+	AND $0C
+	LD A,(HL)
+	JP NZ,LA27E_2
+	ADD A,$04
+	JP LA27E_3
 LA27E_2:
-  SUB $04
+	SUB $04
 LA27E_3:
-  AND $3F
-  LD (HL),A
+	AND $3F
+	LD (HL),A
 LA27E_4:
-  LD C,(HL)
-  INC HL
-  LD A,(HL)
-  EXX
-  LD HL,magnet_properties
-  CALL hl_add_a
-  PUSH HL
-  POP IY
-  BIT 0,(IY+$01)
-  JP NZ,LA27E_5
-  CALL obj_compare
-  JP NC,LA27E_5
-  EXX
-  PUSH BC
-  CALL LAD69
-  CALL check_margins
-  LD E,(IX+$06)
-  POP BC
-  PUSH DE
-  LD (IX+$06),C
-  PUSH BC
-  CALL LA27E_24
-  POP BC
-  LD A,(IX+$06)
-  CP C
-  POP DE
-  RET NZ
-  LD (IX+$06),E
-  RET
+	LD C,(HL)
+	INC HL
+	LD A,(HL)
+	EXX
+	LD HL,magnet_properties
+	CALL hl_add_a
+	PUSH HL
+	POP IY
+	BIT 0,(IY+$01)
+	JP NZ,LA27E_5
+	CALL obj_compare
+	JP NC,LA27E_5
+	EXX
+	PUSH BC
+	CALL LAD69
+	CALL check_margins
+	LD E,(IX+$06)
+	POP BC
+	PUSH DE
+	LD (IX+$06),C
+	PUSH BC
+	CALL LA27E_24
+	POP BC
+	LD A,(IX+$06)
+	CP C
+	POP DE
+	RET NZ
+	LD (IX+$06),E
+	RET
 LA27E_5:
-  LD HL,(LA27C)
-  LD (HL),$02
-  INC HL
-  LD (HL),$00
-  EXX
-  LD (IX+$06),C
-  JP LA27E_23
+	LD HL,(LA27C)
+	LD (HL),$02
+	INC HL
+	LD (HL),$00
+	EXX
+	LD (IX+$06),C
+	JP LA27E_23
 LA27E_6:
-  LD A,(magnets_quantity)
-  AND A
-  JP Z,LA27E_12
-  LD B,A
-  LD IY,magnet_properties
+	LD A,(magnets_quantity)
+	AND A
+	JP Z,LA27E_12
+	LD B,A
+	LD IY,magnet_properties
 LA27E_7:
-  BIT 0,(IY+$01)
-  JP NZ,LA27E_8
-  PUSH BC
-  CALL obj_compare
-  POP BC
-  JP C,LA27E_9
+	BIT 0,(IY+$01)
+	JP NZ,LA27E_8
+	PUSH BC
+	CALL obj_compare
+	POP BC
+	JP C,LA27E_9
 LA27E_8:
-  LD DE,$0010
-  ADD IY,DE
-  dec B
-  jp nz,LA27E_7
-  JP LA27E_12
+	LD DE,$0010
+	ADD IY,DE
+	dec B
+	jp nz,LA27E_7
+	JP LA27E_12
 LA27E_9:
-  PUSH IY
-  POP HL
-  LD DE,magnet_properties
-  AND A
-  CALL SBCHLDE8080	; SBC HL,DE
-  LD E,L
-  LD HL,(LA27C)
-  LD (HL),$00
-  INC HL
-  LD B,$00
-  LD A,(IX+$06)
-  ADD A,$10
-  AND $3F
-  CP $20
-  JP C,LA27E_10
-  LD B,$FE
+	PUSH IY
+	POP HL
+	LD DE,magnet_properties
+	AND A
+	CALL SBCHLDE8080	; SBC HL,DE
+	LD E,L
+	LD HL,(LA27C)
+	LD (HL),$00
+	INC HL
+	LD B,$00
+	LD A,(IX+$06)
+	ADD A,$10
+	AND $3F
+	CP $20
+	JP C,LA27E_10
+	LD B,$FE
 LA27E_10:
-  LD C,$FF
-  LD A,(IY+$04)
-  ADD A,$04
-  CP (IX+$04)
-  JP C,LA27E_11
-  LD A,B
-  XOR $FE
-  LD B,A
+	LD C,$FF
+	LD A,(IY+$04)
+	ADD A,$04
+	CP (IX+$04)
+	JP C,LA27E_11
+	LD A,B
+	XOR $FE
+	LD B,A
 LA27E_11:
-  LD A,C
-  XOR B
-  LD (HL),A
-  INC HL
-  INC HL
-  LD (HL),E
+	LD A,C
+	XOR B
+	LD (HL),A
+	INC HL
+	INC HL
+	LD (HL),E
 LA27E_12:
-  LD A,(IX+$14)
-  AND A
-  JP Z,LA27E_20
-  DEC A
-  LD (IX+$14),A
-  JP Z,LA27E_15
-  LD A,(game_mode)
-  CP $02
-  JP NZ,LA27E_13
-  LD A,(IX+$02)
-  CP $88
-  JP NC,LA27E_18
-  CP $80
-  JP C,LA27E_13
-  LD A,(IX+$15)
-  AND $7F
-  CP $0A
-  JP C,LA27E_18
+	LD A,(IX+$14)
+	AND A
+	JP Z,LA27E_20
+	DEC A
+	LD (IX+$14),A
+	JP Z,LA27E_15
+	LD A,(game_mode)
+	CP $02
+	JP NZ,LA27E_13
+	LD A,(IX+$02)
+	CP $88
+	JP NC,LA27E_18
+	CP $80
+	JP C,LA27E_13
+	LD A,(IX+$15)
+	AND $7F
+	CP $0A
+	JP C,LA27E_18
 LA27E_13:
-  LD A,(ctrl_btns_pressed)
-  AND $10
-  JP NZ,LA27E_15	; Нажат ОГОНЬ
-  LD A,(object_bat_1+$14)
-  AND $7F
-  CP $03
-  JP NZ,LA27E_15
-  LD A,(object_bat_1+$02)
+	LD A,(ctrl_btns_pressed)
+	AND $10
+	JP NZ,LA27E_15	; Нажат ОГОНЬ
+	LD A,(object_bat_1+$14)
+	AND $7F
+	CP $03
+	JP NZ,LA27E_15
+	LD A,(object_bat_1+$02)
 LA27E_14:
-  LD B,A
-  LD A,(IX+$15)
-  AND $7F
-  ADD A,B
-  LD (IX+$02),A
-  LD (IX+$04),$A7
-  CALL check_margins
-  JP LA27E_25
+	LD B,A
+	LD A,(IX+$15)
+	AND $7F
+	ADD A,B
+	LD (IX+$02),A
+	LD (IX+$04),$A7
+	CALL check_margins
+	JP LA27E_25
 LA27E_15:
-  LD (IX+$14),$00
-  LD (IX+$04),$A9
-  LD A,(object_bat_1+$14)
-  RLA
-  JP NC,LA27E_16
-  LD A,$FF
-  LD (object_bat_1+$14),A
+	LD (IX+$14),$00
+	LD (IX+$04),$A9
+	LD A,(object_bat_1+$14)
+	RLA
+	JP NC,LA27E_16
+	LD A,$FF
+	LD (object_bat_1+$14),A
 LA27E_16:
-  LD A,(IX+$15)
-  AND $7F
-  ADD A,$24
-  CP $30
-  JP NZ,LA27E_17
-  LD A,$34
+	LD A,(IX+$15)
+	AND $7F
+	ADD A,$24
+	CP $30
+	JP NZ,LA27E_17
+	LD A,$34
 LA27E_17:
-  LD (IX+$06),A
-  LD A,(IX+$15)
-  AND $80
-  LD (IX+$15),A
-  LD (IX+$04),$A6
-  LD A,(IX+$12)
-  AND $80
-  LD (IX+$12),A
-  push HL
-  CALL get_free_sound_slot
-  ld (HL),sound_ball_start
-  inc HL
-  ld (HL),$02
-  pop HL
-  JP LA27E_25
+	LD (IX+$06),A
+	LD A,(IX+$15)
+	AND $80
+	LD (IX+$15),A
+	LD (IX+$04),$A6
+	LD A,(IX+$12)
+	AND $80
+	LD (IX+$12),A
+	push HL
+	CALL get_free_sound_slot
+	ld (HL),sound_ball_start
+	inc HL
+	ld (HL),$02
+	pop HL
+	JP LA27E_25
 LA27E_18:
-  LD A,(ctrl_btns_pressed_copy)
-  AND $10
-  JP NZ,LA27E_19
-  LD A,(object_bat_2+$14)
-  AND $7F
-  CP $03
-  JP NZ,LA27E_19
-  LD A,(object_bat_2+$02)
-  JP LA27E_14
+	LD A,(ctrl_btns_pressed_copy)
+	AND $10
+	JP NZ,LA27E_19
+	LD A,(object_bat_2+$14)
+	AND $7F
+	CP $03
+	JP NZ,LA27E_19
+	LD A,(object_bat_2+$02)
+	JP LA27E_14
 LA27E_19:
-  LD (IX+$14),$00
-  LD (IX+$04),$A9
-  LD A,(object_bat_2+$14)
-  RLA
-  JP NC,LA27E_16
-  LD A,$FF
-  LD (object_bat_2+$14),A
-  JP LA27E_16
+	LD (IX+$14),$00
+	LD (IX+$04),$A9
+	LD A,(object_bat_2+$14)
+	RLA
+	JP NC,LA27E_16
+	LD A,$FF
+	LD (object_bat_2+$14),A
+	JP LA27E_16
 LA27E_20:
-  LD A,(counter_misc)
-  LD C,A
-  AND $03
-  JP NZ,LA27E_23
-  LD A,(IX+$12)
-  INC A
-  LD (IX+$12),A
-  AND $7F
-  CP $7F
-  JP NZ,LA27E_22
-  LD A,(IX+$12)
-  AND $80
-  LD (IX+$12),A
-  LD A,(IX+$06)
-  ADD A,$04
-  AND $0F
-  JP NZ,LA27E_21
-  LD A,$04
+	LD A,(counter_misc)
+	LD C,A
+	AND $03
+	JP NZ,LA27E_23
+	LD A,(IX+$12)
+	INC A
+	LD (IX+$12),A
+	AND $7F
+	CP $7F
+	JP NZ,LA27E_22
+	LD A,(IX+$12)
+	AND $80
+	LD (IX+$12),A
+	LD A,(IX+$06)
+	ADD A,$04
+	AND $0F
+	JP NZ,LA27E_21
+	LD A,$04
 LA27E_21:
-  LD B,A
-  LD A,(IX+$06)
-  AND $30
-  OR B
-  LD (IX+$06),A
+	LD B,A
+	LD A,(IX+$06)
+	AND $30
+	OR B
+	LD (IX+$06),A
 LA27E_22:
-  LD A,C
-  AND $07
-  JP NZ,LA27E_23
-  INC (IX+$13)
-  LD A,(IX+$13)
-  SUB $94
-  JP NZ,LA27E_23
-  LD (IX+$13),A
+	LD A,C
+	AND $07
+	JP NZ,LA27E_23
+	INC (IX+$13)
+	LD A,(IX+$13)
+	SUB $94
+	JP NZ,LA27E_23
+	LD (IX+$13),A
 
-  LD A,(IX+$07)		; Увеличение скорости. Max - $06
-  CP $06
-  JP Z,LA27E_23
-  INC A
-  LD (IX+$07),A
+	LD A,(IX+$07)		; Увеличение скорости. Max - $06
+	CP $06
+	JP Z,LA27E_23
+	INC A
+	LD (IX+$07),A
 
 LA27E_23:
-  CALL LAD69
-  LD E,(IX+$06)
-  CALL bounce_wall
-  LD A,(IX+$06)
-  CP E
-  CALL NZ,set_sound_bat_beat
+	CALL LAD69
+	LD E,(IX+$06)
+	CALL bounce_wall
+	LD A,(IX+$06)
+	CP E
+	CALL NZ,set_sound_bat_beat
 LA27E_24:
-  CALL LAB1F
-  CALL LAFFC
-  CALL kill_enemy_by_bat
+	CALL LAB1F
+	CALL LAFFC
+	CALL kill_enemy_by_bat
 LA27E_25:
-  SET 7,(IX+$15)
-  LD A,(IX+$02)
-  AND $07
-  LD (IX+$01),A
-  LD A,(IX+$04)
-  CP $C0
-  RET C
-  LD HL,(LA27C)
-  LD (HL),$00
-  INC HL
-  LD (HL),$00
-  SET 7,(IX+$00)
-  LD A,(balls_quantity)
-  DEC A
-  LD (balls_quantity),A
-  RET
+	SET 7,(IX+$15)
+	LD A,(IX+$02)
+	AND $07
+	LD (IX+$01),A
+	LD A,(IX+$04)
+	CP $C0
+	RET C
+	LD HL,(LA27C)
+	LD (HL),$00
+	INC HL
+	LD (HL),$00
+	SET 7,(IX+$00)
+	LD A,(balls_quantity)
+	DEC A
+	LD (balls_quantity),A
+	RET
 
 ; Used by the routines at handling_bat and handling_ball.
 ; Проверка и убивание врага кареткой, если условия соблюдены
 kill_enemy_by_bat:
-  LD A,(object_enemy)
-  AND $7F
-  RET Z		; Возвращаемся, если нет врага
-  CP $0A
-  RET Z		; Возвращаемся, если враг уже в состоянии взрыва
-  LD IY,object_enemy
-  CALL obj_compare_2pix
-  RET NC	; Возвращаемся, если нет пересечения с кареткой
+	LD A,(object_enemy)
+	AND $7F
+	RET Z			; Возвращаемся, если нет врага
+	CP $0A
+	RET Z			; Возвращаемся, если враг уже в состоянии взрыва
+	LD IY,object_enemy
+	CALL obj_compare_2pix
+	RET NC			; Возвращаемся, если нет пересечения с кареткой
 
 ; This entry point is used by the routine at get_bonus.
 ; Убивание врага, его взрыв, звук и начисление очков
 kill_enemy:
-  LD (IY+$00),$0A	; anim_alien_blast
-  LD (IY+$01),$00
-  LD (IY+$12),$50
-  LD (IY+$13),$90
-  LD A,(IY+$08)
-  SUB $02
-  ADD A,A
-  ADD A,A
-  ADD A,(IY+$02)
-  LD (IY+$02),A
-  LD (IY+$08),$02
-  LD (IY+$09),$0D
-  LD A,(IY+$04)
-  ADD A,$04
-  LD (IY+$04),A
-  LD A,(IX+$00)
-  AND $7F
-  CP $02
-  JP NZ,LA4CF_4
-  LD A,(IX+$06)
-  AND $10
-  LD DE,$1030
-  JP Z,LA4CF_1
-  LD DE,$0020
+	LD (IY+$00),$0A	; anim_alien_blast
+	LD (IY+$01),$00
+	LD (IY+$12),$50
+	LD (IY+$13),$90
+	LD A,(IY+$08)
+	SUB $02
+	ADD A,A
+	ADD A,A
+	ADD A,(IY+$02)
+	LD (IY+$02),A
+	LD (IY+$08),$02
+	LD (IY+$09),$0D
+	LD A,(IY+$04)
+	ADD A,$04
+	LD (IY+$04),A
+	LD A,(IX+$00)
+	AND $7F
+	CP $02
+	JP NZ,LA4CF_4
+	LD A,(IX+$06)
+	AND $10
+	LD DE,$1030
+	JP Z,LA4CF_1
+	LD DE,$0020
 LA4CF_1:
-  LD A,(random_number+$01)
-  LD B,A
-  RLA
-  JP C,LA4CF_2
-  LD E,D
+	LD A,(random_number+$01)
+	LD B,A
+	RLA
+	JP C,LA4CF_2
+	LD E,D
 LA4CF_2:
-  LD A,B
-  AND $0C
-  JP NZ,LA4CF_3
-  LD A,(IX+$06)
-  AND $0C
+	LD A,B
+	AND $0C
+	JP NZ,LA4CF_3
+	LD A,(IX+$06)
+	AND $0C
 LA4CF_3:
-  OR E
-  LD (IX+$06),A
-  LD A,(IX+$12)
-  AND $80
-  LD (IX+$12),A
+	OR E
+	LD (IX+$06),A
+	LD A,(IX+$12)
+	AND $80
+	LD (IX+$12),A
 LA4CF_4:
-  PUSH IX
-  LD IX,sounds_queue+21
-  LD (IX+$00),$06
-  LD (IX+$01),$30
-  POP IX
-  LD BC,$0350
-  JP add_points_to_score
+	PUSH IX
+	LD IX,sounds_queue+21
+	LD (IX+$00),$06
+	LD (IX+$01),$30
+	POP IX
+	LD BC,$0350
+	JP add_points_to_score
 
 LA557:
-  DEFW $0000
+	DEFW $0000
 LA559:
-  DEFB $00
+	DEFB $00
 
 ; Обработка бонусов
 handling_bonus:
 	ld IX,(IXobj)
-  LD A,(IX+$04)
-  CP $A0
-  CALL NC,get_bonus
-  LD DE,$0008
-  LD B,$02
+	LD A,(IX+$04)
+	CP $A0
+	CALL NC,get_bonus
+	LD DE,$0008
+	LD B,$02
 ; This entry point is used by the routine at handling_400pts.
 LA55A_0:
-  LD HL,(LA557)
-  ADD HL,DE
-  LD A,H
-  CP B
-  JP NZ,LA55A_1
-  LD H,B
-  LD L,$00
+	LD HL,(LA557)
+	ADD HL,DE
+	LD A,H
+	CP B
+	JP NZ,LA55A_1
+	LD H,B
+	LD L,$00
 LA55A_1:
-  LD (LA557),HL
-  LD D,(IX+$04)
-  LD A,(LA559)
-  LD E,A
-  ADD HL,DE
-  LD (IX+$04),H
-  LD A,L
-  LD (LA559),A
-  LD A,H
-  CP $C0
-  RET C
-  SET 7,(IX+$00)
-  RET
+	LD (LA557),HL
+	LD D,(IX+$04)
+	LD A,(LA559)
+	LD E,A
+	ADD HL,DE
+	LD (IX+$04),H
+	LD A,L
+	LD (LA559),A
+	LD A,H
+	CP $C0
+	RET C
+	SET 7,(IX+$00)
+	RET
 
 ; Обработка таблички 400 очков
 handling_400pts:
@@ -2915,97 +2928,98 @@ LA590:
 ; Обработка пули
 handling_bullet:
 	ld IX,(IXobj)
-  LD A,(IX+$02)
-  AND $80
-  LD (need_change_player),A
-  LD A,(counter_2)
-  INC A
-  LD (counter_2),A
-  LD A,(IX+$01)
-  CP $02
-  JP NC,LA5A3_0
-  XOR $01
-  LD (IX+$01),A
-  LD A,(IX+$04)
-  SUB $06
-  LD (IX+$04),A
-  JP C,LA5A3_1
-  CP $03
-  JP NC,LA5A3_2
-  JP LA5A3_1
+	LD A,(IX+$02)
+	AND $80
+	LD (need_change_player),A
+	LD A,(counter_2)
+	INC A
+	LD (counter_2),A
+	LD A,(IX+$01)
+	CP $02
+	JP NC,LA5A3_0
+	XOR $01
+	LD (IX+$01),A
+	LD A,(IX+$04)
+	SUB $06
+	LD (IX+$04),A
+	JP C,LA5A3_1
+	CP $03
+	JP NC,LA5A3_2
+	JP LA5A3_1
 LA5A3_0:
-  LD A,(IX+$02)
-  AND $F8
-  LD (IX+$02),A
-  CALL LAAD2
-  LD A,(IX+$01)
-  AND A
-  RET NZ
+	LD A,(IX+$02)
+	AND $F8
+	LD (IX+$02),A
+	CALL LAAD2
+	LD A,(IX+$01)
+	AND A
+	RET NZ
 LA5A3_1:
-  SET 7,(IX+$00)
-  LD A,(bullet)
-  AND $01
-  LD (bullet),A
-  RET
+	SET 7,(IX+$00)
+	LD A,(bullet)
+	AND $01
+	LD (bullet),A
+	RET
 LA5A3_2:
-  CALL LAFFC
-  LD A,(object_enemy)
-  AND $7F
-  RET Z
-  CP $0A
-  RET Z
-  LD IY,object_enemy
-  CALL obj_compare_2pix
-  RET NC
-  LD (IY+$00),$0A		; anim_alien_blast
-  LD (IY+$01),$00		; spr_alien_blast_1
-  LD (IY+$12),$50
-  LD (IY+$13),$90
-  LD A,(IY+$08)			; ширина спрайта с тенью в байтах
-  SUB $02
-  ADD A,A
-  ADD A,A
-  ADD A,(IY+$02)		; координата Х объекта
-  LD (IY+$02),A			; координата Х объекта
-  LD (IY+$08),$02		; ширина спрайта с тенью в байтах
-  LD (IY+$09),$0D		; высота спрайта с тенью в пикселях
-  LD A,(IY+$04)			; координата Y объекта
-  ADD A,$04
-  LD (IY+$04),A			; координата Y объекта
-  LD (IX+$01),$02		; spr_alien_blast_3
-  LD (IX+$09),$06
-  LD (IX+$12),$50
-  LD (IX+$13),$50
-  LD A,(IX+$02)			; координата Х объекта
-  AND $F8
-  LD (IX+$02),A			; координата Х объекта
+	CALL LAFFC
+	LD A,(object_enemy)
+	AND $7F
+	RET Z
+	CP $0A
+	RET Z
+	LD IY,object_enemy
+	CALL obj_compare_2pix
+	RET NC
+	LD (IY+$00),$0A		; anim_alien_blast
+	LD (IY+$01),$00		; spr_alien_blast_1
+	LD (IY+$12),$50
+	LD (IY+$13),$90
+	LD A,(IY+$08)			; ширина спрайта с тенью в байтах
+	SUB $02
+	ADD A,A
+	ADD A,A
+	ADD A,(IY+$02)		; координата Х объекта
+	LD (IY+$02),A			; координата Х объекта
+	LD (IY+$08),$02		; ширина спрайта с тенью в байтах
+	LD (IY+$09),$0D		; высота спрайта с тенью в пикселях
+	LD A,(IY+$04)			; координата Y объекта
+	ADD A,$04
+	LD (IY+$04),A			; координата Y объекта
+	LD (IX+$01),$02		; spr_alien_blast_3
+	LD (IX+$09),$06
+	LD (IX+$12),$50
+	LD (IX+$13),$50
+	LD A,(IX+$02)			; координата Х объекта
+	AND $F8
+	LD (IX+$02),A			; координата Х объекта
 
-  PUSH IX
-  LD IX,sounds_queue+21
-  LD (IX+$00),$06
-  LD (IX+$01),$30
-  POP IX
+	push HL
+	LD HL,sounds_queue+21
+	LD (HL),$06		; IX+$00
+	inc HL
+	LD (HL),$30		; IX+$01
+	pop HL
 
-  LD BC,$0350
-  JP add_points_to_score
+	LD BC,$0350
+	JP add_points_to_score
 
 ; Счётчик длительности приза Smash
 smash_counter:
-  DEFB $00
+	DEFB $00
 
 ; Used by the routine at get_bonus.
 ; Постановка в очередь звука расширения каретки
 push_resize_sound:
-  push HL
-  CALL get_free_sound_slot
-  ld (HL),sound_bat_resize_2
-  inc HL
-  ld (HL),$02
-  pop HL
-  RET
+	push HL
+	CALL get_free_sound_slot
+	ld (HL),sound_bat_resize_2
+	inc HL
+	ld (HL),$02
+	pop HL
+	RET
 
 bonus_flag_copy:
-  DEFB $00
+	DEFB $00
 
 ; Used by the routines at get_bonus and game_restart.
 ; Обмен содержимым ячеек bonus_flag_copy и bonus_flag
@@ -3021,33 +3035,32 @@ bonus_flag_swap:
 ; Used by the routine at handling_bonus.
 ; Получение бонуса
 get_bonus:
-  CP $B0
-  RET NC
-  LD IY,object_bat_1
-  CALL obj_compare_2pix
-  JP C,LA67B_0			; Если поймал первой кареткой, то дальше
+	CP $B0
+	RET NC
+	LD IY,object_bat_1
+	CALL obj_compare_2pix
+	JP C,LA67B_0			; Если поймал первой кареткой, то дальше
 
-  LD A,(game_mode)
-  CP $02
-  RET NZ				; Уходим, если не два игрока одновременно
+	LD A,(game_mode)
+	CP $02
+	RET NZ				; Уходим, если не два игрока одновременно
 
-  LD IY,object_bat_2
-  CALL obj_compare
-  RET NC				; Уходим, если не поймал второй кареткой
+	LD IY,object_bat_2
+	CALL obj_compare
+	RET NC				; Уходим, если не поймал второй кареткой
 
-  CALL bonus_flag_swap
-  CALL LA67B_0
-  JP bonus_flag_swap
+	CALL bonus_flag_swap
+	CALL LA67B_0
+	JP bonus_flag_swap
 
 LA67B_0:
-  LD A,(IX+$01)
-  SUB $0A
-  JP NZ,LA67B_1			; Если не бомба переходим на обработку бонусов
-  LD (balls_quantity),A	; Обнуляем количество шаров
-  RET
+	LD A,(IX+$01)
+	SUB $0A
+	JP NZ,LA67B_1			; Если не бомба переходим на обработку бонусов
+	LD (balls_quantity),A	; Обнуляем количество шаров
+	RET
 
 ; Собственно обработка бонуса
-
 ; IY - каретка
 ; IX - бонус
 
@@ -3774,7 +3787,6 @@ LAB1F_10:
   LD B,A
   ADD A,A		; *2
   ADD A,B		; *3
-  ;ADD A,A		; *6
   LD HL,LAC0A
   CALL hl_add_2a
   LD A,$04
@@ -4514,7 +4526,6 @@ add_points_for_left_briks_2:
 ; Вычисляет сколько очков добавлять исходя из значения brik_value+$01
 points_calc_and_add:
   LD A,(brik_value+$01)
-  ;ADD A,A
   LD HL,points_table
   CALL hl_add_2a
   LD B,(HL)
@@ -5911,101 +5922,105 @@ LB6A9_20:
 ; IX+$04 - 2 байта адрес в экранном буфере
 ; IX+$06 - 2 байта - адрес (IY) текущего элемента (кирпича) на текущем уровне
 briks_data:
-  DEFB $00,$00,$00,$00,$00,$00,$00
-  DEFB $00,$00,$00,$00,$00,$00,$00
-  DEFB $00,$00,$00,$00,$00,$00,$00
-  DEFB $00,$00,$00,$00,$00,$00,$00
-  DEFB $00,$00,$00,$00,$00,$00,$00
+	DEFB $00,$00,$00,$00,$00,$00,$00
+	DEFB $00,$00,$00,$00,$00,$00,$00
+	DEFB $00,$00,$00,$00,$00,$00,$00
+	DEFB $00,$00,$00,$00,$00,$00,$00
+	DEFB $00,$00,$00,$00,$00,$00,$00
 
 ; Used by the routines at LBAED, LBB97 and LBC10.
 ; Восстанавливает несколько окон, количество задано в A
 wins_recovery:
-  LD B,A
-  LD IX,wins_recovery_data
+	LD HL,wins_recovery_data
 LB717_0:
-  PUSH BC
-  LD L,(IX+$01)
-  LD H,(IX+$00)
-  LD C,(IX+$03)
-  LD B,(IX+$02)
-  CALL win_bg_recovery
-  LD BC,$0004
-  ADD IX,BC
-  POP BC
-  dec B
-  jp nz,LB717_0
-  XOR A
-  LD (wins_counter),A
-  LD HL,wins_recovery_data
-  LD (LB2D8+$02),HL
-  RET
+	LD D,(HL)		; IX+$00
+	inc HL
+	LD E,(HL)		; IX+$01
+	inc HL
+	LD B,(HL)		; IX+$02
+	inc HL
+	LD C,(HL)		; IX+$03
+	inc HL
+	push AF
+	push HL
+	ex DE,HL		; HL - координаты, BC - размеры окна
+	CALL win_bg_recovery
+	pop HL
+	pop AF
+	dec A
+	jp nz,LB717_0
+	;XOR A			; A уже равно 0
+	LD (wins_counter),A
+	LD HL,wins_recovery_data
+	LD (LB2D8+$02),HL
+	RET
 
 ; Used by the routine at all_metal_briks_animation_snd.
 ; Проигрывает один звук металлического кирпича, если на уровне есть хотя бы один такой кирпич
 one_play_sound_metal_brik:
-  NOP
-  LD A,$C9	;Код команды RET
-  LD (one_play_sound_metal_brik),A
-  LD HL,(current_level_addr)
-  LD B,$B4
+	NOP			;WARN: изменяемая команда NOP / RET
+	LD A,$C9		; Код команды RET
+	LD (one_play_sound_metal_brik),A
+	LD HL,(current_level_addr)
+	LD B,$B4
 LB74A:
-  LD A,(HL)
-  AND $90
-  JP Z,LB754
-  INC HL
-  dec B
-  jp nz,LB74A
-  JP LB764
+	LD A,(HL)
+	AND $90
+	JP Z,LB754
+	INC HL
+	dec B
+	jp nz,LB74A
+	JP LB764
 LB754:
-  LD IY,(iy_storage)
-  PUSH IX
-  LD IX,sounds_queue
-  CALL play_sound_metal_brik
-  ; DI
-  POP IX
+	LD IY,(iy_storage)
+	PUSH IX
+	LD IX,sounds_queue
+	CALL play_sound_metal_brik
+	; DI
+	POP IX
 LB764:
-  RET
+	RET
 
 ; Used by the routine at game_restart.
 ; Анимация со звуком разом всех трудновыбиваемых кирпичей перед началом раунда
 all_metal_briks_animation_snd:
-  XOR A
-  LD (one_play_sound_metal_brik),A
-  LD IX,anim_brik
+	XOR A
+	LD (one_play_sound_metal_brik),A
+	LD IX,anim_brik
 LB765_0:
-  LD IY,(iy_storage)
+	LD IY,(iy_storage)
 
-  ; Пауза для анимации металлических кирпичей
-  ; Вместо halt необходимо ставить паузу
+; Пауза для анимации металлических кирпичей
+; Вместо halt необходимо ставить паузу
   ; EI
   ; HALT
   ; EI
   ; HALT
   ; DI
-  ld d,$20		; Константа выставлена на глаз
-  call pause_short
+	ld d,$20		; Константа выставлена на глаз
+	call pause_short
 
-  CALL all_metal_briks_frame
+	CALL all_metal_briks_frame
 
-  LD DE,spr_brik_5
-  LD L,(IX+$00)
-  LD H,(IX+$01)
-  XOR A
-  CALL SBCHLDE8080	; SBC HL,DE
+	LD DE,spr_brik_5
+	LD L,(IX+$00)
+	LD H,(IX+$01)
+	XOR A
+	CALL SBCHLDE8080	; SBC HL,DE
 
-  CALL Z,one_play_sound_metal_brik
+	CALL Z,one_play_sound_metal_brik
 
-  INC IX
-  INC IX
-  LD A,(IX+$01)
-  AND A
+	INC IX
+	INC IX
+	LD A,(IX+$01)
+	AND A
 
-  JP NZ,LB765_0
-  RET
+	JP NZ,LB765_0
+	RET
 
 ; Ячейки хранения стандартного значения IY для корректной работы IM1
 iy_storage:
-  DEFW $0000
+	DEFW $0000
 
 ; Used by the routine at game_restart.
 ;return:
@@ -6014,53 +6029,53 @@ iy_storage:
 ; Used by the routines at show_window_round_number, disp_high_score_table_screen, disp_main_menu_and_wait_keys, print_kinnock and LBC10.
 ; На входе в DE адрес сообщения, в B - количество выводимых строк
 print_message:		; Specialist ready
-  PUSH BC
-  CALL print_line
-  POP BC
-  DEC B
-  JP NZ,print_message
-  RET
+	PUSH BC
+	CALL print_line
+	POP BC
+	DEC B
+	JP NZ,print_message
+	RET
 
 ; Data block at B79E
 ; Мусор?
-  DEFB $08,$07,$44,$04,$01,$26,$1E,$19
+	DEFB $08,$07,$44,$04,$01,$26,$1E,$19
 
 ;--------------------------
 ; Данные для первого игрока
 score_1up_in_game:
-  DEFW $0F00	; Адрес в буфере (на старте игры вычисляется по координатам $1510)
-  DEFB $47,$06	; Рудимент, не используется?
-  DEFW $0000	; 6-й и 5-й разряды счёта
-  DEFW $0000	; 4-й и 3-й разряды счёта
-  DEFW $0000	; 2-й и 1-й разряды счёта
+	DEFW $0F00	; Адрес в буфере (на старте игры вычисляется по координатам $1510)
+	DEFB $47,$06	; Рудимент, не используется?
+	DEFW $0000	; 6-й и 5-й разряды счёта
+	DEFW $0000	; 4-й и 3-й разряды счёта
+	DEFW $0000	; 2-й и 1-й разряды счёта
 ;--------------------------
 
 ; Мусор?
-  DEFB $78,$07,$43,$02,$11,$12
+	DEFB $78,$07,$43,$02,$11,$12
 
 hi_score_in_game:
-  DEFW $0F68	; Адрес в буфере (на старте игры вычисляется по координатам $1568)
-  DEFB $47,$06	; Рудимент, не используется?
+	DEFW $0F68	; Адрес в буфере (на старте игры вычисляется по координатам $1568)
+	DEFB $47,$06	; Рудимент, не используется?
 
 ;HI score - 3 ячейки
 hi_score:
-  DEFB $00,$00,$10
+	DEFB $00,$00,$10
 
 ; Мусор?
-  DEFB $00,$00,$00,$D8,$07,$44,$04,$02
-  DEFB $26,$1E,$19
+	DEFB $00,$00,$00,$D8,$07,$44,$04,$02
+	DEFB $26,$1E,$19
 
 ;--------------------------
 score_2up_in_game:
-  DEFW $0FD0	; Адрес в буфере (на старте игры вычисляется по координатам $15C0)
-  DEFB $47,$06	; Рудимент, не используется?
-  DEFW $0000	; 6-й и 5-й разряды счёта
-  DEFW $0000	; 4-й и 3-й разряды счёта
-  DEFW $0000	; 2-й и 1-й разряды счёта
+	DEFW $0FD0	; Адрес в буфере (на старте игры вычисляется по координатам $15C0)
+	DEFB $47,$06	; Рудимент, не используется?
+	DEFW $0000	; 6-й и 5-й разряды счёта
+	DEFW $0000	; 4-й и 3-й разряды счёта
+	DEFW $0000	; 2-й и 1-й разряды счёта
 ;--------------------------
 
 ; Мусор?
-  DEFB $06,$07
+	DEFB $06,$07
 
 ; Used by the routine at LBC10.
 pause_clear_screen_attrib:
@@ -6072,15 +6087,15 @@ pause_clear_screen_attrib:
 ; Used by the routines at input_new_record_name, game_restart, LBBFB and LBC10.
 ; Пауза - в B задаётся количество циклов. Один цикл - примерно 0,3 сек.
 pause_long:
-  LD D,$00
-  CALL pause_short
-  dec B
-  jp nz,pause_long
-  RET
+	LD D,$00
+	CALL pause_short
+	dec B
+	jp nz,pause_long
+	RET
 
 ; Неиспользуемый байт - копия предыдущего? Мусор?
 ; Data block at B7E4
-  RET
+	RET
 
 ; Общие переменные игры
 ; Режим игры:
@@ -6088,23 +6103,23 @@ pause_long:
 ; 01 - 2 Players
 ; 02 - Double Play
 game_mode:
-  DEFB $00
+	DEFB $00
 player_number:
-  DEFB $00  ; Номер игрока
+	DEFB $00  ; Номер игрока
 frames_copy:
-  DEFB $00	; Копия системного счётчика кадров
+	DEFB $00	; Копия системного счётчика кадров
 
 ; Данные первого игрока
 lives_1up:
-  DEFB $03	; Количество жизней
+	DEFB $03	; Количество жизней
 briks_quantity_1up:	; Количество кирпичей на текущем уровне
-  DEFB $00
+	DEFB $00
 current_level_number_1up:
-  DEFB $00		; Текущий уровень - один из 15-ти
+	DEFB $00		; Текущий уровень - один из 15-ти
 round_number_1up:
-  DEFB $00	; Номер раунда. Он может быть больше, чем число уровней!
+	DEFB $00	; Номер раунда. Он может быть больше, чем число уровней!
 current_score_1up:
-  DEFB $00,$00,$00	;Текущий счёт 1-го игрока (три ячейки)
+	DEFB $00,$00,$00	;Текущий счёт 1-го игрока (три ячейки)
 
 ; Тип управления первого игрока:
 ; $00 - Keyboard
@@ -6112,21 +6127,21 @@ current_score_1up:
 ; $FE ($02) - Cursor
 ; $FD ($03) - Interface II
 ctrl_type_1up:
-  DEFB $00
+	DEFB $00
 
 ; Данные второго игрока
 lives_2up:
-  DEFB $00
+	DEFB $00
 ;briks_quantity_2up:
-  DEFB $00
+	DEFB $00
 current_level_number_2up:
-  DEFB $00
+	DEFB $00
 ;round_number_2up:
-  DEFB $00
+	DEFB $00
 current_score_2up:
-  DEFB $00,$00,$00
+	DEFB $00,$00,$00
 ctrl_type_2up:
-  DEFB $00
+	DEFB $00
 
 ; Used by the routine at game_restart.
 ; Инициализация всех переменных, подготовка всех буферов
@@ -6148,7 +6163,7 @@ LB7F8_0:
 	;LD (LBAEB+$01),A	; меняем параметр команды JR (но нет других мест изменения параметра)
 	LD (bonus_flag),A
 	LD (bonus_flag_copy),A
-	LD (current_magnet_prop+$01),A
+	LD (current_magnet_prop+1),A
 	LD (ctrl_btns_pressed),A
 	LD (ctrl_btns_pressed_copy),A
 	INC A
@@ -6272,19 +6287,19 @@ print_kinnock:
 ; Начало программы
 ; Used by the routine at L6800.
 game_start:
-  LD (iy_storage),IY
+	LD (iy_storage),IY
 
-  LD HL,$1510
-  CALL scr_buff_addr_calc
-  LD (score_1up_in_game),HL	; Адрес в буфере по координатам
+	LD HL,$1510
+	CALL scr_buff_addr_calc
+	LD (score_1up_in_game),HL	; Адрес в буфере по координатам
 
-  LD HL,$15C0
-  CALL scr_buff_addr_calc
-  LD (score_2up_in_game),HL	; Адрес в буфере по координатам
+	LD HL,$15C0
+	CALL scr_buff_addr_calc
+	LD (score_2up_in_game),HL	; Адрес в буфере по координатам
 
-  LD HL,$1568
-  CALL scr_buff_addr_calc
-  LD (hi_score_in_game),HL	; Адрес в буфере по координатам
+	LD HL,$1568
+	CALL scr_buff_addr_calc
+	LD (hi_score_in_game),HL	; Адрес в буфере по координатам
 
 ;---------------------------------
 ; Переносим свойства 11 спрайтов в буфер по адресу 6000
@@ -6416,41 +6431,41 @@ LB9E8_3:
 LBAEB:
 	;JR LBAED_0		;WARN: Параметр JR изменяемый! но почему-то задаётся только в одном месте
 LBAED:
-  LD A,(object_rocket)
-  AND A
-  JP NZ,LBAED_6
+	LD A,(object_rocket)
+	AND A
+	JP NZ,LBAED_6
 ; This entry point is used by the routine at game_restart.
 LBAED_0:
-  LD A,(balls_quantity)
-  AND A
-  JP Z,LBC10
-  LD A,(briks_quantity_1up)
-  AND A
-  JP Z,LBC10
-  CALL save_objs_to_buff
-  LD HL,print_obj_to_buff
-  CALL call_hl_for_all_obj
-  CALL play_sounds_queue
-  JP NZ,LBAED_4
-  LD A,(save_objs_buff)
-  CP $04
-  JP Z,LBAED_1
-  JP C,LBAED_3
-  LD A,(objs_width_sum)
-  CP $23
-  JP NC,LBAED_4
-  JP LBAED_3
+	LD A,(balls_quantity)
+	AND A
+	JP Z,LBC10
+	LD A,(briks_quantity_1up)
+	AND A
+	JP Z,LBC10
+	CALL save_objs_to_buff
+	LD HL,print_obj_to_buff
+	CALL call_hl_for_all_obj
+	CALL play_sounds_queue
+	JP NZ,LBAED_4
+	LD A,(save_objs_buff)
+	CP $04
+	JP Z,LBAED_1
+	JP C,LBAED_3
+	LD A,(objs_width_sum)
+	CP $23
+	JP NC,LBAED_4
+	JP LBAED_3
 LBAED_1:
-  LD A,(object_bat_1+$0C)	; Ширина каретки в пикселях
-  CP $1C
-  JP NZ,LBAED_2
-  LD A,(object_bonus)
-  AND A
-  JP NZ,LBAED_3
+	LD A,(object_bat_1+$0C)	; Ширина каретки в пикселях
+	CP $1C
+	JP NZ,LBAED_2
+	LD A,(object_bonus)
+	AND A
+	JP NZ,LBAED_3
 LBAED_2:
-  LD A,(counter_2)
-  CP $03
-  JP C,LBAED_4
+	LD A,(counter_2)
+	CP $03
+	JP C,LBAED_4
 LBAED_3:
 
   ; Общая скорость геймплея
@@ -6459,29 +6474,29 @@ LBAED_3:
   ; HALT
   ; DI
 
-  ld d,$05		; Константа выставлена на глаз $10
-  call pause_short
+	ld d,$05		; Константа выставлена на глаз $10
+	call pause_short
 
 LBAED_4:
-  LD HL,object_bat_1+2
-  CALL running_dot
-  LD A,(game_mode)
-  CP $02
-  JP NZ,LBAED_5
-  CALL running_dot_frame_swap
-  LD HL,object_bat_2+2
-  CALL running_dot
-  CALL running_dot_frame_swap
+	LD HL,object_bat_1+2
+	CALL running_dot
+	LD A,(game_mode)
+	CP $02
+	JP NZ,LBAED_5
+	CALL running_dot_frame_swap
+	LD HL,object_bat_2+2
+	CALL running_dot
+	CALL running_dot_frame_swap
 
 LBAED_5:
-  LD HL,print_obj_from_buf_to_scr
-  CALL call_hl_for_all_obj
-  LD A,(wins_counter)
-  AND A
-  CALL NZ,wins_recovery			; В том числе восстанавливается фон под выбитым кирпичом
-  CALL restore_objs_and_magnet
-  CALL pause_game
-  JP LB9E8_2
+	LD HL,print_obj_from_buf_to_scr
+	CALL call_hl_for_all_obj
+	LD A,(wins_counter)
+	AND A
+	CALL NZ,wins_recovery	; В том числе восстанавливается фон под выбитым кирпичом
+	CALL restore_objs_and_magnet
+	CALL pause_game
+	JP LB9E8_2
 
 LBAED_6:
 	ld B,$0B		; 11
@@ -6499,34 +6514,34 @@ LBAED_8:
 	dec B
 	jp nz,LBAED_7
 
-  LD A,$01
+	LD A,$01
 LBB83:
-  LD HL,$0000
-  LD (HL),A
-  LD A,$06
-  LD (object_rocket),A
-  LD A,$05
-  LD (sounds_queue),A
-  XOR A
-  LD (counter_misc),A
-  JP LBB97_0
+	LD HL,$0000
+	LD (HL),A
+	LD A,$06
+	LD (object_rocket),A
+	LD A,$05
+	LD (sounds_queue),A
+	XOR A
+	LD (counter_misc),A
+	JP LBB97_0
 
 LBB97:
-  LD A,(counter_misc)
-  INC A
-  LD (counter_misc),A
-  CALL random_generate
-  LD HL,handling_object
-  CALL call_hl_for_all_obj
-  CALL fill_briks_data
+	LD A,(counter_misc)
+	INC A
+	LD (counter_misc),A
+	CALL random_generate
+	LD HL,handling_object
+	CALL call_hl_for_all_obj
+	CALL fill_briks_data
 ; This entry point is used by the routine at LBAED.
 LBB97_0:
-  LD HL,ix_buf_addr_calc
-  CALL call_hl_for_all_obj
-  CALL save_objs_to_buff
-  LD HL,print_obj_to_buff
-  CALL call_hl_for_all_obj
-  LD IY,(iy_storage)
+	LD HL,ix_buf_addr_calc
+	CALL call_hl_for_all_obj
+	CALL save_objs_to_buff
+	LD HL,print_obj_to_buff
+	CALL call_hl_for_all_obj
+	LD IY,(iy_storage)
 
   ; Непонятно на что влияющая задержка
   ; Вместо halt необходимо ставить паузу
@@ -6537,105 +6552,113 @@ LBB97_0:
   ; ld d,$10		; Константа выставлена на глаз
   ; call pause_short
 
-  CALL play_sounds_queue
-  LD HL,print_obj_from_buf_to_scr
-  CALL call_hl_for_all_obj
-  LD A,(wins_counter)
-  AND A
-  CALL NZ,wins_recovery
-  CALL restore_objs
-  CALL pause_game
-  LD A,(object_rocket)
-  AND A
-  JP Z,LBBFB
-  JP LBB97
+	CALL play_sounds_queue
+	LD HL,print_obj_from_buf_to_scr
+	CALL call_hl_for_all_obj
+	LD A,(wins_counter)
+	AND A
+	CALL NZ,wins_recovery
+	CALL restore_objs
+	CALL pause_game
+	LD A,(object_rocket)
+	AND A
+	JP Z,LBBFB
+	JP LBB97
 
 ; Used by the routine at LBBFB.
 increment_round_number:
-  LD A,(round_number_1up)
-  INC A
-  LD (round_number_1up),A
-  LD A,(current_level_number_1up)
-  INC A
-  CP $0F	; Максимальное количество уровней
-  JP Z,LBBE0_0
-  LD (current_level_number_1up),A
-  JP LBBE0_1
+	LD A,(round_number_1up)
+	INC A
+	LD (round_number_1up),A
+	LD A,(current_level_number_1up)
+	INC A
+	CP $0F			; Максимальное количество уровней
+	JP Z,LBBE0_0
+	LD (current_level_number_1up),A
+	JP LBBE0_1
 LBBE0_0:
-  XOR A
-  LD (current_level_number_1up),A
+	XOR A
+	LD (current_level_number_1up),A
 LBBE0_1:
-  JP briks_calc
+	JP briks_calc
 
 ; Used by the routine at LBB97.
 LBBFB:
-  CALL add_points_for_left_briks
+	CALL add_points_for_left_briks
 ; This entry point is used by the routine at LBC10.
 LBBFB_0:
-  LD A,(briks_quantity_1up)
-  AND A
-  CALL Z,play_sounds_queue
-  CALL increment_round_number
-  LD B,$02
-  CALL pause_long
-  JP LB9E8_1
+	LD A,(briks_quantity_1up)
+	AND A
+	CALL Z,play_sounds_queue
+	CALL increment_round_number
+	LD B,$02
+	CALL pause_long
+	JP LB9E8_1
 
 ; Used by the routine at LBAED.
 LBC10:
-  LD A,(current_magnet_prop+$01)
-  AND A
-  JP Z,LBC10_0
-  LD IX,(current_magnet_prop)
-  LD A,(IX+$02)
-  SUB $05
-  LD L,A
-  LD A,(IX+$04)
-  SUB $05
-  LD H,A
-  LD BC,$0417
-  CALL win_bg_recovery
-  XOR A
-  LD (current_magnet_prop+$01),A
+	LD A,(current_magnet_prop+1)
+	AND A
+	JP Z,LBC10_0
+	LD HL,(current_magnet_prop)
+	inc HL
+	inc HL
+	LD A,(HL)		; IX+$02
+	SUB $05
+	LD L,A
+	inc HL
+	inc HL
+	LD A,(HL)		; IX+$04
+	SUB $05
+	LD H,A
+	LD BC,$0417
+	CALL win_bg_recovery
+	XOR A
+	LD (current_magnet_prop+1),A
 LBC10_0:
-  LD IX,object_ball_1
-  LD B,$0B
-  LD DE,$0016
-  LD A,(object_rocket)
-  PUSH AF
+
+	LD HL,object_ball_1
+	LD B,$0B		; 11
+	LD DE,$0016
+	LD A,(object_rocket)
+	PUSH AF
 LBC10_1:
-  LD A,(IX+$00)
-  AND A
-  JP Z,LBC10_2
-  SET 7,(IX+$00)
+	LD A,(HL)		; IX+$00
+	AND A
+	JP Z,LBC10_2
+	ld A,(HL)
+	or %10000000		; SET 7,(IX+$00)
+	ld (HL),A
 LBC10_2:
-  ADD IX,DE
-  dec B
-  jp nz,LBC10_1
-  POP AF
-  LD (object_rocket),A
-  LD HL,print_obj_to_buff
-  CALL call_hl_for_all_obj
-  LD HL,print_obj_from_buf_to_scr
-  CALL call_hl_for_all_obj
-  LD A,(wins_counter)
-  AND A
-  CALL NZ,wins_recovery
-  LD A,(briks_quantity_1up)
-  AND A
-  JP Z,LBBFB_0
-  LD A,$08
-  LD (sounds_queue),A
-  LD A,$3D
-  LD (sounds_queue+$01),A
-  XOR A
-  LD (flag_extra_life),A
+	ADD HL,DE
+	dec B
+	jp nz,LBC10_1
+	POP AF
+
+	LD (object_rocket),A
+	LD HL,print_obj_to_buff
+	CALL call_hl_for_all_obj
+	LD HL,print_obj_from_buf_to_scr
+	CALL call_hl_for_all_obj
+	LD A,(wins_counter)
+	AND A
+	CALL NZ,wins_recovery
+	LD A,(briks_quantity_1up)
+	AND A
+	JP Z,LBBFB_0
+	LD A,$08
+	LD (sounds_queue),A
+	LD A,$3D
+	LD (sounds_queue+$01),A
+	XOR A
+	LD (flag_extra_life),A
 	LD HL,object_ball_1
 	LD B,$0A		; 10 объектов
-  LD A,(object_bat_1+$02)
-  LD C,A
-  LD A,(object_bat_2+$02)
-  SUB C
-  LD (LBCE6+$01),A
+	LD A,(object_bat_1+$02)
+	LD C,A
+	LD A,(object_bat_2+$02)
+	SUB C
+	LD (LBCE6+$01),A
 	LD A,(object_bat_1+$0C)	; ширина объекта без тени в пикселях
 	or a
 	rra		; SRL A
@@ -6707,88 +6730,88 @@ LBCE6:
 	jp nz,LBC10_4
 
 LBC10_5:
-  CALL random_generate
-  LD HL,handling_object
-  CALL call_hl_for_all_obj
-  CALL fill_briks_data
-  LD HL,ix_buf_addr_calc
-  CALL call_hl_for_all_obj
-  CALL save_objs_to_buff
+	CALL random_generate
+	LD HL,handling_object
+	CALL call_hl_for_all_obj
+	CALL fill_briks_data
+	LD HL,ix_buf_addr_calc
+	CALL call_hl_for_all_obj
+	CALL save_objs_to_buff
 
-  LD HL,print_obj_to_buff
-  LD A,(object_ball_2)
-  RLA
-  CALL NC,call_hl_for_all_obj
+	LD HL,print_obj_to_buff
+	LD A,(object_ball_2)
+	RLA
+	CALL NC,call_hl_for_all_obj
 
-  CALL play_sounds_queue
-  LD HL,print_obj_from_buf_to_scr
-  CALL call_hl_for_all_obj
-  LD A,(wins_counter)
-  AND A
-  CALL NZ,wins_recovery
+	CALL play_sounds_queue
+	LD HL,print_obj_from_buf_to_scr
+	CALL call_hl_for_all_obj
+	LD A,(wins_counter)
+	AND A
+	CALL NZ,wins_recovery
 
-  CALL restore_objs
-  CALL pause_game
+	CALL restore_objs
+	CALL pause_game
 
-  LD A,(object_ball_2)
-  AND A
-  JP NZ,LBC10_5
+	LD A,(object_ball_2)
+	AND A
+	JP NZ,LBC10_5
 
-  LD B,$03
-  CALL pause_long
-  LD A,(lives_1up)
+	LD B,$03
+	CALL pause_long
+	LD A,(lives_1up)
 live_dec:
-  DEC A			; Отнимаем жизнь
-  LD (lives_1up),A
-  JP Z,LBC10_6
-  LD A,(game_mode)
-  DEC A
-  CALL Z,current_level_2up_copier
-  JP LB9E8_1
+	DEC A			; Отнимаем жизнь
+	LD (lives_1up),A
+	JP Z,LBC10_6
+	LD A,(game_mode)
+	DEC A
+	CALL Z,current_level_2up_copier
+	JP LB9E8_1
 
 ; Жизней не осталось
 LBC10_6:
-  LD B,$02
-  CALL pause_clear_screen_attrib
-  CALL clear_screen_attrib
-  CALL clear_screen_pix
-  LD A,(player_number)
-  INC A
-  LD (txt_player_0+$0C),A  ; Номер игрока для надписи GAME OVER PLAYER X
-  LD DE,txt_game_over
-  LD B,$02
-  CALL print_message
-  LD A,(game_mode)
-  CP $02
-  CALL Z,print_txt_players_1_and_2
-  LD B,$0C
-  CALL pause_clear_screen_attrib
-  CALL hi_score_update
-  CALL input_new_record_name
-  LD A,(game_mode)
-  CP $02
-  JP NZ,LBC10_7
-  CALL players_swap
-  CALL hi_score_update
-  CALL input_new_record_name
-  CALL players_swap
-  JP game_restart
+	LD B,$02
+	CALL pause_clear_screen_attrib
+	CALL clear_screen_attrib
+	CALL clear_screen_pix
+	LD A,(player_number)
+	INC A
+	LD (txt_player_0+$0C),A		; Номер игрока для надписи GAME OVER PLAYER X
+	LD DE,txt_game_over
+	LD B,$02
+	CALL print_message
+	LD A,(game_mode)
+	CP $02
+	CALL Z,print_txt_players_1_and_2
+	LD B,$0C
+	CALL pause_clear_screen_attrib
+	CALL hi_score_update
+	CALL input_new_record_name
+	LD A,(game_mode)
+	CP $02
+	JP NZ,LBC10_7
+	CALL players_swap
+	CALL hi_score_update
+	CALL input_new_record_name
+	CALL players_swap
+	JP game_restart
 LBC10_7:
-  DEC A
-  JP NZ,game_restart
-  LD A,(lives_2up)
-  AND A
-  JP Z,game_restart
-  CALL current_level_2up_copier
-  JP LB9E8_1
+	DEC A
+	JP NZ,game_restart
+	LD A,(lives_2up)
+	AND A
+	JP Z,game_restart
+	CALL current_level_2up_copier
+	JP LB9E8_1
 
   INCLUDE "./txt/txt_game_over.asm"
   INCLUDE "./txt/txt_player_0.asm"
 
 ; Used by the routine at LBC10.
 print_txt_players_1_and_2:
-  LD DE,txt_players_1_and_2
-  JP print_line
+	LD DE,txt_players_1_and_2
+	JP print_line
 
   INCLUDE "./txt/txt_players_1_and_2.asm"
 
@@ -7133,7 +7156,7 @@ LBE8B_10:
 	JP NZ,LBE8B_11
 	ld HL,object_separator
 	ld (IXobj),HL
-	CALL ix_buf_addr_calc
+	CALL hl_buf_addr_calc
 	CALL print_obj_to_buff
 
 ;------------------------------
@@ -7211,20 +7234,20 @@ LBFCF_1:
 
 ; Последовательность спрайтов в горизонтали рамки
 set_border_horizontal:
-  DEFW spr_bord_horiz_left_edge
-  DEFW spr_bord_horiz_left_thin
-  DEFW spr_bord_horiz_left_bold
-  DEFW spr_bord_horiz_left_thin
-  DEFW spr_bord_horiz_right_thin
-  DEFW spr_bord_horiz_right_bold
-  DEFW spr_bord_horiz_right_thin
-  DEFW spr_bord_horiz_right_edge
+	DEFW spr_bord_horiz_left_edge
+	DEFW spr_bord_horiz_left_thin
+	DEFW spr_bord_horiz_left_bold
+	DEFW spr_bord_horiz_left_thin
+	DEFW spr_bord_horiz_right_thin
+	DEFW spr_bord_horiz_right_bold
+	DEFW spr_bord_horiz_right_thin
+	DEFW spr_bord_horiz_right_edge
 
 ; Дополнительная линия для горизонтальной части рамки
 border_horizontal_addon:
-  DEFB $00,$00,$03,$FF,$FF,$FF,$C0,$00,$00,$00
-  DEFB $03,$FF,$FF,$FF,$C0,$03,$FF,$FF,$FF,$C0
-  DEFB $00,$00,$00,$03,$FF,$FF,$FF,$C0,$00,$00
+	DEFB $00,$00,$03,$FF,$FF,$FF,$C0,$00,$00,$00
+	DEFB $03,$FF,$FF,$FF,$C0,$03,$FF,$FF,$FF,$C0
+	DEFB $00,$00,$00,$03,$FF,$FF,$FF,$C0,$00,$00
 
 ; Графика текстуры уровня 1
   INCLUDE "./gfx/sprites_color_3.asm"
