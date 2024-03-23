@@ -542,43 +542,46 @@ print_digit:
   JP NC,print_digit_0
   INC D
 print_digit_0:
-  LD (print_digit_ld_sp_1+$01),DE	; Адрес спрайта цифры
+  ex DE,HL
+  LD (print_digit_ld_sp_1+$01),HL	; Адрес спрайта цифры
+  ex DE,HL
   EXX
   LD (print_digit_ld_hl+$01),HL		; Адрес в буфере
   EX DE,HL
 
-  ld hl,$0000
-  add hl,sp
-  LD (print_digit_ld_sp_2+$01),hl	; сохраняем SP
-  di
+	ld hl,$0000
+	add hl,sp
+	ld (print_digit_ld_sp_2+$01),hl	; сохраняем SP
+	di
 
   ld hl,$0090
   ADD HL,DE
   LD A,$08
 print_digit_ld_sp_1:
-  LD SP,$0000		; Адрес спрайта цифры
+  LD SP,$0000			; Адрес спрайта цифры
 print_digit_1:
-  EX AF,AF'
-  POP BC
+  ld (print_digit_2+1),A	; save A
+  POP BC			; берём пиксели и маску
   LD A,C
   OR (HL)
   XOR B
   LD (DE),A
   inc l
-  EX DE,HL
-  inc l		; НЕ поправлено направление для Вектора
-  EX DE,HL
-  EX AF,AF'
+  ;EX DE,HL
+  inc E			; НЕ поправлено направление для Вектора
+  ;EX DE,HL
+print_digit_2:
+  ld A,$00		; restore A
   DEC A
   JP NZ,print_digit_1
 
 print_digit_ld_hl:
-  LD HL,$0000		; Адрес в буфере
-  inc h
+	LD HL,$0000		; Адрес в буфере
+	inc h
 
 print_digit_ld_sp_2:
-  LD SP,$0000		; restore SP
-  ei
+	ld SP,$0000		; restore SP
+	ei
   EXX
   RET
 
@@ -823,29 +826,29 @@ restore_objs_and_magnet:
 ; This entry point is used by the routines at LBB97 and LBC10.
 ; Восстанавливает объекты из save_objs_buff в экранный буфер
 restore_objs:
-  LD A,(save_objs_buff)		; 	Количество восстанавливаемых объектов
-  AND A
-  RET Z						; Возвращаемся, если нечего восстанавливать
-  LD HL,save_objs_buff+$01
+	LD A,(save_objs_buff)	; Количество восстанавливаемых объектов
+	AND A
+	RET Z			; Возвращаемся, если нечего восстанавливать
+	LD HL,save_objs_buff+$01
 next_restore_obj:
-  EX AF,AF'
-  LD E,(HL)		; младший адрес в экранном буфере
-  INC HL
-  LD D,(HL)		; старший адрес в экранном буфере
-  INC HL
-  LD A,(HL)		; шаг отступа для выполнения череды LDI
-  ; LD (next_line_restore_obj+$01),A
-  INC HL
-  LD B,(HL)		; высота спрайта с тенью в пикселях
-  INC HL
+	ld (rest_obj_04+1),A	; save A
+	LD E,(HL)		; младший адрес в экранном буфере
+	INC HL
+	LD D,(HL)		; старший адрес в экранном буфере
+	INC HL
+	LD A,(HL)		; шаг отступа для выполнения череды LDI
+	; LD (next_line_restore_obj+$01),A
+	INC HL
+	LD B,(HL)		; высота спрайта с тенью в пикселях
+	INC HL
 
-	ld c,a		; ширина
-	ld a,b		; высота спрайта с тенью в пикселях
+	ld c,a			; ширина
+	ld a,b			; высота спрайта с тенью в пикселях
 	ld (rest_obj_02+$01),a
 	ld (rest_obj_03+$01),a
 
 rest_obj_02:
-	ld b,$00	; Высота восстанавливаемого окна
+	ld b,$00		; Высота восстанавливаемого окна
 rest_obj_01:
 	ld a,(hl)
 	ld (de),a
@@ -855,16 +858,16 @@ rest_obj_01:
 	jp nz,rest_obj_01
 	ld a,e
 rest_obj_03:
-	sub $00	; Высота восстанавливаемого окна
+	sub $00			; Высота восстанавливаемого окна
 	ld e,a
 	inc d
 	dec c
 	jp nz,rest_obj_02
-
-  EX AF,AF'
-  DEC A
-  JP NZ,next_restore_obj
-  RET
+rest_obj_04:
+	ld A,$00		; restore A
+	DEC A
+	JP NZ,next_restore_obj
+	RET
 
   ; LD C,$FF
   ; LD A,E
@@ -1002,22 +1005,22 @@ no_shift_obj:
 
   CALL sprite_search
   LD HL,table_proc-$02
-  LD A,(IX+$04)			; координата Y объекта
+  LD A,(IX+$04)		; координата Y объекта
 
   CP $C0
-  RET NC				; Возвращаемся, если координата больше 192, то есть объект за пределами экрана
+  RET NC		; Возвращаемся, если координата больше 192, то есть объект за пределами экрана
 
   LD (sp_storage),SP
 
-  BIT 7,(IX+$15)		; BIT7 = 1 - каретка не в процессе трансформации
+  BIT 7,(IX+$15)	; BIT7 = 1 - каретка не в процессе трансформации
   LD A,$00
   JP NZ,not_transform	; Переход, если каретка не в процессе трансформации
-  LD A,(IX+$02)			; координата Х объекта
+  LD A,(IX+$02)		; координата Х объекта
 not_transform:
   AND $07
   LD C,A
-  LD A,(DE)				; ширина в байтах (без учёта маски) (в DE адрес спрайта)
-  LD B,A				; ширина в байтах (без учёта маски)
+  LD A,(DE)		; ширина в байтах (без учёта маски) (в DE адрес спрайта)
+  LD B,A		; ширина в байтах (без учёта маски)
   JP Z,no_shift_obj_2	; Переход, если нет сдвига по X
   ADD A,$08
 
@@ -1062,8 +1065,10 @@ no_cross_top:
   ADD A,A
   ADD A,table_shifts/$100-$02	; $F200/$100-$02=$F0
   LD H,A
-  LD (scr_buff_1+$01),DE	; DE - адрес в экранном буфере
-  LD A,(DE)
+	ex DE,HL
+	ld (scr_buff_1+$01),HL	; DE - адрес в экранном буфере
+	ld A,(HL)
+	ex DE,HL
 put_byte_4:
   JP put_byte_4
 
@@ -3634,9 +3639,9 @@ LAAD2_0:
   ADD A,A
   AND $C0
   OR (IX+$12)
-  EX AF,AF'
+  push AF	; save A
   CALL calc_write_spr_addr
-  EX AF,AF'
+  pop AF	; restore A
 LAAD2_1:
   LD (IX+$12),A
   RET
@@ -4129,9 +4134,14 @@ print_frame_metal_brik:
 print_frame_metal_brik_01:
 	ENDIF
 
+	ex HL,DE		; сейчас HL свободен
+	ld HL,$0000
+	add HL,SP
+	ld (LADDD+$01),HL	; LD (LADDD+$01),SP  - сохраняем SP
+	ex HL,DE
+
   LD E,(IX+$00)
   LD D,(IX+$01)
-  LD (LADDD+$01),SP
   EX DE,HL
   di
   LD SP,HL
@@ -4139,18 +4149,14 @@ print_frame_metal_brik_01:
   LD B,$08	; 8 строк по 2 байта
 LADBC_0:
   POP DE
-
 LADBC_01:
 ;  ld a,$00
 ;  ld (color_port),a	; Цвет левой половины кирпича (на случай тени)
-
   LD (HL),E
   INC H
-
 LADBC_02:
 ;  ld a,$00
 ;  ld (color_port),a	; Цвет правой половины кирпича
-
   LD (HL),D
   DEC H
   dec L			; поправлено направление для Вектора
@@ -4268,7 +4274,11 @@ brik_shadow_2:
 ; В HL - координаты кирпича
 ; В IY - ссылка не текущий код кирпича
 print_one_brik_buf:
-  LD (LAEB4+$01),SP	; Сохраняем стек
+	ex DE,HL		; теперь HL свободен
+	ld HL,$0000
+	add HL,SP
+	ld (LAEB4+$01),HL	; Сохраняем стек
+	ex DE,HL
 
 ; Оформление верхнего края кирпича
   PUSH HL
@@ -4342,15 +4352,15 @@ LAE82_1:
   di
 	LD SP,spr_brik_1
 
-	IFDEF MX
+  IFDEF MX
 	; Ничего не делаем
-	ELSE
+  ELSE
 	ld a,b
 	or a
 	jp nz,LAE82_21
 	LD SP,spr_brik_black
 LAE82_21:
-	ENDIF
+  ENDIF
 
   LD A,$08
 LAE82_2:
@@ -4967,7 +4977,9 @@ LAFFC_46:
 ;-----------------------------------------
 ; Восстановление фона ЗА выбитым кирпичом
 LAFFC_47:
-  LD (LB3E2+$01),DE
+	ex DE,HL
+	ld (LB3E2+$01),HL
+	ex DE,HL
   PUSH DE
   LD A,B
   LD (LB33D+$01),A
@@ -4975,7 +4987,7 @@ LAFFC_47:
   LD A,$08
   LD B,$00
 LAFFC_48:
-  EX AF,AF'
+  ld (LB33D_2+1),A	; save A
 LB33D:
   LD C,$00		; Размер окна
 LB33D_0:
@@ -4995,7 +5007,8 @@ LB33D_1:
 	sub c
 	ld d,a
 	inc e
-  EX AF,AF'
+LB33D_2:
+  ld A,$00		; restore A
   DEC A
   JP NZ,LAFFC_48
 
@@ -5063,11 +5076,13 @@ LAFFC_55:
 ;=======================================
 
 LAFFC_56:
-  LD DE,(LB28F+$01)		; Координаты на экране
-  POP HL				; Адрес в экранном буфере
+	ex DE,HL
+	ld HL,(LB28F+$01)	; Координаты на экране
+	ex DE,HL
+  POP HL		; Адрес в экранном буфере
   LD B,H
   LD C,L
-  ; BC - адрес в экранном буфере
+; BC - адрес в экранном буфере
   LD A,D
   CP $78
   JP Z,LAFFC_58
@@ -5276,17 +5291,19 @@ LAFFC_66:
   CALL scr_buff_attr_calc
 ;  В HL адрес в буфере атрибутов
 
-	IFDEF MX
-  PUSH HL
-  LD DE,(attr_buff+$0202)
+  IFDEF MX
+	PUSH HL
+	ex DE,HL
+	ld HL,(attr_buff+$0202)
+	ex DE,HL
 
-; RES 6,E
+	; RES 6,E
 	ld a,e
 	and %01110111
 	ld e,a
-  LD A,(LB28F+$01)
-  CP $08
-  JP Z,LAFFC_67
+	LD A,(LB28F+$01)
+	CP $08
+	JP Z,LAFFC_67
 	; SET 6,E
 	ld a,e
 	and %00000111
@@ -5300,11 +5317,11 @@ col_res_02:
 	ld e,a
 
 LAFFC_67:
-  LD A,(LB28F+$02)
-  CP $20
-  JP Z,LAFFC_69
-  BIT 7,(IY-$10)
-  JP NZ,LAFFC_68
+	LD A,(LB28F+$02)
+	CP $20
+	JP Z,LAFFC_69
+	BIT 7,(IY-$10)
+	JP NZ,LAFFC_68
 
 	; RES 6,E
 	ld a,e
@@ -5312,8 +5329,8 @@ LAFFC_67:
 	ld e,a
 
 LAFFC_68:
-  BIT 7,(IY-$0F)
-  JP NZ,LAFFC_69
+	BIT 7,(IY-$0F)
+	JP NZ,LAFFC_69
 
 	; RES 6,D
 	ld a,d
@@ -5321,14 +5338,14 @@ LAFFC_68:
 	ld d,a
 
 LAFFC_69:
-  LD (HL),E
-  inc h
-  LD (HL),D
+	LD (HL),E
+	inc h
+	LD (HL),D
 
-  inc l
-  LD A,(LB28F+$02)
-  CP $78
-  JP NZ,LAFFC_70
+	inc l
+	LD A,(LB28F+$02)
+	CP $78
+	JP NZ,LAFFC_70
 
   	; SET 6,(HL)
 	ld a,(hl)
@@ -5356,10 +5373,10 @@ col_res_05:
 col_res_06:
 	ld (hl),a
 
-  JP LAFFC_72
+	JP LAFFC_72
 LAFFC_70:
-  BIT 7,(IY+$0F)
-  JP Z,LAFFC_71
+	BIT 7,(IY+$0F)
+	JP Z,LAFFC_71
 
   	; SET 6,(HL)
 	ld a,(hl)
@@ -5374,12 +5391,12 @@ col_res_08:
 	ld (hl),a
 
 LAFFC_71:
-  inc h
-  LD A,(LB28F+$01)
-  CP $E8
-  JP Z,LAFFC_72
-  BIT 7,(IY+$10)
-  JP Z,LAFFC_72
+	inc h
+	LD A,(LB28F+$01)
+	CP $E8
+	JP Z,LAFFC_72
+	BIT 7,(IY+$10)
+	JP Z,LAFFC_72
 
   	; SET 6,(HL)
 	ld a,(hl)
@@ -5393,15 +5410,15 @@ col_res_09:
 col_res_10:
 	ld (hl),a
 LAFFC_72:
-  POP HL		; hl - адрес в буфере атрибутов
-	ELSE
-
-	ld de,(attr_buff+$0202)
+	POP HL		; hl - адрес в буфере атрибутов
+  ELSE
+	ex DE,HL
+	ld HL,(attr_buff+$0202)
+	ex DE,HL
 	ld (hl),e
 	inc h
 	ld (hl),d
-
-	ENDIF
+  ENDIF
 
 ;----------------------------------------------------------------
 ; Моментальное восстановление цвета на экране из буфера атрибутов
@@ -5568,11 +5585,13 @@ screen_addr_calc:
 	and %11111
 	ld b,a
 	ld a,h
+	ld (screen_addr_calc_1+1),a
 	ld c,0
 	ld hl,zx_scr
 	add hl,bc
-	neg
-	add l
+	ld a,l
+screen_addr_calc_1:
+	sub $00
 	ld l,a
 	ret
 
@@ -5823,7 +5842,7 @@ LB6A9_02:
 ;-----------------------
 	LD A,$07
 LB6A9_1:
-	EX AF,AF'
+	ld (LB6A9_20+1),A	; save A
 LB6A9_10:
 ;  ld a,$00
 ;  ld (color_port),a	; Цвет левой половины кирпича (на случай тени)
@@ -5844,7 +5863,8 @@ LB6A9_11:
 	INC DE
 	dec B
 	inc c
-	EX AF,AF'
+LB6A9_20:
+	ld A,$00		; restore A
 	DEC A
 	JP NZ,LB6A9_1
 ;-----------------------
@@ -6732,7 +6752,7 @@ buff_to_screen_pixs:
 	ld de,scr_buff
 	ld a,32
 buff_to_screen_pixs_1:
-	ex af,af'
+	ld (buff_to_screen_pixs_4+1),a ; save A
 	push de
 	push hl
 	ld c,24
@@ -6764,7 +6784,8 @@ buff_to_screen_pixs_3:
 	pop de
 	inc h
 	inc d
-	ex af,af'
+buff_to_screen_pixs_4:
+	ld a,$00		; restore A
 	dec a
 	jp nz,buff_to_screen_pixs_1
 	ret
@@ -6795,7 +6816,9 @@ current_level_2up_copier:
   LD A,(lives_2up)
   AND A
   RET Z
-  LD DE,(current_level_addr)
+	ex DE,HL
+	ld HL,(current_level_addr)
+	ex DE,HL
   PUSH DE
   LD A,(current_level_number_2up)
   CALL level_addr_calc_a
@@ -6803,7 +6826,7 @@ current_level_2up_copier:
   LD BC,current_level_copy
   LD A,$B4
 LBE0C_0:
-  EX AF,AF'
+	ld (LBE0C_1+1),A	; save A
   LD A,(DE)
   PUSH AF
   LD A,(BC)
@@ -6813,7 +6836,8 @@ LBE0C_0:
   INC HL
   INC DE
   INC BC
-  EX AF,AF'
+LBE0C_1:
+	ld A,$00		; restore A
   DEC A
   JP NZ,LBE0C_0
 
@@ -6891,7 +6915,9 @@ game_screen_draw_to_buffer:
   LD E,(HL)
   INC HL
   LD D,(HL)
-  LD (current_texture+$01),DE	; Помещаем указатель на текстуру уровня
+	ex DE,HL
+	ld (current_texture+$01),HL	; Помещаем указатель на текстуру уровня
+	ex DE,HL
 
 ;-----------------------------------
 ; Заполняем буфер текстурой

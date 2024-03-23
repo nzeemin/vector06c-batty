@@ -222,7 +222,7 @@ play_sound_unused:
   LD A,$18
   LD L,$01
 play_sound_LC190:
-  EX AF,AF'
+	ld (play_sound_LC190_1+1),A	; save A
   LD DE,$01FF
 play_sound_LC190_0:
   PUSH DE
@@ -235,7 +235,8 @@ play_sound_LC190_0:
   LD A,$04
   ADD A,L
   LD L,A
-  EX AF,AF'
+play_sound_LC190_1:
+	ld A,$00		; restore A
   DEC A
   JP NZ,play_sound_LC190
   ;DI
