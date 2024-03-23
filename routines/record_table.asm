@@ -132,7 +132,9 @@ L910C_10:
 L910C_11:
   LD (IX+$09),C
   PUSH BC
-  LD DE,(text_line_addr)
+	ex DE,HL
+	ld HL,(text_line_addr)
+	ex DE,HL
   CALL print_line
   CALL play_sound_choose_letter
   LD D,$20
@@ -146,7 +148,9 @@ L910C_12:
   INC IX
   LD (IX+$09),$0A
   PUSH BC
-  LD DE,(text_line_addr)
+	ex DE,HL
+	ld HL,(text_line_addr)
+	ex DE,HL
   CALL print_line
 L910C_13:
   CALL get_control_state_1up
