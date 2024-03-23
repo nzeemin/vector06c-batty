@@ -584,7 +584,7 @@ print_digit_ld_sp_2:
 	ld SP,$0000		; restore SP
 	ei
   EXX
-  RET
+	RET
 
 ; Used by the routines at add_points_for_left_briks and play_sounds_queue.
 ; Обновляет участок экрана со счётом текущего игрока
@@ -615,17 +615,17 @@ level_addr_calc:
 ; This entry point is used by the routine at current_level_2up_copier.
 ; Поиск адреса уровня по номеру, заданному в А
 level_addr_calc_a:
-  LD HL,levels
-  ADD A,A
-  LD E,A
-  LD D,$00
-  ADD HL,DE
-  LD E,(HL)
-  INC HL
-  LD D,(HL)
-  EX DE,HL
-  LD (current_level_addr),HL
-  RET
+	LD HL,levels
+	ADD A,A		; *2
+	LD E,A
+	LD D,$00
+	ADD HL,DE
+	ld A,(HL)
+	INC HL
+	ld H,(HL)
+	ld L,A
+	LD (current_level_addr),HL
+	RET
 
 current_level_addr:
   DEFW $0000
@@ -1934,6 +1934,7 @@ handling_bat_stub:
 
 ; Used by the routine at game_restart.
 ; Реальная обработка текущего состояния каретки
+; Вход: (IXobj) = адрес объекта
 handling_bat:
   LD A,(object_bat_temp+$06)	; направление
   CP $1C
@@ -1943,7 +1944,7 @@ handling_bat:
 zero_direction:
   LD (objs_width_sum),A	; Записываем $00 или $05, в зависимости от направления
 
-	ld HL,(IXobj)
+	ld IX,(IXobj)
 ; На какой стороне всё происходит?
   LD A,(IX+$02)	; Координата X биты
   AND $80
@@ -6063,10 +6064,10 @@ score_2up_in_game:
 
 ; Used by the routine at LBC10.
 pause_clear_screen_attrib:
-  CALL pause_short
-  dec B
-  jp nz,pause_clear_screen_attrib
-  JP clear_screen_attrib
+	CALL pause_short
+	dec B
+	jp nz,pause_clear_screen_attrib
+	JP clear_screen_attrib
 
 ; Used by the routines at input_new_record_name, game_restart, LBBFB and LBC10.
 ; Пауза - в B задаётся количество циклов. Один цикл - примерно 0,3 сек.
@@ -6130,91 +6131,91 @@ ctrl_type_2up:
 ; Used by the routine at game_restart.
 ; Инициализация всех переменных, подготовка всех буферов
 all_var_init:
-  LD A,(ball_x_coord+$01)
-  XOR $88
-  LD (ball_x_coord+$01),A	; Запись в object_ball_1+2
-  LD A,$0C
-  LD (spr_bonus_rocket_1+$01),A
-  LD DE,object_ball_1
-  LD HL,objects_buff_2
-  LD A,$0B
+	LD A,(ball_x_coord+$01)
+	XOR $88
+	LD (ball_x_coord+$01),A	; Запись в object_ball_1+2
+	LD A,$0C
+	LD (spr_bonus_rocket_1+$01),A
+	LD DE,object_ball_1
+	LD HL,objects_buff_2
+	LD A,$0B		; 11
 LB7F8_0:
-  LD BC,$0016
-  CALL LDIR8080		; LDIR
-  DEC A
-  JP NZ,LB7F8_0
+	LD BC,$0016
+	CALL LDIR8080		; LDIR
+	DEC A
+	JP NZ,LB7F8_0
 ; A = 0
-  LD (LBAEB+$01),A		; меняем параметр команды JR
-  LD (bonus_flag),A
-  LD (bonus_flag_copy),A
-  LD (current_magnet_prop+$01),A
-  LD (ctrl_btns_pressed),A
-  LD (ctrl_btns_pressed_copy),A
-  INC A
+	;LD (LBAEB+$01),A	; меняем параметр команды JR (но нет других мест изменения параметра)
+	LD (bonus_flag),A
+	LD (bonus_flag_copy),A
+	LD (current_magnet_prop+$01),A
+	LD (ctrl_btns_pressed),A
+	LD (ctrl_btns_pressed_copy),A
+	INC A
 ; A = 1
-  LD (balls_quantity),A
-  LD A,(game_mode)
-  CP $02
-  JP NZ,LB7F8_1
+	LD (balls_quantity),A
+	LD A,(game_mode)
+	CP $02
+	JP NZ,LB7F8_1
 ; Режим двух игроков
-  LD A,$01
-  LD (object_bat_2),A
-  LD A,$38
-  LD (object_bat_1+$02),A	; Координата X
-  LD A,$B0
-  LD (object_bat_2+$02),A	; Координата X
+	LD A,$01
+	LD (object_bat_2),A
+	LD A,$38
+	LD (object_bat_1+$02),A	; Координата X
+	LD A,$B0
+	LD (object_bat_2+$02),A	; Координата X
 ball_x_coord:
-  LD A,$48	; Здесь самомодификация кода
-  LD (object_ball_1+$02),A
-  CP $C0
-  JP NZ,LB7F8_1
-  LD A,(object_ball_1+$12)
-  OR $80
-  LD (object_ball_1+$12),A
-  LD A,$FF
-  LD (object_bat_1+$14),A
-  LD A,$83
-  LD (object_bat_2+$14),A
+	LD A,$48	; Здесь самомодификация кода
+	LD (object_ball_1+$02),A
+	CP $C0
+	JP NZ,LB7F8_1
+	LD A,(object_ball_1+$12)
+	OR $80
+	LD (object_ball_1+$12),A
+	LD A,$FF
+	LD (object_bat_1+$14),A
+	LD A,$83
+	LD (object_bat_2+$14),A
 LB7F8_1:
-  LD HL,$8CC0			; Это не адрес!
-  LD (object_ball_1+$14),HL
-  LD L,$08
-  LD A,(current_level_number_1up)
-  ADD A,$02
-  CP $04
-  JP C,LB7F8_2
-  LD A,$04
+	LD HL,$8CC0			; Это не адрес!
+	LD (object_ball_1+$14),HL
+	LD L,$08
+	LD A,(current_level_number_1up)
+	ADD A,$02
+	CP $04
+	JP C,LB7F8_2
+	LD A,$04
 LB7F8_2:
-  LD A,$03
-  LD H,A
-  LD (object_ball_1+$06),HL
-  LD A,$0E
-  LD (running_dot_frame_1up),A
-  LD (running_dot_frame_2up),A
-  LD A,$83
-  LD (object_bat_1+$14),A
-  XOR A
-  LD (wins_counter),A
-  LD HL,wins_recovery_data
-  LD (LB2D8+$02),HL
-  LD HL,bonus_table_first
-  LD A,(round_number_1up)
-  CP $06
-  JP C,LB7F8_3
-  LD HL,bonus_table_second
+	LD A,$03
+	LD H,A
+	LD (object_ball_1+$06),HL
+	LD A,$0E
+	LD (running_dot_frame_1up),A
+	LD (running_dot_frame_2up),A
+	LD A,$83
+	LD (object_bat_1+$14),A
+	XOR A
+	LD (wins_counter),A
+	LD HL,wins_recovery_data
+	LD (LB2D8+$02),HL
+	LD HL,bonus_table_first
+	LD A,(round_number_1up)
+	CP $06
+	JP C,LB7F8_3
+	LD HL,bonus_table_second
 LB7F8_3:
-  LD DE,bonus_table_current
-  LD BC,$0010
-  CALL LDIR8080		; LDIR
-  LD HL,LA270
-  LD B,$0C
-  CALL clear_hl_buff
-  LD HL,sounds_queue
-  LD B,$23
-  CALL clear_hl_buff
-  LD HL,briks_data
-  LD B,$23
-  JP clear_hl_buff
+	LD DE,bonus_table_current
+	LD BC,$0010
+	CALL LDIR8080		; LDIR
+	LD HL,LA270
+	LD B,$0C
+	CALL clear_hl_buff
+	LD HL,sounds_queue
+	LD B,$23
+	CALL clear_hl_buff
+	LD HL,briks_data
+	LD B,$23
+	JP clear_hl_buff
 
 ; Used by the routine at briks_calc.
 ; Сброс свойств всех кирпичей на уровне
@@ -6256,15 +6257,15 @@ kinnock:
 
 ; Used by the routine at game_restart.
 print_kinnock:
-  LD A,(kinnock)
-  AND A
-  RET NZ
-  LD DE,txt_kinnock
-  LD B,$02
-  CALL print_message
-  LD D,$00
-  CALL pause_short
-  JP clear_screen_attrib
+	LD A,(kinnock)
+	AND A
+	RET NZ
+	LD DE,txt_kinnock
+	LD B,$02
+	CALL print_message
+	LD D,$00
+	CALL pause_short
+	JP clear_screen_attrib
 
   INCLUDE "./txt/txt_kinnock.asm"
 
@@ -6287,122 +6288,118 @@ game_start:
 
 ;---------------------------------
 ; Переносим свойства 11 спрайтов в буфер по адресу 6000
-  LD DE,objects_buff_2
-  LD HL,object_ball_1
-  LD A,$0B
-game_start_0:
-  LD BC,$0016
-  CALL LDIR8080		; LDIR
-  DEC A
-  JP NZ,game_start_0
+	ld DE,objects_buff_2
+	ld HL,object_ball_1
+	ld BC,11*$0016
+	CALL LDIR8080		; LDIR
 ;---------------------------------
 
-  LD HL,objs_width_sum
-  LD B,$01
-  CALL clear_hl_buff	; Странный метод очистки ячейки objs_width_sum (суть - LD (objs_width_sum),$00)
+	xor a
+	ld (objs_width_sum),A
 
 ; Used by the routine at LBC10.
 ; Повторный запуск главного меню (после проигрыша), минуя некоторые инициализации
 game_restart:
-  ld a,(score_1up_in_game+$01)
-  sub scr_buff/$100
-  AND $1F
-  CP $02
-  CALL NZ,players_swap
+	ld a,(score_1up_in_game+$01)
+	sub scr_buff/$100
+	AND $1F
+	CP $02
+	CALL NZ,players_swap
 
 ;----------------------------------
-  CALL disp_main_menu_and_wait_keys
+	CALL disp_main_menu_and_wait_keys
 ;----------------------------------
 ; Непосредственный запуск игры
 
-  LD HL,$0000
-  LD (current_score_1up),HL
-  LD (current_score_1up+$01),HL
+	xor a
+	ld l,a
+	ld h,a
+	ld (current_score_1up),HL
+	ld (current_score_1up+$02),A
+; Обнуление внутриигрового счёта
+	LD (score_1up_in_game+$04),HL
+	LD (score_1up_in_game+$06),HL
+	LD (score_1up_in_game+$08),HL
+	LD (score_2up_in_game+$04),HL
+	LD (score_2up_in_game+$06),HL
+	LD (score_2up_in_game+$08),HL
 
-  ; Обнуление внутриигрового счёта
-  LD (score_1up_in_game+$04),HL
-  LD (score_1up_in_game+$06),HL
-  LD (score_1up_in_game+$08),HL
-  LD (score_2up_in_game+$04),HL
-  LD (score_2up_in_game+$06),HL
-  LD (score_2up_in_game+$08),HL
-
-  LD A,$03				; Количество жизней
-  LD (lives_1up),A
-  LD A,$C0
-  LD (ball_x_coord+$01),A		; Запись в object_ball_1+2
-  XOR A		; Начальный уровень = 0
-  LD (current_level_number_1up),A
-  LD (round_number_1up),A
-  LD (player_number),A
-  CALL briks_calc
-  LD DE,current_level_copy
-  LD HL,(current_level_addr)
-  LD BC,$00B4			; 180 - количество ячеек на уровне
-  CALL LDIR8080		; LDIR
-  LD DE,lives_2up
-  LD HL,lives_1up
-  LD BC,$0007
-  CALL LDIR8080		; LDIR
-  LD A,(game_mode)
-  AND A
-  JP NZ,LB9E8_0
-  LD (lives_2up),A
+	LD A,$03		; Количество жизней
+	LD (lives_1up),A
+	LD A,$C0
+	LD (ball_x_coord+$01),A	; Запись в object_ball_1+2
+	XOR A			; Начальный уровень = 0
+	LD (current_level_number_1up),A
+	LD (round_number_1up),A
+	LD (player_number),A
+	CALL briks_calc
+	LD DE,current_level_copy
+	LD HL,(current_level_addr)
+	LD BC,$00B4		; 180 - количество ячеек на уровне
+	CALL LDIR8080		; LDIR
+	LD DE,lives_2up
+	LD HL,lives_1up
+	LD BC,$0007
+	CALL LDIR8080		; LDIR
+	LD A,(game_mode)
+	AND A
+	JP NZ,LB9E8_0
+	LD (lives_2up),A
 LB9E8_0:
-  CALL clear_screen_attrib
-  CALL clear_screen_pix
+	CALL clear_screen_attrib
+	CALL clear_screen_pix
 
 ; This entry point is used by the routines at LBBFB and LBC10.
 ; Сюда возвращаемся когда потеряли жизнь
 LB9E8_1:
-  CALL level_addr_calc
-  CALL game_screen_draw_to_buffer
-  CALL all_var_init
-  CALL clear_screen_attrib
-  CALL print_kinnock
-  CALL buff_to_screen_pixs
-  CALL buff_to_screen_attrib
-  ;CALL return		; Заглушка, пустая подпрограмма
-  CALL show_window_round_number
-  LD B,$04
-  CALL pause_long	; Пауза 1,2 сек. (4*0.3)
-  CALL all_metal_briks_animation_snd
+	CALL level_addr_calc
+	CALL game_screen_draw_to_buffer
+	CALL all_var_init
+	CALL clear_screen_attrib
+	CALL print_kinnock
+	CALL buff_to_screen_pixs
+	;CALL buff_to_screen_attrib
+	;CALL return		; Заглушка, пустая подпрограмма
+	CALL show_window_round_number
+	LD B,$04
+	CALL pause_long		; Пауза 1,2 сек. (4*0.3)
+	CALL all_metal_briks_animation_snd
 ; Восстанавливаем из буфера пиксели над окном с надписью о номере раунда
-  LD HL,$8158		; Координаты
-  LD BC,$0A28		; Размеры окна
-  CALL win_bg_recovery
+	LD HL,$8158		; Координаты
+	LD BC,$0A28		; Размеры окна
+	CALL win_bg_recovery
 
 ; This entry point is used by the routine at LBAED.
 LB9E8_2:
-  LD A,(random_number+$01)
-  CP $99
-  CALL Z,print_one_magnet
-  XOR A
-  LD (counter_2),A
-  CALL get_left_player_ctrl_state
-  LD HL,(counter_misc)
-  INC HL
-  LD (counter_misc),HL
-  CALL enemy_prepare
-  CALL random_generate
-  LD IX,object_bat_1
+	LD A,(random_number+$01)
+	CP $99
+	CALL Z,print_one_magnet
+	XOR A
+	LD (counter_2),A
+	CALL get_left_player_ctrl_state
+	LD HL,(counter_misc)
+	INC HL
+	LD (counter_misc),HL
+	CALL enemy_prepare
+	CALL random_generate
+	ld HL,object_bat_1
 	ld (IXobj),HL
-  CALL handling_bat
-  LD A,(game_mode)
-  CP $02
-  JP NZ,LB9E8_3
-  CALL bonus_flag_swap
-  LD A,(ctrl_btns_pressed)
-  PUSH AF
-  LD A,(ctrl_type_2up)
-  CALL get_right_player_ctrl_state
-  LD A,(ctrl_btns_pressed)
-  LD (ctrl_btns_pressed_copy),A
-  LD IX,object_bat_2
+	CALL handling_bat
+	LD A,(game_mode)
+	CP $02
+	JP NZ,LB9E8_3
+	CALL bonus_flag_swap
+	LD A,(ctrl_btns_pressed)
+	PUSH AF
+	LD A,(ctrl_type_2up)
+	CALL get_right_player_ctrl_state
+	LD A,(ctrl_btns_pressed)
+	LD (ctrl_btns_pressed_copy),A
+	LD HL,object_bat_2
 	ld (IXobj),HL
-  CALL handling_bat
-  POP AF
-  LD (ctrl_btns_pressed),A
+	CALL handling_bat
+	POP AF
+	LD (ctrl_btns_pressed),A
 	ld HL,object_bat_1
 	ld (IXobj),HL
 	CALL LACCE
@@ -6411,14 +6408,13 @@ LB9E8_2:
   	CALL LACAD
 	CALL bonus_flag_swap
 LB9E8_3:
-  LD HL,handling_object
-  CALL call_hl_for_all_obj
-  LD HL,ix_buf_addr_calc
-  CALL call_hl_for_all_obj
-  CALL fill_briks_data
+	LD HL,handling_object
+	CALL call_hl_for_all_obj
+	LD HL,ix_buf_addr_calc
+	CALL call_hl_for_all_obj
+	CALL fill_briks_data
 LBAEB:
-  JR LBAED_0		;WARN: Параметр JR изменяемый!
-
+	;JR LBAED_0		;WARN: Параметр JR изменяемый! но почему-то задаётся только в одном месте
 LBAED:
   LD A,(object_rocket)
   AND A
@@ -6488,18 +6484,21 @@ LBAED_5:
   JP LB9E8_2
 
 LBAED_6:
-  LD B,$0B
-  LD DE,$0016
-  LD IX,object_ball_1
+	ld B,$0B		; 11
+	ld DE,$0016
+	ld HL,object_ball_1
 LBAED_7:
-  LD A,(IX+$00)
-  AND A
-  JP Z,LBAED_8
-  SET 7,(IX+$00)
+	LD A,(HL)		; IX+$00
+	AND A
+	JP Z,LBAED_8
+	ld A,(HL)
+	or %10000000		; SET 7,(IX+$00)
+	ld (HL),A
 LBAED_8:
-  ADD IX,DE
-  dec B
-  jp nz,LBAED_7
+	ADD HL,DE
+	dec B
+	jp nz,LBAED_7
+
   LD A,$01
 LBB83:
   LD HL,$0000
@@ -6844,8 +6843,8 @@ buff_to_screen_pixs_4:
 
 ; Used by the routine at game_restart.
 ; Перенос всех атрибутов из буфера на экран
-buff_to_screen_attrib:
-	RET
+;buff_to_screen_attrib:
+;	RET
 
 ; Used by the routines at add_points_to_score and current_level_2up_copier.
 ; Обмен содержимым ячеек адресуемых парами HL и DE
@@ -6963,12 +6962,11 @@ game_screen_draw_to_buffer:
 	LD A,(current_level_number_1up)
 	AND $03
 	CALL hl_add_2a
-	LD E,(HL)
-	INC HL
-	LD D,(HL)
-	ex DE,HL
-	ld (current_texture+$01),HL	; Помещаем указатель на текстуру уровня
-	ex DE,HL
+	ld A,(HL)
+	inc HL
+	ld H,(HL)
+	ld L,A
+	ld (current_texture+1),HL	; Помещаем указатель на текстуру уровня
 
 ;-----------------------------------
 ; Заполняем буфер текстурой
@@ -7105,54 +7103,62 @@ LBE8B_7:
 
 ;-----------------------------------------
 ; Рисуем индикаторы количества жизней
-  LD A,$08		; Координата X для указателя первой жизни
-  LD (object_lives_indicator+$02),A
-  LD A,(lives_1up)
-  DEC A
-  JP Z,LBE8B_10		; Если жизнь только одна, то не рисуем
-  LD B,A
-  LD IX,object_lives_indicator
-	ld (IXobj),IX
+	LD A,$08		; Координата X для указателя первой жизни
+	LD (object_lives_indicator+$02),A
+	LD A,(lives_1up)
+	DEC A
+	JP Z,LBE8B_10		; Если жизнь только одна, то не рисуем
+	LD B,A
+	ld HL,object_lives_indicator
+	ld (IXobj),HL
 LBE8B_8:
-  PUSH BC
-  CALL ix_buf_addr_calc
-  CALL print_obj_to_buff
-  LD A,(object_lives_indicator+$02)	; Координата X
-  ADD A,$10		; на 16 правее
-  CP $E9		; Если жизни не помещаются на экран, то не рисуем
-  JP NC,LBE8B_9
-  LD (object_lives_indicator+$02),A
+	PUSH BC
+	CALL ix_buf_addr_calc
+	CALL print_obj_to_buff
+	LD A,(object_lives_indicator+$02)	; Координата X
+	ADD A,$10		; на 16 правее
+	CP $E9			; Если жизни не помещаются на экран, то не рисуем
+	JP NC,LBE8B_9
+	LD (object_lives_indicator+$02),A
 LBE8B_9:
-  POP BC
-  dec B
-  jp nz,LBE8B_8
+	POP BC
+	dec B
+	jp nz,LBE8B_8
 
 ;---------------------------------
 ; Рисуем разделитель игроков, если соответствующий режим игры
 LBE8B_10:
-  LD A,(game_mode)
-  CP $02
-  JP NZ,LBE8B_11
-  LD IX,object_separator
-	ld (IXobj),IX
-  CALL ix_buf_addr_calc
-  CALL print_obj_to_buff
+	LD A,(game_mode)
+	CP $02
+	JP NZ,LBE8B_11
+	ld HL,object_separator
+	ld (IXobj),HL
+	CALL ix_buf_addr_calc
+	CALL print_obj_to_buff
 
 ;------------------------------
 ; Рисуем 1UP, HI и 2UP
 LBE8B_11:
-	LD IX,object_score_indicator
-	ld (IXobj),IX
-	LD (IX+$02),$1C
-	LD (IX+$01),$01		; spr_1up
+	LD HL,object_score_indicator
+	ld (IXobj),HL
+	inc HL
+	LD (HL),$01		; (IX+$01) = $01: spr_1up
+	inc HL
+	LD (HL),$1C		; (IX+$02) = $1C
 	CALL ix_buf_addr_calc
 	CALL print_obj_to_buff
-	INC (IX+$01)		; spr_2up
-	LD (IX+$02),$CC
+	ld HL,(IXobj)
+	inc HL
+	INC (HL)		; INC (IX+$01): spr_2up
+	inc HL
+	LD (HL),$CC		; (IX+$02) = $CC
 	CALL ix_buf_addr_calc
 	CALL print_obj_to_buff
-	INC (IX+$01)		; spr_hi
-	LD (IX+$02),$78
+	ld HL,(IXobj)
+	inc HL
+	INC (HL)		; INC (IX+$01): spr_hi
+	inc HL
+	LD (HL),$78		; (IX+$02) = $78
 	CALL ix_buf_addr_calc
 	CALL print_obj_to_buff
 
