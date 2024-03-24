@@ -1736,21 +1736,21 @@ generate_new_bonus:
 	LD A,(object_ball_1)
 	AND A
 	JP Z,L9D5A_3
-	LD A,(object_ball_1+$07)
+	LD A,(object_ball_1+$07)	; Скорость движения
 	CP $02
 	JP Z,generate_new_bonus	; Если шарик уже на самой низкой скорости, то генерировать новый приз
 L9D5A_3:
 	LD A,(object_ball_2)
 	AND A
 	JP Z,L9D5A_4
-	LD A,(object_ball_2+$07)
+	LD A,(object_ball_2+$07)	; Скорость движения
 	CP $02
 	JP Z,generate_new_bonus	; Если второй шарик уже на самой низкой скорости, то генерировать новый приз
 L9D5A_4:
 	LD A,(object_ball_3)
 	AND A
 	JP Z,L9D5A_5
-	LD A,(object_ball_3+$07)
+	LD A,(object_ball_3+$07)	; Скорость движения
 	CP $02
 	JP Z,generate_new_bonus	; Если третий шарик уже на самой низкой скорости, то генерировать новый приз
 L9D5A_5:
@@ -2054,12 +2054,12 @@ no_x_decrease:
 	ADD A,$02
 	OR $20			; Устанавливаем признак увеличения каретки
 	CP $30
-	JP Z,bat_increase_size_ready		; Если достигли предела увеличения, то переход
+	JP Z,bat_increase_size_ready	; Если достигли предела увеличения, то переход
 	LD (IX+$15),A
 	RET
 bat_increase_size_ready:
-	LD (IX+$15),$81	; Каретка расширена
-	LD (IX+$0C),$2C	; Ширина объекта без тени в пикселях
+	LD (IX+$15),$81		; Каретка расширена
+	LD (IX+$0C),$2C		; Ширина объекта без тени в пикселях
 	JP bat_resize_ready
 
 ; Каретка находится в процессе уменьшения
@@ -2128,8 +2128,8 @@ handling_bat_no_transform:
 	CALL check_right_margin
 	pop AF
 
-	and %01000000	; BIT 6,A	; BIT6 bonus_flag
-	JP Z,no_bit6
+	rla	; BIT 6,A	; BIT6 bonus_flag
+	JP P,no_bit6
 
 	LD A,(counter_misc)
 	RRA
@@ -2164,10 +2164,12 @@ normal_bat:
 	JP no_bonus
 
 no_bit6:
-	RES 7,(IX+$15)		; Каретка в процессе трансформации
-	SET 0,(IX+$15)		; Широкая каретка
-	RES 1,(IX+$15)		; Каретка не в процессе расширения
-	SET 6,(IX+$15)		; Каретка в процессе уменьшения
+	LD A,(IX+$15)		; BIT7=0 Каретка в процессе трансформации
+	and %01111101		; BIT0=1 Широкая каретка
+	or  %01000001		; BIT1=0 Каретка не в процессе расширения
+	ld (IX+$15),A		; BIT6=1 Каретка в процессе уменьшения
+
+	ld A,(bonus_flag)
 	RLA
 	JP NC,no_bit7_2
 	LD (IX+$01),$0C		; spr_bat_normal_shift
@@ -2184,26 +2186,26 @@ no_bit7_2:
 	RET
 
 no_bonus:
-	LD A,(IX+$02)			; координата Х объекта
+	LD A,(IX+$02)		; координата Х объекта
 	RRA
 	RRA
 	AND $01
-	LD B,A				; BIT2 координаты Х (сдвинута каретка или нет)
+	LD B,A			; BIT2 координаты Х (сдвинута каретка или нет)
 	LD A,(IX+$15)
-	AND $01				; BIT0
+	AND $01			; BIT0
 	ADD A,A
 	ADD A,A
 	ADD A,B
-	LD (IX+$01),A			; номер спрайта каретки (0-1,4-5)
+	LD (IX+$01),A		; номер спрайта каретки (0-1,4-5)
 
 	LD A,(IX+$14)
 	DEC A
-	RET NZ				; Возвращаемся, если бонус не пулемёт
+	RET NZ			; Возвращаемся, если бонус не пулемёт
 
 ; Обработка каретки с пулемётом
 	LD A,(IX+$01)
 	ADD A,$0A
-	LD (IX+$01),A			; Заменяем обычную каретку на соответствующую каретку с пулемётом
+	LD (IX+$01),A		; Заменяем обычную каретку на соответствующую каретку с пулемётом
 
 ; Обработка выстрела
 	LD A,(bullet)
@@ -2229,9 +2231,9 @@ free_bullet_2:
 	LD (IY+$00),$05		; gfx_bullet
 	LD (IY+$01),$00		; spr_bullet_1
 	LD (IY+$09),$08		; высота спрайта с тенью в пикселях
-	LD A,(IX+$02)			; координата Х каретки
+	LD A,(IX+$02)		; координата Х каретки
 	ADD A,$0C
-	LD (IY+$02),A			; Плюс 12 пикселей к X-координате каретки
+	LD (IY+$02),A		; Плюс 12 пикселей к X-координате каретки
 	LD (IY+$04),$AC		; 192 - координата Y объекта
 	LD (IY+$11),$00
 	LD (IY+$15),$00
@@ -2804,7 +2806,7 @@ LA27E_22:
 	CP $06
 	JP Z,LA27E_23
 	INC A
-	LD (IX+$07),A
+	LD (IX+$07),A		; Записываем скорость
 
 LA27E_23:
 	CALL LAD69
@@ -2850,7 +2852,7 @@ kill_enemy_by_bat:
 ; This entry point is used by the routine at get_bonus.
 ; Убивание врага, его взрыв, звук и начисление очков
 kill_enemy:
-	LD (IY+$00),$0A	; anim_alien_blast
+	LD (IY+$00),$0A		; anim_alien_blast
 	LD (IY+$01),$00
 	LD (IY+$12),$50
 	LD (IY+$13),$90
@@ -2959,7 +2961,7 @@ LA590:
 	LD (HL),A		; IX+$02
 	CALL check_left_margin
 	CALL check_right_margin
-	LD DE,$0028
+	LD DE,$0028		; 40
 	LD B,$80
 	ld IX,(IXobj)
 	JP LA55A_0
@@ -3080,15 +3082,15 @@ get_bonus:
 	RET NC
 	LD IY,object_bat_1
 	CALL obj_compare_2pix
-	JP C,LA67B_0			; Если поймал первой кареткой, то дальше
+	JP C,LA67B_0		; Если поймал первой кареткой, то дальше
 
 	LD A,(game_mode)
 	CP $02
-	RET NZ				; Уходим, если не два игрока одновременно
+	RET NZ			; Уходим, если не два игрока одновременно
 
 	LD IY,object_bat_2
 	CALL obj_compare
-	RET NC				; Уходим, если не поймал второй кареткой
+	RET NC			; Уходим, если не поймал второй кареткой
 
 	CALL bonus_flag_swap
 	CALL LA67B_0
@@ -3097,16 +3099,15 @@ get_bonus:
 LA67B_0:
 	LD A,(IX+$01)
 	SUB $0A
-	JP NZ,LA67B_1			; Если не бомба переходим на обработку бонусов
+	JP NZ,LA67B_1		; Если не бомба переходим на обработку бонусов
 	LD (balls_quantity),A	; Обнуляем количество шаров
 	RET
 
 ; Собственно обработка бонуса
 ; IY - каретка
 ; IX - бонус
-
 LA67B_1:
-	LD A,(IY+$02)			; Координата Х каретки
+	LD A,(IY+$02)		; Координата Х каретки
 	AND $80
 	LD (need_change_player),A
 	XOR A
@@ -3138,7 +3139,7 @@ LA67B_2:
 	JP C,LA67B_3
 	NEG
 LA67B_3:
-	LD (LA590+$01),A
+	LD (LA590+1),A
 	LD (IX+$00),$0B		; gfx_last_sprite
 	LD (IX+$01),$00		; spr_400_points
 	CALL calc_write_spr_addr
@@ -3167,7 +3168,7 @@ LA67B_4:
 	XOR A
 	LD (object_bat_temp+$11),A
 	LD (IY+$15),$4E
-	LD (IY+$01),$04			; spr_bonus_slow
+	LD (IY+$01),$04		; spr_bonus_slow
 	push HL
 	CALL get_free_sound_slot
 	ld (HL),sound_triple_ball
@@ -3190,9 +3191,9 @@ LA67B_6:
 	JP NZ,LA67B_7
 ; Бонус KILL ALIENS
 	LD A,(object_enemy)
-	AND $7F
+	AND $7F			; Врага нет?
 	RET Z
-	CP $0A
+	CP $0A			; Враг уже в процессе взрыва?
 	RET Z
 	PUSH IX
 	LD IX,LA67B_6
@@ -3209,7 +3210,7 @@ LA67B_7:
 
 ; Замедление шарика
 	LD (IY+$14),$FF
-	LD A,$02
+	LD A,$02		; Скорость движения
 	LD (object_ball_1+$07),A
 	LD (object_ball_2+$07),A
 	LD (object_ball_3+$07),A
@@ -3241,62 +3242,61 @@ LA7A6:
 	LD IY,$0000
 	LD L,(IY+$02)
 	LD H,(IY+$04)
-
-  LD A,(IY+$06)
-  AND $0F
-  LD DE,$080C	; Если +$06 = $04  (0100)
-  CP $04
-  JP Z,LA67B_9
-  LD DE,$040C	; Если +$06 = $08 (1000)
-  CP $08
-  JP Z,LA67B_9
-  LD DE,$0408	; Если +$06 = предположительно $0C (1100)
+	LD A,(IY+$06)
+	AND $0F
+	LD DE,$080C		; Если +$06 = $04  (0100)
+	CP $04
+	JP Z,LA67B_9
+	LD DE,$040C		; Если +$06 = $08 (1000)
+	CP $08
+	JP Z,LA67B_9
+	LD DE,$0408		; Если +$06 = предположительно $0C (1100)
 LA67B_9:
-  LD A,(IY+$06)
-  AND $30
-  OR E
-  LD (ball2_direction+$03),A
-  LD A,(IY+$06)
-  AND $30
-  OR D
-  LD (ball3_direction+$03),A
+	LD A,(IY+$06)
+	AND $30
+	OR E
+	LD (ball2_direction+$03),A
+	LD A,(IY+$06)
+	AND $30
+	OR D
+	LD (ball3_direction+$03),A
 
-  LD D,(IY+$07)		; Скорость
-  LD C,(IY+$00)
-  LD B,(IY+$01)
-  LD IY,object_ball_1
-  LD A,(object_ball_1)
-  AND A
-  JP Z,LA67B_10
+	LD D,(IY+$07)		; Скорость
+	LD C,(IY+$00)
+	LD B,(IY+$01)
+	LD IY,object_ball_1
+	LD A,(object_ball_1)
+	AND A
+	JP Z,LA67B_10
 ; Копирование свойств первого шарика во второй + своё направление
-  LD IY,object_ball_2
+	LD IY,object_ball_2
 LA67B_10:
-  LD (IY+$02),L
-  LD (IY+$04),H
-  LD (IY+$00),$02		; gfx_ball
-  LD (IY+$11),$00
-  LD (IY+$07),D			; Скорость
-  LD (IY+$00),C
-  LD (IY+$01),B
+	LD (IY+$02),L
+	LD (IY+$04),H
+	LD (IY+$00),$02		; gfx_ball
+	LD (IY+$11),$00
+	LD (IY+$07),D		; Скорость
+	LD (IY+$00),C
+	LD (IY+$01),B
 ball2_direction:
-  LD (IY+$06),$00		; Направление шарика
-  LD IY,object_ball_2
-  LD A,(object_ball_2)
-  AND A
-  JP Z,LA67B_11
+	LD (IY+$06),$00		; Направление шарика
+	LD IY,object_ball_2
+	LD A,(object_ball_2)
+	AND A
+	JP Z,LA67B_11
 ; Копирование свойств первого шарика в третий + своё направление
-  LD IY,object_ball_3
+	LD IY,object_ball_3
 LA67B_11:
-  LD (IY+$02),L
-  LD (IY+$04),H
-  LD (IY+$00),$02		; gfx_ball
-  LD (IY+$11),$00
-  LD (IY+$07),D			; Скорость
-  LD (IY+$00),C
-  LD (IY+$01),B
+	LD (IY+$02),L
+	LD (IY+$04),H
+	LD (IY+$00),$02		; gfx_ball
+	LD (IY+$11),$00
+	LD (IY+$07),D		; Скорость
+	LD (IY+$00),C
+	LD (IY+$01),B
 ball3_direction:
-  LD (IY+$06),$00		; Направление шарика
-  RET
+	LD (IY+$06),$00		; Направление шарика
+	RET
 
 ; Поймали расширитель каретки
 bonus_resize:
@@ -3306,9 +3306,9 @@ bonus_resize:
 	LD A,(bonus_flag)
 	AND A
 	JP Z,LA67B_13
-	LD A,$0A				; spr_bat_gun
+	LD A,$0A		; spr_bat_gun
 LA67B_13:
-	LD (IY+$01),A			; spr_bat_normal
+	LD (IY+$01),A		; spr_bat_normal
 	push HL
 	CALL get_free_sound_slot
 	ld (HL),sound_bat_resize_1
@@ -3351,7 +3351,7 @@ LA860_0:
 	inc HL
 	ld (HL),$20
 	POP HL
-	ld (IXobj),HL
+	ld (IXobj),HL		; Восстанавливаем текущий объект
 	LD A,$01
 	LD (flag_extra_life),A
 	LD A,(lives_1up)
@@ -3404,78 +3404,80 @@ handling_rocket_4:
 	RET
 
 LA8CF:
-  DEFB $00,$00
+	DEFB $00,$00
 LA8D1:
-  DEFB $00
+	DEFB $00
 
 ; Обработка искр
 handling_spark:
 	ld IX,(IXobj)
-  CALL LAD69
-  LD A,(IX+$04)
-  CP $C0
-  JP NC,LA8D2_0
-  CALL bounce_wall
-  DEC (IX+$15)
-  RET NZ
-  LD A,(IX+$01)
-  CP $04
-  JP Z,LA8D2_0
-  INC (IX+$01)
-  CALL calc_write_spr_addr
-  LD A,(IX+$14)
+	CALL LAD69
+	LD A,(IX+$04)
+	CP $C0
+	JP NC,LA8D2_0
+	CALL bounce_wall
+	DEC (IX+$15)
+	RET NZ
+	LD A,(IX+$01)
+	CP $04
+	JP Z,LA8D2_0
+	INC (IX+$01)
+	CALL calc_write_spr_addr
+	LD A,(IX+$14)
 	or A
-	rra	; SRL A
-  LD (IX+$14),A
-  INC A
-  LD (IX+$15),A
-  RET
+	rra		; SRL A
+	LD (IX+$14),A
+	INC A
+	LD (IX+$15),A
+	RET
 LA8D2_0:
-  ld A,(IX+$00)
-  or %10000000		; SET 7,(IX+$00)
-  ld (IX+$00),A
-  RET
+	ld HL,(IXobj)
+	ld A,(HL)		; IX+$00
+	or %10000000		; SET 7,(IX+$00)
+	ld (HL),A		; IX+$00
+	RET
 
 ; Обработка UFO
 handling_ufo:
 	ld IX,(IXobj)
-  LD A,(IX+$04)
-  CP $08
-  JP NC,LA902_0
-  INC (IX+$04)
-  RET
+	LD A,(IX+$04)
+	CP $08
+	JP NC,LA902_0
+	INC (IX+$04)
+	RET
 LA902_0:
-  CALL bomb_appear
-  LD HL,(LAA7B)
-  LD A,H
-  AND A
-  JP Z,LA902_1
-  CALL LAA44
-  JP LA902_2
+	CALL bomb_appear
+	LD HL,(LAA7B)
+	LD A,H
+	AND A
+	JP Z,LA902_1
+	CALL LAA44
+	JP LA902_2
 LA902_1:
-  LD B,$01
-  LD A,(counter_misc)
-  AND $03
-  CALL Z,LAA7D
-  CALL LAD69
-  CALL LAFFC
-  CALL check_margins
+	LD B,$01
+	LD A,(counter_misc)
+	AND $03
+	CALL Z,LAA7D
+	CALL LAD69
+	CALL LAFFC
+	CALL check_margins
 LA902_2:
-  LD A,(IX+$04)
-  CP $C0
-  JP C,LA902_3
-  ld A,(IX+$00)
-  or %10000000		; SET 7,(IX+$00)
-  ld (IX+$00),A
-  RET
+	LD A,(IX+$04)
+	CP $C0
+	JP C,LA902_3
+	ld HL,(IXobj)
+	ld A,(HL)		; IX+$00
+	or %10000000		; SET 7,(IX+$00)
+	ld (HL),A		; IX+$00
+	RET
 LA902_3:
-  LD A,(counter_misc)
-  AND $00
-  CALL Z,LAAD2
-  LD A,(flag_2)
-  AND A
-  JP NZ,LAA7D_1
-  RET
+	LD A,(counter_misc)
+	AND $00
+	CALL Z,LAAD2
+	LD A,(flag_2)
+	AND A
+	JP NZ,LAA7D_1
+	RET
 
 ;---------------------------------------------
 ; Нигде неиспользуемый код Мусор?
@@ -3502,112 +3504,112 @@ LA902_3:
 ;   LD (IX+$12),$F0
 ;   RET
 
-LA96F:
-  DEFB $01,$44
-  DEFB $05,$84
-  DEFB $0D,$F0
-  DEFB $09,$C0
+; LA96F:
+;   DEFB $01,$44
+;   DEFB $05,$84
+;   DEFB $0D,$F0
+;   DEFB $09,$C0
 
 ;---------------------------------------------
 ; Used by the routines at handling_ufo and handling_bird.
 ; Включение бомбы
 bomb_appear:
-  LD A,(object_bonus)
-  AND A
-  RET NZ			; Возвращаемся, если уже какой-то бонус падает
+	LD A,(object_bonus)
+	AND A
+	RET NZ			; Возвращаемся, если уже какой-то бонус падает
 
-  LD A,(random_number)
-  LD B,A
-  LD A,(random_number_1)
-  ADD A,B
-  AND $3F
-  RET NZ			; Возвращаемся, если случайный номер не удовлетворяет условиям
+	LD A,(random_number)
+	LD B,A
+	LD A,(random_number_1)
+	ADD A,B
+	AND $3F
+	RET NZ			; Возвращаемся, если случайный номер не удовлетворяет условиям
 
-  LD (object_bonus+$11),A	; Помещаем случайный номер
-  LD A,(IX+$04)			; координата Y каретки?
-  ADD A,$08
-  CP $C0
-  RET NC			; Возвращаемся, если пролетела
+	LD (object_bonus+$11),A	; Помещаем случайный номер
+	LD A,(IX+$04)		; координата Y каретки?
+	ADD A,$08
+	CP $C0
+	RET NC			; Возвращаемся, если пролетела
 
-  LD (object_bonus+$04),A	; координата Y объекта
-  LD A,$04
-  LD (object_bonus),A		; gfx_bonuses
-  LD A,(IX+$02)			; координата Х объекта
-  ADD A,$08
-  LD (object_bonus+$02),A	; координата Х объекта
-  LD A,$0A
-  LD (object_bonus+$01),A	; spr_bomb
-  LD A,$08
-  LD (object_bonus+$0C),A
-  LD (object_bonus+$0D),A
-  LD HL,$1002
-  LD (object_bonus+$08),HL	; Ширина и высота
-  LD HL,$0000
-  LD (LA557),HL
-  RET
+	LD (object_bonus+$04),A	; координата Y объекта
+	LD A,$04
+	LD (object_bonus),A	; gfx_bonuses
+	LD A,(IX+$02)		; координата Х объекта
+	ADD A,$08
+	LD (object_bonus+$02),A	; координата Х объекта
+	LD A,$0A
+	LD (object_bonus+$01),A	; spr_bomb
+	LD A,$08
+	LD (object_bonus+$0C),A
+	LD (object_bonus+$0D),A
+	LD HL,$1002
+	LD (object_bonus+$08),HL	; Ширина и высота
+	LD HL,$0000
+	LD (LA557),HL
+	RET
 
 handling_bird:
 	ld IX,(IXobj)
-  LD A,(IX+$04)
-  CP $08
-  JP NC,LA9BC_0
-  INC (IX+$04)
-  RET
+	LD A,(IX+$04)
+	CP $08
+	JP NC,LA9BC_0
+	INC (IX+$04)
+	RET
 LA9BC_0:
-  CALL bomb_appear
-  LD A,(IX+$06)
-  SUB $10
-  AND $3F
-  LD (LAA02+$01),A
-  LD HL,(LAA7B)
-  LD A,H
-  AND A
-  JP Z,LA9BC_1
-  CALL LAA44
-  JP LA9BC_2
+	CALL bomb_appear
+	LD A,(IX+$06)
+	SUB $10
+	AND $3F
+	LD (LAA02+$01),A
+	LD HL,(LAA7B)
+	LD A,H
+	AND A
+	JP Z,LA9BC_1
+	CALL LAA44
+	JP LA9BC_2
 LA9BC_1:
-  LD B,$01
-  LD A,(counter_misc)
-  AND $03
-  CALL Z,LAA7D
-  CALL LAD69
-  CALL LAFFC
-  CALL check_margins
+	LD B,$01
+	LD A,(counter_misc)
+	AND $03
+	CALL Z,LAA7D
+	CALL LAD69
+	CALL LAFFC
+	CALL check_margins
 LA9BC_2:
-  LD A,(IX+$04)
-  CP $C0
-  JP C,LA9BC_3
-  ld A,(IX+$00)
-  or %10000000		; SET 7,(IX+$00)
-  ld (IX+$00),A
-  RET
+	LD A,(IX+$04)
+	CP $C0
+	JP C,LA9BC_3
+	ld A,(IX+$00)
+	or %10000000		; SET 7,(IX+$00)
+	ld (IX+$00),A
+	RET
 LA9BC_3:
-  CALL LAAD2
+	CALL LAAD2
 LAA02:
-  LD C,$00
-  LD A,(IX+$06)
-  SUB $10
-  AND $3F
-  XOR C
-  AND $20
-  JP Z,LA9BC_5
-  LD A,(IX+$13)
-  LD (IX+$13),A
-  ld A,C
-  and %00100000		; BIT 5,C
-  JP Z,LA9BC_4
-  LD A,$0E
-  SUB (IX+$01)
-  JP LA9BC_5
+	LD C,$00
+	LD A,(IX+$06)
+	SUB $10
+	AND $3F
+	XOR C
+	AND $20
+	JP Z,LA9BC_5
+	;LD A,(IX+$13)
+	;LD (IX+$13),A
+	ld A,C
+	and %00100000		; BIT 5,C
+	JP Z,LA9BC_4
+	LD A,$0E
+	SUB (IX+$01)
+	JP LA9BC_5
 LA9BC_4:
-  LD A,(IX+$01)
-  XOR $07
-  ADD A,$07
+	LD A,(IX+$01)
+	XOR $07
+	ADD A,$07
 LA9BC_5:
-  LD A,(flag_2)
-  AND A
-  JP NZ,LAA7D_1
-  RET
+	LD A,(flag_2)
+	AND A
+	JP NZ,LAA7D_1
+	RET
 
 ; Обработка взрыва врага
 handling_blast:
@@ -5348,7 +5350,7 @@ LAFFC_63:
 	and %11111110	; RES 0,(HL)
 	ld (HL),A
   ELSE
-  ; SET 0,(HL)
+	; SET 0,(HL)
 	ld A,(HL)
 	and %11111110	; RES 0,(HL)
 	ld (HL),A
