@@ -2897,18 +2897,14 @@ LA559:
 
 ; Обработка бонусов
 handling_bonus:
-	ld HL,(IXobj)
-	ld DE,$0004
-	add HL,DE
-	ld (handling_bonus_1+1),HL
-	ld (handling_bonus_4+1),HL
-	ld (handling_bonus_5+1),HL
+	ld IX,(IXobj)
 handling_bonus_1:
-	LD A,($0004)		; IX+$04
+	LD A,(IX+$04)		; IX+$04
 	CP $A0
 	CALL NC,get_bonus
 	LD DE,$0008
 	LD B,$02
+
 ; This entry point is used by the routine at handling_400pts.
 LA55A_0:
 	LD HL,(LA557)
@@ -2921,13 +2917,13 @@ LA55A_0:
 LA55A_1:
 	LD (LA557),HL
 handling_bonus_4:
-	LD D,($0004)		; IX+$04
+	LD D,(IX+$04)		; IX+$04
 	LD A,(LA559)
 	LD E,A
 	ADD HL,DE
 handling_bonus_5:
 	ld A,H
-	LD ($0004),A		; IX+$04
+	LD (IX+$04),A		; IX+$04
 	LD A,L
 	LD (LA559),A
 	LD A,H
@@ -2942,15 +2938,18 @@ handling_bonus_6:
 
 ; Обработка таблички 400 очков
 handling_400pts:
-	ld IX,(IXobj)
-	LD A,(IX+$02)
+	ld HL,(IXobj)
+	inc HL
+	inc HL
+	LD A,(HL)		; IX+$02
 LA590:
-	ADD A,$00
-	LD (IX+$02),A
+	ADD A,$00		; Изменяемый аргумент
+	LD (HL),A		; IX+$02
 	CALL check_left_margin
 	CALL check_right_margin
 	LD DE,$0028
 	LD B,$80
+	ld IX,(IXobj)
 	JP LA55A_0
 
 ; Обработка пули
@@ -2983,7 +2982,9 @@ LA5A3_0:
 	AND A
 	RET NZ
 LA5A3_1:
-	SET 7,(IX+$00)
+	ld A,(IX+$00)
+	or %10000000		; SET 7,(IX+$00)
+	ld (IX+$00),A
 	LD A,(bullet)
 	AND $01
 	LD (bullet),A
@@ -3002,24 +3003,24 @@ LA5A3_2:
 	LD (IY+$01),$00		; spr_alien_blast_1
 	LD (IY+$12),$50
 	LD (IY+$13),$90
-	LD A,(IY+$08)			; ширина спрайта с тенью в байтах
+	LD A,(IY+$08)		; ширина спрайта с тенью в байтах
 	SUB $02
 	ADD A,A
 	ADD A,A
 	ADD A,(IY+$02)		; координата Х объекта
-	LD (IY+$02),A			; координата Х объекта
+	LD (IY+$02),A		; координата Х объекта
 	LD (IY+$08),$02		; ширина спрайта с тенью в байтах
 	LD (IY+$09),$0D		; высота спрайта с тенью в пикселях
-	LD A,(IY+$04)			; координата Y объекта
+	LD A,(IY+$04)		; координата Y объекта
 	ADD A,$04
-	LD (IY+$04),A			; координата Y объекта
+	LD (IY+$04),A		; координата Y объекта
 	LD (IX+$01),$02		; spr_alien_blast_3
 	LD (IX+$09),$06
 	LD (IX+$12),$50
 	LD (IX+$13),$50
-	LD A,(IX+$02)			; координата Х объекта
+	LD A,(IX+$02)		; координата Х объекта
 	AND $F8
-	LD (IX+$02),A			; координата Х объекта
+	LD (IX+$02),A		; координата Х объекта
 
 	push HL
 	LD HL,sounds_queue+21
@@ -3417,7 +3418,9 @@ handling_spark:
   LD (IX+$15),A
   RET
 LA8D2_0:
-  SET 7,(IX+$00)
+  ld A,(IX+$00)
+  or %10000000		; SET 7,(IX+$00)
+  ld (IX+$00),A
   RET
 
 ; Обработка UFO
@@ -3448,7 +3451,9 @@ LA902_2:
   LD A,(IX+$04)
   CP $C0
   JP C,LA902_3
-  SET 7,(IX+$00)
+  ld A,(IX+$00)
+  or %10000000		; SET 7,(IX+$00)
+  ld (IX+$00),A
   RET
 LA902_3:
   LD A,(counter_misc)
@@ -3559,7 +3564,9 @@ LA9BC_2:
   LD A,(IX+$04)
   CP $C0
   JP C,LA9BC_3
-  SET 7,(IX+$00)
+  ld A,(IX+$00)
+  or %10000000		; SET 7,(IX+$00)
+  ld (IX+$00),A
   RET
 LA9BC_3:
   CALL LAAD2
@@ -3597,7 +3604,9 @@ handling_blast:
   AND $3F
   CP $09
   RET NZ
-  SET 7,(IX+$00)
+  ld A,(IX+$00)
+  or %10000000		; SET 7,(IX+$00)
+  ld (IX+$00),A
   RET
 
 ; Used by the routines at handling_ufo and handling_bird.
@@ -3932,32 +3941,38 @@ bounce_wall:
 ;---------------------------
 ; Нигде неиспользуемый код Мусор?
 ; Data block at AC8C
-  LD A,(IX+$04)
-  CP $AF
-  RET C
-  LD (IX+$04),$AF
-  RET
+;   LD A,(IX+$04)
+;   CP $AF
+;   RET C
+;   LD (IX+$04),$AF
+;   RET
 ;---------------------------
 
 ; Used by the routines at check_margins and bounce_wall.
 ; Проверка, чтобы содержимое IX+$04 не опускалось ниже $08
 ; Упираемся объектом в верхний край экрана
 check_top_margin:
-  LD A,(IX+$04)
-  CP $08
-  RET NC
-  LD (IX+$04),$08
-  RET
+	ld HL,(IXobj)
+	ld DE,$0004
+	add HL,DE
+	LD A,(HL)		; IX+$04
+	CP $08
+	RET NC
+	LD (HL),$08		; IX+$04
+	RET
 
 ; Used by the routines at handling_bat, handling_400pts, check_margins and bounce_wall.
 ; Проверка, чтобы содержимое IX+$02 не опускалось ниже $08
 ; Упираемся объектом в левый край экрана
 check_left_margin:
-  LD A,(IX+$02)
-  CP $08
-  RET NC
-  LD (IX+$02),$08
-  RET
+	ld HL,(IXobj)
+	inc HL
+	inc HL
+	LD A,(HL)		; IX+$02
+	CP $08
+	RET NC
+	LD (HL),$08		; IX+$02
+	RET
 
 ; Used by the routine at game_restart.
 ; Проверка, чтобы содержимое IX+$02 не опускалось ниже $80.
@@ -3980,14 +3995,21 @@ LACAD:
 ; Used by the routines at handling_bat, handling_400pts, check_margins and bounce_wall.
 ; Упираемся объектом в правый край экрана
 check_right_margin:
-  LD A,(IX+$0C)
-  ADD A,(IX+$02)	; Складываем значение IX+$0C и IX+$02
-  CP $F9
-  RET C				; Возвращаемся, если сумма меньше $F9
-  LD A,$F8
-  SUB (IX+$0C)
-  LD (IX+$02),A		; Иначе помещаем в IX+$02 значение $F8 - IX+$0C
-  RET
+	ld HL,(IXobj)
+	inc HL
+	inc HL
+	ld (check_right_margin_3+1),HL
+	ld A,(HL)		; IX+$02
+	ld DE,$0C-$02
+	add HL,DE
+	ADD A,(HL)		; Складываем значение IX+$0C и IX+$02
+	CP $F9
+	RET C			; Возвращаемся, если сумма меньше $F9
+	LD A,$F8
+	SUB (HL)		; IX+$0C
+check_right_margin_3:
+	LD ($0002),A		; Иначе помещаем в IX+$02 значение $F8 - IX+$0C
+	RET
 
 ; Used by the routine at game_restart.
 ; Вход: (IXobj)
@@ -4006,7 +4028,9 @@ LACCE:
   CP $2C
   RET NZ
 LACCE_0:
-  SET 0,(IX+$01)
+  ld A,(IX+$01)
+  or $01		; SET 0,(IX+$01)
+  ld (IX+$01),A
   RET
 
 ; Used by the routines at bounce_wall and LAFFC.
@@ -4060,46 +4084,46 @@ LAD13:
 ; Used by the routine at LAD69.
 ; Высчитываются значения HL и BC по таблице, а зависимости от направления движения
 hl_bc_calc_direction:
-  LD HL,direction_table
-  LD A,(IX+$06)		; Направление
-  AND $0F
-  LD B,A
-  CALL hl_add_a
-  LD C,(HL)			; C = YY из таблицы, в зависимости от направления
-  LD A,B
-  XOR $0F
-  INC A
-  LD HL,direction_table
-  CALL hl_add_a
-  LD L,(HL)			; L = XX из таблицы, в зависимости от направления
+	LD HL,direction_table
+	LD A,(IX+$06)		; Направление
+	AND $0F
+	LD B,A
+	CALL hl_add_a
+	LD C,(HL)		; C = YY из таблицы, в зависимости от направления
+	LD A,B
+	XOR $0F
+	INC A
+	LD HL,direction_table
+	CALL hl_add_a
+	LD L,(HL)		; L = XX из таблицы, в зависимости от направления
 
-  LD H,$00			; HL = $00XX, BC = $00YY
-  LD B,H
-  LD A,(IX+$06)		; Направление
-  AND $30
-  RET Z				; Если направление $00, то HL = $00XX, BC = $00YY
+	LD H,$00		; HL = $00XX, BC = $00YY
+	LD B,H
+	LD A,(IX+$06)		; Направление
+	AND $30
+	RET Z			; Если направление $00, то HL = $00XX, BC = $00YY
 
-  CP $10
-  JP NZ,LAD22_0
-  LD A,L
-  LD L,C
-  LD C,A
-  DEC B
-  RET				; Если направление $10, то HL = $00YY, BC = $FFXX
+	CP $10
+	JP NZ,LAD22_0
+	LD A,L
+	LD L,C
+	LD C,A
+	DEC B
+	RET			; Если направление $10, то HL = $00YY, BC = $FFXX
 
 LAD22_0:
-  CP $20
-  JP NZ,LAD22_1
-  DEC H
-  DEC B
-  RET				; Если направление $20, то HL = $FFXX, BC = $FFYY
+	CP $20
+	JP NZ,LAD22_1
+	DEC H
+	DEC B
+	RET			; Если направление $20, то HL = $FFXX, BC = $FFYY
 
 LAD22_1:
-  LD A,C
-  LD C,L
-  LD L,A
-  DEC H
-  RET				; Если направление $30, то HL = $FFYY, BC = $00XX
+	LD A,C
+	LD C,L
+	LD L,A
+	DEC H
+	RET			; Если направление $30, то HL = $FFYY, BC = $00XX
 
 ; Из этой таблицы в зависимости от направления движения выбираются значения для HL и BC
 direction_table:
@@ -4110,75 +4134,73 @@ direction_table:
 
 ; Used by the routines at handling_ball, handling_spark, handling_ufo and handling_bird.
 LAD69:
-  CALL hl_bc_calc_direction
-  PUSH HL
+	CALL hl_bc_calc_direction
+	PUSH HL
 
-  CALL LAD13
-  LD D,(IX+$02)		; координата Х объекта
-  LD E,(IX+$03)
-  ADD HL,DE
-  LD (IX+$02),H		; координата Х объекта
-  LD (IX+$03),L
+	CALL LAD13
+	LD D,(IX+$02)		; координата Х объекта
+	LD E,(IX+$03)
+	ADD HL,DE
+	LD (IX+$02),H		; координата Х объекта
+	LD (IX+$03),L
 
-  POP BC
+	POP BC
 
-  CALL LAD13
-  LD D,(IX+$04)		; координата Y объекта
-  LD E,(IX+$05)
-  ADD HL,DE
-  LD (IX+$04),H		; координата Y объекта
-  LD (IX+$05),L
+	CALL LAD13
+	LD D,(IX+$04)		; координата Y объекта
+	LD E,(IX+$05)
+	ADD HL,DE
+	LD (IX+$04),H		; координата Y объекта
+	LD (IX+$05),L
 
-  RET
+	RET
 
 ; Used by the routine at all_metal_briks_animation_snd.
 ; Печатает текущий кадр анимации перелива всех металлических кирпичей
 ; На входе в IX адрес текущего кадра анимации (IX - anim_brik)
 all_metal_briks_frame:
-  LD IY,(current_level_addr)
-  LD HL,zx_scr+$00E0 ; Адрес в экранной области начала рисования кирпичей
-  LD B,$0C
+	LD IY,(current_level_addr)
+	LD HL,zx_scr+$00E0 ; Адрес в экранной области начала рисования кирпичей
+	LD B,$0C
 LAD8F_0:
-  PUSH BC
-  PUSH HL
-  CALL line_metal_briks_frame
-  POP HL
-  ld a,$f8 ;LD A,$08	; поправка для Вектора
-  ADD L
-  LD L,A
+	PUSH BC
+	PUSH HL
+	CALL line_metal_briks_frame
+	POP HL
+	ld a,$f8 ;LD A,$08	; поправка для Вектора
+	ADD L
+	LD L,A
 LAD8F_1:
-  POP BC
-  dec B
-  jp nz,LAD8F_0
-  RET
+	POP BC
+	dec B
+	jp nz,LAD8F_0
+	RET
 
 ; Used by the routine at all_metal_briks_frame.
 ; Печатает одну строку текущего кадра металлических кирпичей
 line_metal_briks_frame:
-  LD B,$0F
+	LD B,$0F
 LADAC_0:
-  PUSH BC
-  PUSH HL
-  CALL print_frame_metal_brik
-  POP HL
-  INC H
-  INC H
-  POP BC
-  INC IY
-  dec B
-  jp nz,LADAC_0
-  RET
+	PUSH BC
+	PUSH HL
+	CALL print_frame_metal_brik
+	POP HL
+	INC H
+	INC H
+	POP BC
+	INC IY
+	dec B
+	jp nz,LADAC_0
+	RET
 
 ; Used by the routine at line_metal_briks_frame.
 ; Рисует текущий кадр одного металлического кирпича, если это он
 ; В IX указатель на текущий спрайт анимации перелива кирпича
 ; В HL - адрес в экранной области
 print_frame_metal_brik:
-  ld a,(IY+$00)
-  BIT 7,a
-  RET NZ	; Возвращаемся, если BIT7 = 1
-  BIT 4,a
-  RET NZ	; Возвращаемся, если BIT4 = 1
+	ld A,(IY+$00)
+	and %10010000		; BIT 7,a / BIT 4,a
+	ret nz			; Возвращаемся, если BIT7 = 1 или BIT4 = 1
 
 	; Выясняем и установка цвет кирпича
 	ld a,h
@@ -4198,9 +4220,9 @@ print_frame_metal_brik:
 ;	ld (LADBC_02+$01),a	; Устанавливаем цвет для правой половины кирпича
 
 	; Индивидуальная обработка чёрного кирпича
-	IFDEF MX
+  IFDEF MX
 	; Ничего не делаем
-	ELSE
+  ELSE
 	or a
 	jp nz,print_frame_metal_brik_01
 	ld a,(anim_brik+$0e)%256
@@ -4210,10 +4232,10 @@ print_frame_metal_brik:
 	cp ixh
 	jp nz,print_frame_metal_brik_01
 	xor a
-	ld (print_frame_metal_brik_02),a
+	ld (print_frame_metal_brik_02),a	; NOP
 	ld ix,anim_brik_black
 print_frame_metal_brik_01:
-	ENDIF
+  ENDIF
 
 	ex HL,DE		; сейчас HL свободен
 	ld HL,$0000
@@ -4221,132 +4243,132 @@ print_frame_metal_brik_01:
 	ld (LADDD+$01),HL	; LD (LADDD+$01),SP  - сохраняем SP
 	ex HL,DE
 
-  LD E,(IX+$00)
-  LD D,(IX+$01)
-  EX DE,HL
-  di
-  LD SP,HL
-  EX DE,HL
-  LD B,$08	; 8 строк по 2 байта
+	LD E,(IX+$00)
+	LD D,(IX+$01)
+	EX DE,HL
+	di
+	LD SP,HL
+	EX DE,HL
+	LD B,$08	; 8 строк по 2 байта
 LADBC_0:
-  POP DE
+	POP DE
 LADBC_01:
-;  ld a,$00
-;  ld (color_port),a	; Цвет левой половины кирпича (на случай тени)
-  LD (HL),E
-  INC H
+;	ld a,$00
+;	ld (color_port),a	; Цвет левой половины кирпича (на случай тени)
+	LD (HL),E
+	INC H
 LADBC_02:
-;  ld a,$00
-;  ld (color_port),a	; Цвет правой половины кирпича
-  LD (HL),D
-  DEC H
-  dec L			; поправлено направление для Вектора
-  dec B
-  jp nz,LADBC_0
+;	ld a,$00
+;	ld (color_port),a	; Цвет правой половины кирпича
+	LD (HL),D
+	DEC H
+	dec L			; поправлено направление для Вектора
+	dec B
+	jp nz,LADBC_0
 LADDD:
-  LD SP,$0000
-  ei
+	LD SP,$0000
+	ei
 
 	; Индивидуальная обработка чёрного кирпича
-	IFDEF MX
+  IFDEF MX
 	; Ничего не делаем
-	ELSE
+  ELSE
 print_frame_metal_brik_02:
-	ret
+	ret			; изменяемый оператор NOP / RET
 	ld ix,anim_brik+$0e
-	ld a,$c9
+	ld a,$c9		; RET
 	ld (print_frame_metal_brik_02),a
-	ENDIF
+  ENDIF
 
-  RET
+	RET
 
 ; Used by the routine at game_screen_draw_to_buffer.
 ; Вывод в буфер всех кирпичей уровня
 print_briks:
-  LD IY,(current_level_addr)
-  LD HL,scr_buff+$0120			; Адрес начала кирпичей в буфере (было scr_buff+$401)
-  LD (brik_addr_buf),HL
-  LD HL,attr_buff+$0205			; Адрес начала атрибутов кирпичей в буфере (было attr_buff+$A2)
-  LD (brik_attr_buf),HL
-  LD B,$0C	; Высота уровня
+	LD IY,(current_level_addr)
+	LD HL,scr_buff+$0120	; Адрес начала кирпичей в буфере (было scr_buff+$401)
+	LD (brik_addr_buf),HL
+	LD HL,attr_buff+$0205	; Адрес начала атрибутов кирпичей в буфере (было attr_buff+$A2)
+	LD (brik_attr_buf),HL
+	LD B,$0C		; Высота уровня
 LADE1_0:
-  PUSH BC
-  PUSH IY
-  CALL print_line_briks
-  POP IY
+	PUSH BC
+	PUSH IY
+	CALL print_line_briks
+	POP IY
 
-	IFDEF MX
-  CALL brik_shadow
-	ELSE
-  ld b,$0f
+  IFDEF MX
+	CALL brik_shadow
+  ELSE
+	ld b,$0f
 LADE1_01:
-  inc iy
-  dec B
-  jp nz,LADE1_01
-	ENDIF
+	inc iy
+	dec B
+	jp nz,LADE1_01
+  ENDIF
 
-  LD HL,(brik_addr_buf)
-  ld a,l
-  add $08
-  ld l,a
-  LD (brik_addr_buf),HL
-  LD HL,(brik_attr_buf)
-  inc l
-  LD (brik_attr_buf),HL
-  POP BC
-  dec B
-  jp nz,LADE1_0
-  RET
+	LD HL,(brik_addr_buf)
+	ld a,l
+	add $08
+	ld l,a
+	LD (brik_addr_buf),HL
+	LD HL,(brik_attr_buf)
+	inc l
+	LD (brik_attr_buf),HL
+	POP BC
+	dec B
+	jp nz,LADE1_0
+	RET
 
 ; Used by the routine at print_briks.
 print_line_briks:
-  LD B,$0F	; Ширина уровня
-  LD HL,(brik_addr_buf)
+	LD B,$0F	; Ширина уровня
+	LD HL,(brik_addr_buf)
 LAE13_0:
-  PUSH BC
-  PUSH HL
-  BIT 7,(IY+$00)
-  CALL Z,print_one_brik_buf	; 	Печатаем кирпич, если не пустота
-  POP HL
-  INC H
-  INC H
-  INC IY
-  POP BC
-  dec B
-  jp nz,LAE13_0
-  RET
+	PUSH BC
+	PUSH HL
+	BIT 7,(IY+$00)
+	CALL Z,print_one_brik_buf	; 	Печатаем кирпич, если не пустота
+	POP HL
+	INC H
+	INC H
+	INC IY
+	POP BC
+	dec B
+	jp nz,LAE13_0
+	RET
 
 ; Used by the routine at print_briks.
-	IFDEF MX
+  IFDEF MX
 brik_shadow:
-  LD B,$0F
-  LD HL,(brik_attr_buf)
+	LD B,$0F
+	LD HL,(brik_attr_buf)
 brik_shadow_0:
-  BIT 7,(IY+$00)
-  JP NZ,brik_shadow_1
-  ld a,(hl)
-  and %01110111
-  ld (hl),a
-  inc h
-  ; Проверка на правый крайний столбец - обрамление поля
-  ld a,h
-  sub attr_buff/$100
-  CPL
-  AND $1F
-  JP Z,brik_shadow_1
-  ld a,(hl)
-  and %01110111
-  ld (hl),a
-  JP brik_shadow_2
+	BIT 7,(IY+$00)
+	JP NZ,brik_shadow_1
+	ld a,(hl)
+	and %01110111
+	ld (hl),a
+	inc h
+; Проверка на правый крайний столбец - обрамление поля
+	ld a,h
+	sub attr_buff/$100
+	CPL
+	AND $1F
+	JP Z,brik_shadow_1
+	ld a,(hl)
+	and %01110111
+	ld (hl),a
+	JP brik_shadow_2
 brik_shadow_1:
-  inc h
+	inc h
 brik_shadow_2:
-  inc h
-  INC IY
-  dec B
-  jp nz,brik_shadow_0
-  RET
-	ENDIF
+	inc h
+	INC IY
+	dec B
+	jp nz,brik_shadow_0
+	RET
+  ENDIF
 
 ;-----------------------------------------------
 
@@ -4362,39 +4384,38 @@ print_one_brik_buf:
 	ex DE,HL
 
 ; Оформление верхнего края кирпича
-  PUSH HL
-  dec l
+	PUSH HL
+	dec l
 
-	IFDEF MX
-  LD (HL),$00	; Линия над кирпичом
-  inc h
-  LD (HL),$00	; Линия над кирпичом
-	ELSE
-  LD (HL),$00	; Линия над кирпичом
-  inc h
-  LD (HL),$00	; Линия над кирпичом
+  IFDEF MX
+	LD (HL),$00	; Линия над кирпичом
+	inc h
+	LD (HL),$00	; Линия над кирпичом
+  ELSE
+	LD (HL),$00	; Линия над кирпичом
+	inc h
+	LD (HL),$00	; Линия над кирпичом
 
-  ; LD (HL),$ff	; Линия над кирпичом
-  ; inc h
-  ; LD (HL),$ff	; Линия над кирпичом
-	ENDIF
+	; LD (HL),$ff	; Линия над кирпичом
+	; inc h
+	; LD (HL),$ff	; Линия над кирпичом
+  ENDIF
 
-  POP HL
+	POP HL
 
 ; Оформление левого края кирпича
-  ; Проверка на левый крайний кирпич
-  ld a,h
+; Проверка на левый крайний кирпич
+	ld a,h
 
-  PUSH HL
+	PUSH HL
 
 	ld c,h
 
-  cp scr_buff/256+1
-  JP Z,LAE82_1
+	cp scr_buff/256+1
+	JP Z,LAE82_1
 
-
-  dec h
-  LD B,$08
+	dec h
+	LD B,$08
 LAE82_0:
 
   IFDEF MX
@@ -4408,29 +4429,29 @@ LAE82_0:
 	ld (HL),A
   ENDIF
 
-  inc l
-  dec B
-  jp nz,LAE82_0
+	inc l
+	dec B
+	jp nz,LAE82_0
 LAE82_1:
 
 ; Раскрашивание кирпича
-  LD HL,(brik_attr_buf)	; Адрес атрибутов текущего кирпича
-  ld h,c
-  dec l
-  PUSH HL
-  LD A,(IY+$00)
-  AND $0F
-  LD HL,briks_colors-$01
-  CALL hl_add_a
-  LD B,(HL)
-  POP HL
-  LD (HL),B
-  inc h
-  LD (HL),B
+	LD HL,(brik_attr_buf)	; Адрес атрибутов текущего кирпича
+	ld h,c
+	dec l
+	PUSH HL
+	LD A,(IY+$00)
+	AND $0F
+	LD HL,briks_colors-$01
+	CALL hl_add_a
+	LD B,(HL)
+	POP HL
+	LD (HL),B
+	inc h
+	LD (HL),B
 
-  POP HL
+	POP HL
 ; Рисование кирпича
-  di
+	di
 	LD SP,spr_brik_1
 
   IFDEF MX
@@ -4443,88 +4464,88 @@ LAE82_1:
 LAE82_21:
   ENDIF
 
-  LD A,$08
+	LD A,$08
 LAE82_2:
-  POP BC
-  LD (HL),C
-  INC H
-  LD (HL),B
-  dec h
-  inc l
-  DEC A
-  JP NZ,LAE82_2
+	POP BC
+	LD (HL),C
+	INC H
+	LD (HL),B
+	dec h
+	inc l
+	DEC A
+	JP NZ,LAE82_2
 
 LAEB4:
-  LD SP,$0000	; Восстанавливаем стек
-  ei
-  ; Оформление левого края кирпича
-  ld c,h		; Номер знакоместа второй половины кирпича
-  LD (HL),A
-  inc h
-  LD (HL),A
-  ; Проверка на левый крайний кирпич
-  ld a,h
-  cp scr_buff/256+$1e
-  ret Z
-  inc h
-  dec l
+	LD SP,$0000	; Восстанавливаем стек
+	ei
+; Оформление левого края кирпича
+	ld c,h		; Номер знакоместа второй половины кирпича
+	LD (HL),A
+	inc h
+	LD (HL),A
+; Проверка на левый крайний кирпич
+	ld a,h
+	cp scr_buff/256+$1e
+	ret Z
+	inc h
+	dec l
 
-  LD B,$08
+	LD B,$08
 LAE82_3:
-  ; В обеих версиях рисуем эту линию
+; В обеих версиях рисуем эту линию
 	ld A,(HL)
 	and %01111111	; RES 7,(HL)		; Сброс стороны слева кирпича
 	ld (HL),A
-  dec l
-  dec B
-  jp nz,LAE82_3
-  RET
+	dec l
+	dec B
+	jp nz,LAE82_3
+	RET
 
 ; Цвета кирпичей
 briks_colors:
-	IFDEF MX
-  DEFB c57,c4F,c5F,c20,c70	; Цвета обычных кирпичей
-  DEFB c47,c57,c5F,c4F		; Цвета трудновыбиваемых кирпичей
-  DEFB c00					; Не используется
-  DEFB c47,c57,c4F,c5F		; Цвета невыбиваемых кирпичей
-  DEFB c00					; Не используется
-	ELSE
-  DEFB $50,$C0,$40,$90,$10	; Цвета обычных кирпичей
-  DEFB $00,$50,$40,$C0		; Цвета трудновыбиваемых кирпичей
-  DEFB $D0					; Не используется
-  DEFB $00,$50,$C0,$40		; Цвета невыбиваемых кирпичей
-  DEFB $D0					; Не используется
-	ENDIF
+  IFDEF MX
+	DEFB c57,c4F,c5F,c20,c70	; Цвета обычных кирпичей
+	DEFB c47,c57,c5F,c4F		; Цвета трудновыбиваемых кирпичей
+	DEFB c00			; Не используется
+	DEFB c47,c57,c4F,c5F		; Цвета невыбиваемых кирпичей
+	DEFB c00			; Не используется
+  ELSE
+	DEFB $50,$C0,$40,$90,$10	; Цвета обычных кирпичей
+	DEFB $00,$50,$40,$C0		; Цвета трудновыбиваемых кирпичей
+	DEFB $D0			; Не используется
+	DEFB $00,$50,$C0,$40		; Цвета невыбиваемых кирпичей
+	DEFB $D0			; Не используется
+  ENDIF
 
 ; Хранит адреса пикселей и атрибутов в буфере текущего кирпича
 brik_addr_buf:
-  DEFW $0000
+	DEFW $0000
 brik_attr_buf:
-  DEFW $0000
+	DEFW $0000
 
 ; Графика кирпичей
   INCLUDE "./gfx/briks.asm"
 
 ; Анимация переливания кирпича
 anim_brik:
-  DEFW spr_brik_2
-  DEFW spr_brik_6
-  DEFW spr_brik_3
-  DEFW spr_brik_7
-  DEFW spr_brik_4
-  DEFW spr_brik_5
-  DEFW spr_brik_5
-  DEFW spr_brik_1
-  DEFW $0000
+	DEFW spr_brik_2
+	DEFW spr_brik_6
+	DEFW spr_brik_3
+	DEFW spr_brik_7
+	DEFW spr_brik_4
+	DEFW spr_brik_5
+	DEFW spr_brik_5
+	DEFW spr_brik_1
+	DEFW $0000
 
 	; Индивидуальная обработка чёрного кирпича
-	IFDEF MX
+  IFDEF MX
 	; Ничего не делаем
-	ELSE
+  ELSE
 anim_brik_black:
-  DEFW spr_brik_black
-  DEFW $0000
-	ENDIF
+	DEFW spr_brik_black
+	DEFW $0000
+  ENDIF
 
 
 ; Used by the routine at LBBFB.
@@ -4591,18 +4612,18 @@ points_calc_and_add:
 
 ; Таблица добавления очков
 points_table:
-  DEFB $01,$20	;120
-  DEFB $01,$10	;110
-  DEFB $01,$00	;100
-  DEFB $00,$90	; 90
-  DEFB $00,$80	; 80
-  DEFB $00,$70	; 70
-  DEFB $00,$60	; 60
-  DEFB $00,$50	; 50
-  DEFB $00,$40	; 40
-  DEFB $00,$30	; 30
-  DEFB $00,$20	; 20
-  DEFB $00,$10	; 10
+	DEFB $01,$20	;120
+	DEFB $01,$10	;110
+	DEFB $01,$00	;100
+	DEFB $00,$90	; 90
+	DEFB $00,$80	; 80
+	DEFB $00,$70	; 70
+	DEFB $00,$60	; 60
+	DEFB $00,$50	; 50
+	DEFB $00,$40	; 40
+	DEFB $00,$30	; 30
+	DEFB $00,$20	; 20
+	DEFB $00,$10	; 10
 
 ; Used by the routines at handling_ball, handling_bullet, handling_ufo and handling_bird.
 LAFFC:
