@@ -218,29 +218,29 @@ play_sound_05:
 ; НЕИСПОЛЬЗУЕМЫЙ В ИГРЕ КОД!
 ; Интересный звук, которого нет в игре!
 ; Routine at C18C
-play_sound_unused:
-  LD A,$18
-  LD L,$01
-play_sound_LC190:
-	ld (play_sound_LC190_1+1),A	; save A
-  LD DE,$01FF
-play_sound_LC190_0:
-  PUSH DE
-  CALL sound_beep_cont_d
-  POP DE
-  LD A,E
-  SUB L
-  LD E,A
-  JP NC,play_sound_LC190_0
-  LD A,$04
-  ADD A,L
-  LD L,A
-play_sound_LC190_1:
-	ld A,$00		; restore A
-  DEC A
-  JP NZ,play_sound_LC190
-  ;DI
-  RET
+; play_sound_unused:
+;   LD A,$18
+;   LD L,$01
+; play_sound_LC190:
+; 	ld (play_sound_LC190_1+1),A	; save A
+;   LD DE,$01FF
+; play_sound_LC190_0:
+;   PUSH DE
+;   CALL sound_beep_cont_d
+;   POP DE
+;   LD A,E
+;   SUB L
+;   LD E,A
+;   JP NC,play_sound_LC190_0
+;   LD A,$04
+;   ADD A,L
+;   LD L,A
+; play_sound_LC190_1:
+; 	ld A,$00		; restore A
+;   DEC A
+;   JP NZ,play_sound_LC190
+;   ;DI
+;   RET
 ;-----------------------------
 
 play_sound_06:

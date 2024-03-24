@@ -76,9 +76,9 @@ LB8E6_0:
   LD (DE),A		; Запись второй точки
 
   LD A,(running_dot_frame_1up)
-  BIT 7,A
-  RES 7,A
+  or A			; BIT 7,A
   JP Z,LB8E6_1
+  and %01111111		; RES 7,A
   DEC A
   CP $09
   JP Z,LB8E6_2
