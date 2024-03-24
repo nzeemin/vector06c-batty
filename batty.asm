@@ -807,31 +807,31 @@ save_obj_03:
 	dec c
 	jp nz,save_obj_02
 
-  EX DE,HL
-  RET
+	EX DE,HL
+	RET
 
 ; Used by the routine at LBAED.
 ; Восстанавливает магнит и все объекты
 restore_objs_and_magnet:
-  LD A,(current_magnet_prop+1)
-  AND A
-  JP Z,restore_objs
+	LD A,(current_magnet_prop+1)
+	AND A
+	JP Z,restore_objs
 ; Восстанавливаем магнит с фоном и с припуском 5 пикселей
-  LD HL,(current_magnet_prop)
-  inc HL
-  inc HL
-  LD A,(HL)			; IX+$02 координата Х объекта
-  SUB $05
-  LD L,A
-  inc HL
-  inc HL
-  LD A,(HL)			; IX+$04 координата Y объекта
-  SUB $05
-  LD H,A
-  LD BC,$0417
-  CALL win_bg_recovery
-  XOR A
-  LD (current_magnet_prop+1),A
+	LD HL,(current_magnet_prop)
+	inc HL
+	inc HL
+	LD A,(HL)			; IX+$02 координата Х объекта
+	SUB $05
+	LD L,A
+	inc HL
+	inc HL
+	LD A,(HL)			; IX+$04 координата Y объекта
+	SUB $05
+	LD H,A
+	LD BC,$0417
+	CALL win_bg_recovery
+	XOR A
+	LD (current_magnet_prop+1),A
 
 ; This entry point is used by the routines at LBB97 and LBC10.
 ; Восстанавливает объекты из save_objs_buff в экранный буфер
@@ -953,27 +953,32 @@ objs_width:
 ; Печатает спрайт с маской в буфер
 ; На входе: (IXobj) = адрес объекта (спрайт с маской)
 print_obj_to_buff:
-	ld IX,(IXobj)
-	LD A,(IX+$00)
+	ld HL,(IXobj)
+	LD A,(HL)		; IX+$00
 	BIT 7,A
 	RET NZ			; Возвращаемся, если объект невидим (за пределами экрана)
 	CP $02
+	ld IX,(IXobj)
 	JP NZ,obj_processing_1	; Переходим, если объект не шарик
 
 ; Обработка объекта шарик
 	LD A,(object_bat_1+$14)	; применённый к объекту бонус
-	CP $07					; spr_bonus_smash
+	CP $07			; spr_bonus_smash
 	JP Z,set_big_ball
 	LD A,(object_bat_2+$14)	; применённый к объекту бонус
-	CP $07					; spr_bonus_smash
+	CP $07			; spr_bonus_smash
 	JP NZ,obj_processing
 
 ; Установка большого шарика
 set_big_ball:
-	LD (IX+$01),$08		; spr_big_ball
-	ld A,(IX+$15)
+	ld HL,(IXobj)
+	inc HL
+	LD (HL),$08		; IX+$01 = spr_big_ball
+	ld DE,$15-$01
+	add HL,DE
+	ld A,(HL)		; IX+$15
 	and %01111111		; RES 7,(IX+$15)
-	ld (IX+$15),A
+	ld (HL),A		; IX+$15
 
 ; Обработка длительности действия приза
 	LD A,(counter_misc)
@@ -987,13 +992,13 @@ set_big_ball:
 
 ; Отключение действия приза, если пришло время
 	LD A,(object_bat_1+$14)	; применённый к объекту бонус
-	CP $07				; spr_bonus_smash
+	CP $07			; spr_bonus_smash
 	JP NZ,not_smash
 	LD A,$FF
 	LD (object_bat_1+$14),A	; применённый к объекту бонус
 not_smash:
 	LD A,(object_bat_2+$14)	; применённый к объекту бонус
-	CP $07				; spr_bonus_smash
+	CP $07			; spr_bonus_smash
 	JP NZ,obj_processing
 	LD A,$FF
 	LD (object_bat_2+$14),A	; применённый к объекту бонус
@@ -1028,63 +1033,63 @@ no_shift_obj:
 	JP NZ,not_transform	; Переход, если каретка не в процессе трансформации
 	LD A,(IX+$02)		; координата Х объекта
 not_transform:
-  AND $07
-  LD C,A
-  LD A,(DE)		; ширина в байтах (без учёта маски) (в DE адрес спрайта)
-  LD B,A		; ширина в байтах (без учёта маски)
-  JP Z,no_shift_obj_2	; Переход, если нет сдвига по X
-  ADD A,$08
+	AND $07
+	LD C,A
+	LD A,(DE)		; ширина в байтах (без учёта маски) (в DE адрес спрайта)
+	LD B,A			; ширина в байтах (без учёта маски)
+	JP Z,no_shift_obj_2	; Переход, если нет сдвига по X
+	ADD A,$08
 
 no_shift_obj_2:
-  CALL hl_add_2a
-  LD A,(HL)
-  INC HL
-  LD H,(HL)
-  LD L,A
-  LD (put_byte_1+$01),HL
-  LD (put_byte_3+$01),HL
-  LD (put_byte_4+$01),HL
-  INC DE			; в (DE) - высота в пикселях
-  ld a,b
-  LD (new_line_bytes_1+$01),A
-  LD (new_line_bytes_2+$01),A
-  LD H,(IX+$0A)
-  LD L,(IX+$0B)		; HL - адрес в экранном буфере
-  EX DE,HL			; DE - адрес в экранном буфере
-  LD A,(HL)			; A - высота в пикселях
-  LD B,A
-  EX AF,AF'
-  INC HL
-  di
-  LD SP,HL			; SP - начало пикселей спрайта
-  LD A,(IX+$04)		; координата Y объекта
-  ADD A,B			; координата Y объекта + высота в пикселях
-  CP $C1
-  JP C,no_cross_top	; Переход, если объект не пересекает верхнюю границу
+	CALL hl_add_2a
+	LD A,(HL)
+	INC HL
+	LD H,(HL)
+	LD L,A
+	LD (put_byte_1+$01),HL
+	LD (put_byte_3+$01),HL
+	LD (put_byte_4+$01),HL
+	INC DE			; в (DE) - высота в пикселях
+	ld a,b
+	LD (new_line_bytes_1+$01),A
+	LD (new_line_bytes_2+$01),A
+	LD H,(IX+$0A)
+	LD L,(IX+$0B)		; HL - адрес в экранном буфере
+	EX DE,HL		; DE - адрес в экранном буфере
+	LD A,(HL)		; A - высота в пикселях
+	LD B,A
+	EX AF,AF'
+	INC HL
+	di
+	LD SP,HL		; SP - начало пикселей спрайта
+	LD A,(IX+$04)		; координата Y объекта
+	ADD A,B			; координата Y объекта + высота в пикселях
+	CP $C1
+	JP C,no_cross_top	; Переход, если объект не пересекает верхнюю границу
 
-  LD A,$C0
-  SUB (IX+$04)		; координата Y объекта
-  LD B,A			; Остаточная высота спрайта
-  EX AF,AF'
+	LD A,$C0
+	SUB (IX+$04)		; координата Y объекта
+	LD B,A			; Остаточная высота спрайта
+	EX AF,AF'
 
 no_cross_top:
-  LD A,C
-  AND A
-  JP Z,no_shift_obj_3
+	LD A,C
+	AND A
+	JP Z,no_shift_obj_3
 
-  ADD A,A
-  ADD A,table_shifts/$100-$02	; $F200/$100-$02=$F0
-  LD H,A
+	ADD A,A
+	ADD A,table_shifts/$100-$02	; $F200/$100-$02=$F0
+	LD H,A
 	ex DE,HL
 	ld (scr_buff_1+$01),HL	; DE - адрес в экранном буфере
 	ld A,(HL)
 	ex DE,HL
 put_byte_4:
-  JP put_byte_4
+	JP put_byte_4
 
 no_shift_obj_3:
-  EX DE,HL
-  JP put_byte_4
+	EX DE,HL
+	JP put_byte_4
 
 ;------------------------------------------------
 ; В процессе игры ни разу не вызывалась процедура byte_put_width_8
@@ -3142,51 +3147,51 @@ LA67B_5:
   CP $08			; spr_bonus_5000_points
   JP NZ,LA67B_6
 ; Поймали 5000 очков
-  LD BC,$5000
-  JP add_points_to_score
+	LD BC,$5000
+	JP add_points_to_score
 
 LA67B_6:
-  CP $09			; spr_bonus_kill_aliens
-  JP NZ,LA67B_7
-  LD A,(object_enemy)
-  AND $7F
-  RET Z
-  CP $0A
-  RET Z
-  PUSH IX
-  LD IX,LA67B_6
-  LD IY,object_enemy
-  CALL kill_enemy
-  POP IX
-  RET
+	CP $09			; spr_bonus_kill_aliens
+	JP NZ,LA67B_7
+	LD A,(object_enemy)
+	AND $7F
+	RET Z
+	CP $0A
+	RET Z
+	PUSH IX
+	LD IX,LA67B_6
+	LD IY,object_enemy
+	CALL kill_enemy
+	POP IX
+	RET
 
 LA67B_7:
-  CP $05			; spr_bonus_extra_life
-  JP Z,bonus_extra_life
-  CP $04			; spr_bonus_slow
-  JP NZ,LA67B_8
+	CP $05			; spr_bonus_extra_life
+	JP Z,bonus_extra_life
+	CP $04			; spr_bonus_slow
+	JP NZ,LA67B_8
 
 ; Замедление шарика
-  LD (IY+$14),$FF
-  LD A,$02
-  LD (object_ball_1+$07),A
-  LD (object_ball_2+$07),A
-  LD (object_ball_3+$07),A
-  LD HL,(random_number)
-  LD A,L
-  AND $1F
-  ADD A,$1F
-  LD (object_ball_1+$13),A
-  LD A,H
-  AND $1F
-  ADD A,$1F
-  LD (object_ball_2+$13),A
-  LD A,H
-  ADD A,L
-  AND $1F
-  ADD A,$1F
-  LD (object_ball_3+$13),A
-  RET
+	LD (IY+$14),$FF
+	LD A,$02
+	LD (object_ball_1+$07),A
+	LD (object_ball_2+$07),A
+	LD (object_ball_3+$07),A
+	LD HL,(random_number)
+	LD A,L
+	AND $1F
+	ADD A,$1F
+	LD (object_ball_1+$13),A
+	LD A,H
+	AND $1F
+	ADD A,$1F
+	LD (object_ball_2+$13),A
+	LD A,H
+	ADD A,L
+	AND $1F
+	ADD A,$1F
+	LD (object_ball_3+$13),A
+	RET
 
 LA67B_8:
   CP $02			; spr_bonus_triple_ball
@@ -3259,92 +3264,108 @@ ball3_direction:
 
 ; Поймали расширитель каретки
 bonus_resize:
-  XOR A
-  LD (object_bat_temp+$11),A
-  LD (IY+$15),$20
-  LD A,(bonus_flag)
-  AND A
-  JP Z,LA67B_13
-  LD A,$0A				; spr_bat_gun
+	XOR A
+	LD (object_bat_temp+$11),A
+	LD (IY+$15),$20
+	LD A,(bonus_flag)
+	AND A
+	JP Z,LA67B_13
+	LD A,$0A				; spr_bat_gun
 LA67B_13:
-  LD (IY+$01),A			; spr_bat_normal
-  push HL
-  CALL get_free_sound_slot
-  ld (HL),sound_bat_resize_1
-  inc HL
-  ld (HL),$C0
-  pop HL
-  LD A,(counter_misc)
-  AND $FE
-  LD (counter_misc),A
-  RET
+	LD (IY+$01),A			; spr_bat_normal
+	push HL
+	CALL get_free_sound_slot
+	ld (HL),sound_bat_resize_1
+	inc HL
+	ld (HL),$C0
+	pop HL
+	LD A,(counter_misc)
+	AND $FE
+	LD (counter_misc),A
+	RET
 
 ; Сюда помещается $80, если бонус пулемёт
 ; $00 - ничего нет
 ; $41 - пулемёт
 ; $C0 - обычная с шифтом
 bonus_flag:
-  DEFB $00
+	DEFB $00
 
 ; Used by the routine at get_bonus.
 ; Получение дополнительной жизни
 bonus_extra_life:
-  PUSH IX
-  LD IX,object_lives_indicator
-	ld (IXobj),IX
-  CALL ix_buf_addr_calc
-  CALL print_obj_to_buff
-  CALL print_obj_from_buf_to_scr
-  LD (IX+$11),$00
-  LD A,(IX+$02)
-  ADD A,$10
-  CP $E9
-  JP NC,LA860_0
-  LD (IX+$02),A
+	ld HL,(IXobj)
+	PUSH HL
+	LD HL,object_lives_indicator
+	ld (IXobj),HL
+	CALL hl_buf_addr_calc
+	CALL print_obj_to_buff
+	CALL print_obj_from_buf_to_scr
+	xor a
+	LD (object_lives_indicator+$11),A	; IX+$11
+	ld HL,object_lives_indicator+$02
+	LD A,(HL)				; IX+$02
+	ADD A,$10
+	CP $E9
+	JP NC,LA860_0
+	LD (HL),A				; IX+$02
 LA860_0:
-  CALL get_free_sound_slot
-  ld (HL),sound_live_add
-  inc HL
-  ld (HL),$20
-  POP IX
-  LD A,$01
-  LD (flag_extra_life),A
-  LD A,(lives_1up)
-  INC A
-  LD (lives_1up),A
-  RET
+	CALL get_free_sound_slot
+	ld (HL),sound_live_add
+	inc HL
+	ld (HL),$20
+	POP HL
+	ld (IXobj),HL
+	LD A,$01
+	LD (flag_extra_life),A
+	LD A,(lives_1up)
+	INC A
+	LD (lives_1up),A
+	RET
 
 ; Флаг того, что жизнь на раунде уже выпадала
 flag_extra_life:
-  DEFB $00
+	DEFB $00
 
 ; Обработка ракеты
 handling_rocket:
-	ld IX,(IXobj)
-  LD A,(counter_misc)
-  AND $01
-  LD (IX+$01),A
-  CALL calc_write_spr_addr
-  LD HL,(LA8CF)
-  LD DE,$FFE0
-  ADD HL,DE
-  LD A,(counter_misc)
-  CP $38
-  JP C,LA89A_0
-  LD (LA8CF),HL
+	ld HL,(IXobj)
+	inc HL
+	ld (handling_rocket_1+1),HL
+	inc HL
+	inc HL
+	inc HL
+	ld (handling_rocket_3+1),HL
+	ld (handling_rocket_4+1),HL
+
+	LD A,(counter_misc)
+	AND $01
+handling_rocket_1:
+	LD ($0001),A		; IX+$01
+	CALL calc_write_spr_addr
+	LD HL,(LA8CF)
+	LD DE,$FFE0
+	ADD HL,DE
+	LD A,(counter_misc)
+	CP $38
+	JP C,LA89A_0
+	LD (LA8CF),HL
 LA89A_0:
-  LD A,(LA8D1)
-  LD E,A
-  LD D,(IX+$04)
-  ADD HL,DE
-  LD A,L
-  LD (LA8D1),A
-  LD A,H
-  LD (IX+$04),A
-  SUB $06
-  LD (object_bat_1+$04),A
-  LD (object_bat_2+$04),A
-  RET
+	LD A,(LA8D1)
+	LD E,A
+handling_rocket_3:
+	LD A,($0004)		; IX+$04
+	ld D,A
+	ADD HL,DE
+	LD A,L
+	LD (LA8D1),A
+	LD A,H
+handling_rocket_4:
+	LD ($0004),A		; IX+$04
+	SUB $06
+	LD (object_bat_1+$04),A
+	LD (object_bat_2+$04),A
+	RET
 
 LA8CF:
   DEFB $00,$00
@@ -3452,25 +3473,25 @@ LA96F:
 bomb_appear:
   LD A,(object_bonus)
   AND A
-  RET NZ					; Возвращаемся, если уже какой-то бонус падает
+  RET NZ			; Возвращаемся, если уже какой-то бонус падает
 
   LD A,(random_number)
   LD B,A
   LD A,(random_number+$01)
   ADD A,B
   AND $3F
-  RET NZ					; Возвращаемся, если случайный номер не удовлетворяет условиям
+  RET NZ			; Возвращаемся, если случайный номер не удовлетворяет условиям
 
   LD (object_bonus+$11),A	; Помещаем случайный номер
-  LD A,(IX+$04)				; координата Y каретки?
+  LD A,(IX+$04)			; координата Y каретки?
   ADD A,$08
   CP $C0
-  RET NC					; Возвращаемся, если пролетела
+  RET NC			; Возвращаемся, если пролетела
 
   LD (object_bonus+$04),A	; координата Y объекта
   LD A,$04
   LD (object_bonus),A		; gfx_bonuses
-  LD A,(IX+$02)				; координата Х объекта
+  LD A,(IX+$02)			; координата Х объекта
   ADD A,$08
   LD (object_bonus+$02),A	; координата Х объекта
   LD A,$0A
