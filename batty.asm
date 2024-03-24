@@ -673,7 +673,7 @@ clear_screen_pix:		; Vector ready
 	LD D,H
 	LD E,L
 	ADD HL,SP
-	LD (clear_screen_1+1),HL
+	LD (clear_screen_1+1),HL	; сохраняем стек
 	LD HL,zx_scr+$2000	; поправка для Вектора
 	LD C,$20
 	di
@@ -688,7 +688,7 @@ clear_screen_2:
 	DEC C
 	JP NZ,clear_screen_3
 clear_screen_1:
-	LD SP,$0000
+	LD SP,$0000		; восстанавливаем стек
 	ei
 	RET
 
@@ -736,8 +736,6 @@ next_obj_to_buff:
 save_obj_buff_end:
 	DEFW $0000
 
-; Routine at 9801
-;
 ; Used by the routine at save_objs_to_buff.
 ; Сохранение одного объекта с тенью и фоном в текущее место (HL) буфера
 save_one_obj_to_buff:
@@ -746,8 +744,9 @@ save_one_obj_to_buff:
 	JP C,out_of_bottom	; Переходим, если координата не ниже границы экрана
 	SET 7,(IX+$00)		; Делаем объект невидимым (он за пределами экрана)
 out_of_bottom:
-	BIT 7,(IX+$00)
-	RET NZ			; Выходим, если объект за пределами экрана
+	ld A,(IX+$00)
+	or A		; BIT 7,(IX+$00)
+	RET M			; Выходим, если объект за пределами экрана
 	LD A,(save_objs_buff)
 	INC A
 	LD (save_objs_buff),A
@@ -766,9 +765,12 @@ sprite_width_const:
 
 	LD A,$FF
 	SUB (IX+$02)		; координата Х объекта
-	SRL A
-	SRL A
-	SRL A
+	or a
+	rra		; SRL A
+	or a
+	rra		; SRL A
+	or a
+	rra		; SRL A
 	INC A
 	LD C,A			; номер столбца (1-32)
 
@@ -958,8 +960,8 @@ objs_width:
 print_obj_to_buff:
 	ld HL,(IXobj)
 	LD A,(HL)		; IX+$00
-	BIT 7,A
-	RET NZ			; Возвращаемся, если объект невидим (за пределами экрана)
+	or A		; BIT 7,A
+	RET M			; Возвращаемся, если объект невидим (за пределами экрана)
 	CP $02
 	ld IX,(IXobj)
 	JP NZ,obj_processing_1	; Переходим, если объект не шарик
@@ -1031,9 +1033,10 @@ no_shift_obj:
 
 	LD (sp_storage),SP
 
-	BIT 7,(IX+$15)		; BIT7 = 1 - каретка не в процессе трансформации
+	ld A,(IX+$15)		; BIT7 = 1 - каретка не в процессе трансформации
+	or A		; BIT 7,(IX+$15)
 	LD A,$00
-	JP NZ,not_transform	; Переход, если каретка не в процессе трансформации
+	JP M,not_transform	; Переход, если каретка не в процессе трансформации
 	LD A,(IX+$02)		; координата Х объекта
 not_transform:
 	AND $07
@@ -1486,7 +1489,7 @@ obj_on_screen:
 	ADD A,A
 	ADD A,A
 	ADD A,L
-	LD B,A		; В - координата правой стороны объекта
+	LD B,A			; В - координата правой стороны объекта
 	LD C,(IX+$09)		; высота спрайта с тенью в пикселях
 	JP ready_for_restore
 
@@ -1548,11 +1551,11 @@ ready_for_restore:
 	RET NC			; Возвращаемся, если координата Х = $F8 и больше
 	CP B
 	JP C,ready_for_restore_1
-	LD B,$FF			; Прижимаем правую сторону к краю
+	LD B,$FF		; Прижимаем правую сторону к краю
 ready_for_restore_1:
 	LD E,L
-	BIT 7,A
-	JP Z,ready_for_restore_2
+	or A	; BIT 7,A
+	JP P,ready_for_restore_2
 	RES 7,L
 	RES 7,B
 ready_for_restore_2:
@@ -1560,60 +1563,67 @@ ready_for_restore_2:
 	ADD A,$07
 	AND $F8
 	SUB L
-	SRL A
-	SRL A
-	SRL A
+	or A
+	rra	; SRL A
+	or A
+	rra	; SRL A
+	or A
+	rra	; SRL A
 	LD B,A
 	LD L,E
 
-  LD A,(IX+$02)		; координата Х объекта
-  LD (IX+$0E),A		; предыдущая координата Х объекта
+	LD A,(IX+$02)		; координата Х объекта
+	LD (IX+$0E),A		; предыдущая координата Х объекта
 
-  LD A,(IX+$04)		; координата Y объекта
-  LD (IX+$0F),A		; предыдущая координата Y объекта
+	LD A,(IX+$04)		; координата Y объекта
+	LD (IX+$0F),A		; предыдущая координата Y объекта
 
-  LD A,(IX+$08)		; ширина спрайта с тенью в байтах
-  LD (IX+$10),A		; предыдущая ширина спрайта с тенью в байтах
+	LD A,(IX+$08)		; ширина спрайта с тенью в байтах
+	LD (IX+$10),A		; предыдущая ширина спрайта с тенью в байтах
 
-  LD A,(IX+$09)		; высота спрайта с тенью в пикселях
-  LD (IX+$11),A		; предыдущая высота спрайта с тенью в пикселях
+	LD A,(IX+$09)		; высота спрайта с тенью в пикселях
+	LD (IX+$11),A		; предыдущая высота спрайта с тенью в пикселях
 
-  LD A,H
-  ADD A,C
-  CP $C0
-  JP C,ready_for_restore_3
-  LD A,$C0
-  SUB H
-  LD C,A
+	LD A,H
+	ADD A,C
+	CP $C0
+	JP C,ready_for_restore_3
+	LD A,$C0
+	SUB H
+	LD C,A
 ready_for_restore_3:
-  BIT 7,L
-  JP Z,ready_for_restore_5
-  RES 7,L
-  LD A,B
-  ADD A,A
-  ADD A,A
-  ADD A,A
-  ADD A,L
-  SUB $78
-  JP C,ready_for_restore_4
-  SRL A
-  SRL A
-  SRL A
-  NEG
-  ADD A,B
-  LD B,A
+	xor A
+	or L		; BIT 7,L
+	JP P,ready_for_restore_5
+	RES 7,L
+	LD A,B
+	ADD A,A
+	ADD A,A
+	ADD A,A
+	ADD A,L
+	SUB $78
+	JP C,ready_for_restore_4
+	or A
+	rra	; SRL A
+	or A
+	rra	; SRL A
+	or A
+	rra	; SRL A
+	NEG
+	ADD A,B
+	LD B,A
 ready_for_restore_4:
-  SET 7,L
+	SET 7,L
 ready_for_restore_5:
-  LD A,H
-  SUB $08
-  JP NC,win_bg_recovery
-  ADD A,C
-  LD C,A
-  DEC A
-  RLA
-  RET C
-  LD H,$08
+	LD A,H
+	SUB $08
+	JP NC,win_bg_recovery
+	ADD A,C
+	LD C,A
+	DEC A
+	RLA
+	RET C
+	LD H,$08
 
 ; This entry point is used by the routines at scr_score_update, restore_objs_and_magnet, wins_recovery, game_restart and
 ; LBC10.
@@ -1977,7 +1987,7 @@ zero_direction:
 ; Обработка нажатия клавиш и изменение координат каретки
 	LD A,(ctrl_btns_pressed)
 	ld C,A
-	BIT 1,C			; Нажато Влево
+	and $02		; BIT 1,C	; Нажато Влево
 	LD A,(IX+$02)		; Координата X биты
 	JP Z,moving_right
 	SUB $04			; Уменьшаем координату Х на 4
@@ -2023,7 +2033,8 @@ bat_resize:
 	JP NZ,bat_decrease_size		; Переход, если в процессе уменьшения
 
 ; Каретка находится в процессе увеличения
-	BIT 0,E			; BIT0 счётчика
+	ld A,E
+	and $01		; BIT 0,E	; BIT0 счётчика
 	JP Z,no_x_decrease
 	DEC (IX+$02)		; Уменьшаем координату Х каретки
 no_x_decrease:
@@ -2053,7 +2064,8 @@ bat_increase_size_ready:
 
 ; Каретка находится в процессе уменьшения
 bat_decrease_size:
-	BIT 0,E			; BIT0 счётчика
+	ld A,E
+	and $01		; BIT 0,E	; BIT0 счётчика
 	JP Z,no_x_increase
 	INC (IX+$02)		; Увеличиваем координату Х каретки
 no_x_increase:
@@ -2116,7 +2128,7 @@ handling_bat_no_transform:
 	CALL check_right_margin
 	pop AF
 
-	BIT 6,A			; BIT6 bonus_flag
+	and %01000000	; BIT 6,A	; BIT6 bonus_flag
 	JP Z,no_bit6
 
 	LD A,(counter_misc)
@@ -3412,7 +3424,8 @@ handling_spark:
   INC (IX+$01)
   CALL calc_write_spr_addr
   LD A,(IX+$14)
-  SRL A
+	or A
+	rra	; SRL A
   LD (IX+$14),A
   INC A
   LD (IX+$15),A
@@ -3580,7 +3593,8 @@ LAA02:
   JP Z,LA9BC_5
   LD A,(IX+$13)
   LD (IX+$13),A
-  BIT 5,C
+  ld A,C
+  and %00100000		; BIT 5,C
   JP Z,LA9BC_4
   LD A,$0E
   SUB (IX+$01)
@@ -3652,7 +3666,7 @@ LAA7D:
   LD L,A
   SUB (IX+$14)
   JP Z,LAA7D_1
-  BIT 5,A
+  and %00100000		; BIT 5,A
   LD A,B
   JP NZ,LAA7D_0
   NEG
@@ -4327,8 +4341,9 @@ print_line_briks:
 LAE13_0:
 	PUSH BC
 	PUSH HL
-	BIT 7,(IY+$00)
-	CALL Z,print_one_brik_buf	; 	Печатаем кирпич, если не пустота
+	ld A,(IY+$00)
+	or A		; BIT 7,(IY+$00)
+	CALL P,print_one_brik_buf	; 	Печатаем кирпич, если не пустота
 	POP HL
 	INC H
 	INC H
@@ -4344,8 +4359,9 @@ brik_shadow:
 	LD B,$0F
 	LD HL,(brik_attr_buf)
 brik_shadow_0:
-	BIT 7,(IY+$00)
-	JP NZ,brik_shadow_1
+	ld A,(IY+$00)
+	or A		; BIT 7,(IY+$00)
+	JP M,brik_shadow_1
 	ld a,(hl)
 	and %01110111
 	ld (hl),a
@@ -4687,8 +4703,9 @@ LAFFC_5:
 
   LD D,$0F
 
-  BIT 7,(IY+$00)
-  JP Z,LAFFC_7
+  ld A,(IY+$00)
+  or A		; BIT 7,(IY+$00)
+  JP P,LAFFC_7
   LD A,L
   CP $E8
   JP Z,LAFFC_6
@@ -4702,8 +4719,9 @@ LB069:
   ADD A,L
   LD L,A
   INC IY
-  BIT 7,(IY+$00)
-  JP Z,LAFFC_7
+  ld A,(IY+$00)
+  or A		; BIT 7,(IY+$00)
+  JP P,LAFFC_7
   LD L,E
   DEC IY
 LAFFC_6:
@@ -4725,16 +4743,18 @@ LB087:
   LD A,(brik_value+$01)
   INC A
   LD (brik_value+$01),A
-  BIT 7,(IY+$00)
-  JP Z,LAFFC_7
+  ld A,(IY+$00)
+  or A		; BIT 7,(IY+$00)
+  JP P,LAFFC_7
   BIT 7,D
   RET Z
   LD A,L
   ADD A,$10
   LD L,A
   INC IY
-  BIT 7,(IY+$00)
-  RET NZ
+  ld A,(IY+$00)
+  or A		; BIT 7,(IY+$00)
+  RET M
 LAFFC_7:
   LD (LB28F+$01),HL
   PUSH HL
@@ -4772,7 +4792,7 @@ LAFFC_12:
   RES 3,D
 LAFFC_13:
   LD A,D
-  LD (LB292+$01),A
+  LD (LB292+1),A
   LD A,(IX+$00)
   AND $3F
   CP $05
@@ -5029,49 +5049,49 @@ brik_value_0:
 	pop HL
 LB2D8:
   LD IX,wins_recovery_data
-  LD (IX+$01),L		; Координата окна - X
-  LD (IX+$00),H		; Координата окна - Y
-  LD (IX+$02),B		; Размер окна - ширина в байтах
-  LD (IX+$03),C		; Размер окна - высота в пикселях
-  PUSH BC
-  CALL scr_buff_addr_calc	; На выходе в HL адрес в буфере scr_buff
-  POP BC
-  LD A,(wins_counter)
-  INC A
-  LD (wins_counter),A
-  BIT 0,(IX+$00)
-  JP Z,LAFFC_46
-  ; В DE адрес текстуры внизу экрана для восстановления фона под кирпичом
+	LD (IX+$01),L		; Координата окна - X
+	LD (IX+$00),H		; Координата окна - Y
+	LD (IX+$02),B		; Размер окна - ширина в байтах
+	LD (IX+$03),C		; Размер окна - высота в пикселях
+	PUSH BC
+	CALL scr_buff_addr_calc	; На выходе в HL адрес в буфере scr_buff
+	POP BC
+	LD A,(wins_counter)
+	INC A
+	LD (wins_counter),A
+	BIT 0,(IX+$00)
+	JP Z,LAFFC_46
+; В DE адрес текстуры внизу экрана для восстановления фона под кирпичом
 	dec e
 LAFFC_46:
-  ; в HL адрес в буфере scr_buff
-  ld a,h
-  and $01
-  ; В DE адрес текстуры внизу экрана для восстановления фона под кирпичом
-  add a,d
-  ld d,a
-  LD (LB3DF+$01),HL	; в HL адрес в буфере scr_buff
-  EX DE,HL
+; в HL адрес в буфере scr_buff
+	ld a,h
+	and $01
+; В DE адрес текстуры внизу экрана для восстановления фона под кирпичом
+	add a,d
+	ld d,a
+	LD (LB3DF+$01),HL	; в HL адрес в буфере scr_buff
+	EX DE,HL
 ;-----------------------------------------------
 ; Восстановление линии фона НАД выбитым кирпичом
-  LD A,C	; Размер окна
-  CP $08
-  JP Z,LAFFC_47
-  BIT 0,(IX+$00)
-  JP Z,LAFFC_47
+	LD A,C	; Размер окна
+	CP $08
+	JP Z,LAFFC_47
+	BIT 0,(IX+$00)
+	JP Z,LAFFC_47
 
-  PUSH DE
-  PUSH HL
-  set 0,h
-  set 0,d
+	PUSH DE
+	PUSH HL
+	set 0,h
+	set 0,d
 	ld a,(hl)
 	ld (de),a
 	inc h
 	inc d
 	ld a,(hl)
 	ld (de),a
-  POP HL ; адрес текстуры внизу экрана для восстановления фона под кирпичом
-  POP DE ; адрес в буфере scr_buff
+	POP HL ; адрес текстуры внизу экрана для восстановления фона под кирпичом
+	POP DE ; адрес в буфере scr_buff
 
 	inc e
 	inc l
@@ -5081,25 +5101,25 @@ LAFFC_47:
 	ex DE,HL
 	ld (LB3E2+$01),HL
 	ex DE,HL
-  PUSH DE
-  LD A,B
-  LD (LB33D+$01),A
-  LD (LB33D_1+$01),A
-  LD A,$08
-  LD B,$00
+	PUSH DE
+	LD A,B
+	LD (LB33D+$01),A
+	LD (LB33D_1+$01),A
+	LD A,$08
+	LD B,$00
 LAFFC_48:
-  ld (LB33D_2+1),A	; save A
+	ld (LB33D_2+1),A	; save A
 LB33D:
-  LD C,$00		; Размер окна
+	LD C,$00		; Размер окна
 LB33D_0:
-  ld a,(hl)
-  ld (de),a
-  inc h
-  inc d
-  dec c
-  jp nz,LB33D_0
+	ld a,(hl)
+	ld (de),a
+	inc h
+	inc d
+	dec c
+	jp nz,LB33D_0
 LB33D_1:
-  LD C,$00		; Размер окна
+	LD C,$00		; Размер окна
 	ld a,h
 	sub c
 	ld h,a
@@ -5109,25 +5129,27 @@ LB33D_1:
 	ld d,a
 	inc e
 LB33D_2:
-  ld A,$00		; restore A
-  DEC A
-  JP NZ,LAFFC_48
+	ld A,$00		; restore A
+	DEC A
+	JP NZ,LAFFC_48
 
 ;-----------------------------------------------
 ; Восстановление линии фона ПОД выбитым кирпичом
-  PUSH DE
-  LD A,(IX+$03)
-  CP $08
-  JP Z,LAFFC_51
-  CP $0A
-  JP Z,LAFFC_49
-  BIT 0,(IX+$00)
-  JP NZ,LAFFC_51
+	PUSH DE
+	LD A,(IX+$03)
+	CP $08
+	JP Z,LAFFC_51
+	CP $0A
+	JP Z,LAFFC_49
+	ld A,(IX+$00)
+	and $01		; BIT 0,(IX+$00)
+	JP NZ,LAFFC_51
 LAFFC_49:
-  BIT 3,(IX+$01)
-  JP NZ,LAFFC_50
-  inc h
-  inc d
+	ld A,(IX+$01)
+	and %00001000	; BIT 3,(IX+$01)
+	JP NZ,LAFFC_50
+	inc h
+	inc d
 LAFFC_50:
 	ld a,(hl)
 	ld (de),a
@@ -5143,189 +5165,183 @@ LAFFC_50:
 ; Назначение неизвестно. Возможно буфер портится в какой-то момент и эта процедура его восстанавливает
 ; Возможно это костыль, чтобы за вороной не оставался след, который ранее появлялся чаще
 LAFFC_51:
-  LD A,(IX+$01)
-  CP $E0
-  JP C,LAFFC_52
-  LD HL,scr_buff+$1e32
-  LD C,$FE
-  JP LAFFC_53
+	LD A,(IX+$01)
+	CP $E0
+	JP C,LAFFC_52
+	LD HL,scr_buff+$1e32
+	LD C,$FE
+	JP LAFFC_53
 LAFFC_52:
-  CP $10
-  JP NC,LAFFC_56
-  LD HL,scr_buff+$0132
-  LD C,$7F
+	CP $10
+	JP NC,LAFFC_56
+	LD HL,scr_buff+$0132
+	LD C,$7F
 LAFFC_53:
-  LD B,$1C
+	LD B,$1C
 LAFFC_54:
-  LD A,(HL)
-  AND C
-  LD (HL),A
-  inc l
-  dec B
-  jp nz,LAFFC_54
+	LD A,(HL)
+	AND C
+	LD (HL),A
+	inc l
+	dec B
+	jp nz,LAFFC_54
 	ld a,l
 	add $1c
 	ld l,a
-  LD B,$18
+	LD B,$18
 LAFFC_55:
-  LD A,(HL)
-  AND C
-  LD (HL),A
-  inc l
-  dec B
-  jp nz,LAFFC_55
+	LD A,(HL)
+	AND C
+	LD (HL),A
+	inc l
+	dec B
+	jp nz,LAFFC_55
 ;=======================================
 
 LAFFC_56:
 	ex DE,HL
 	ld HL,(LB28F+$01)	; Координаты на экране
 	ex DE,HL
-  POP HL		; Адрес в экранном буфере
-  LD B,H
-  LD C,L
+	POP HL			; Адрес в экранном буфере
+	LD B,H
+	LD C,L
 ; BC - адрес в экранном буфере
-  LD A,D
-  CP $78
-  JP Z,LAFFC_58
+	LD A,D
+	CP $78
+	JP Z,LAFFC_58
 	dec c
   	set 0,h
-  LD A,E
-  CP $08
-  JP Z,LAFFC_57
-  BIT 7,(IY+$0E)
-  JP NZ,LAFFC_57
-
+	LD A,E
+	CP $08
+	JP Z,LAFFC_57
+	BIT 7,(IY+$0E)
+	JP NZ,LAFFC_57
 	ld A,(HL)
 	and %01111111	; RES 7,(HL)
 	ld (HL),A
+	bit 0,b
+	JP NZ,LAFFC_57
 
-  bit 0,b
-  JP NZ,LAFFC_57
-
-	IFDEF MX
-  XOR A
-	ELSE
-  XOR A
-
+  IFDEF MX
+	XOR A
+  ELSE
+	XOR A
 	; ld a,$ff
+  ENDIF
+	LD (BC),A
 
-	ENDIF
-  LD (BC),A
-
-  LD A,E
+	LD A,E
 LAFFC_57:
-  CP $E0
-  JP NC,LAFFC_58
-  BIT 7,(IY+$10)
-  JP NZ,LAFFC_58
-  inc h
-  LD A,(IX+$02)
-  DEC A
-  add a,b
-  ld b,a
+	CP $E0
+	JP NC,LAFFC_58
+	ld A,(IY+$10)
+	or A		; BIT 7,(IY+$10)
+	JP M,LAFFC_58
+	inc h
+	LD A,(IX+$02)
+	DEC A
+	add a,b
+	ld b,a
 
 	ld A,(HL)
 	and %11111110	; RES 0,(HL)
 	ld (HL),A
 	ld A,B
 
-  AND $01
-  JP Z,LAFFC_58
-	IFDEF MX
-  XOR A
-	ELSE
-  XOR A
-
+	AND $01
+	JP Z,LAFFC_58
+  IFDEF MX
+	XOR A
+  ELSE
+	XOR A
 	; ld a,$ff
-
-	ENDIF
-  LD (BC),A
+  ENDIF
+	LD (BC),A
 
 LAFFC_58:
-  LD A,D
-  CP $20
-  JP Z,LAFFC_60
+	LD A,D
+	CP $20
+	JP Z,LAFFC_60
 LB3DF:
-  LD HL,$0000
+	LD HL,$0000
 LB3E2:
-  LD BC,$0000
-  set 0,h
-  LD A,E
-  CP $08
-  JP Z,LAFFC_59
-  BIT 7,(IY-$10)
-  JP NZ,LAFFC_59
+	LD BC,$0000
+	set 0,h
+	LD A,E
+	CP $08
+	JP Z,LAFFC_59
+	BIT 7,(IY-$10)
+	JP NZ,LAFFC_59
 	ld A,(HL)
 	and %01111111	; RES 7,(HL)
 	ld (HL),A
-  bit 0,b
-  JP NZ,LAFFC_59
-  XOR A
-  LD (BC),A
-  LD A,E
+	bit 0,b
+	JP NZ,LAFFC_59
+	XOR A
+	LD (BC),A
+	LD A,E
 LAFFC_59:
-  CP $E0
-  JP NC,LAFFC_60
-  BIT 7,(IY-$0E)
-  JP NZ,LAFFC_60
-  inc h
+	CP $E0
+	JP NC,LAFFC_60
+	ld A,(IY-$0E)
+	or A		; BIT 7,(IY-$0E)
+	JP M,LAFFC_60
+	inc h
 	ld A,(HL)
 	and %11111110	; RES 0,(HL)
 	ld (HL),A
-  LD A,(IX+$02)
-  DEC A
-  add a,b
-  ld b,a
-  AND $01
-  JP Z,LAFFC_60
-  XOR A
-  LD (BC),A
+	LD A,(IX+$02)
+	DEC A
+	add a,b
+	ld b,a
+	AND $01
+	JP Z,LAFFC_60
+	XOR A
+	LD (BC),A
 
 ;------------------------------------------------------
 ; Обработка соседнего кирпича СЛЕВА от выбитого кирпича
 LAFFC_60:
-  POP HL
-  ld d,$00	; Для дальнейших манипуляций в d нужен 0
-  LD A,(IX+$01)
-  CP $08
-  JP Z,LAFFC_62
-  BIT 3,A
-  JP Z,LAFFC_62
-  PUSH HL
-  LD B,$08
+	POP HL
+	ld d,$00		; Для дальнейших манипуляций в d нужен 0
+	LD A,(IX+$01)
+	CP $08
+	JP Z,LAFFC_62
+	and %00001000		; BIT 3,A
+	JP Z,LAFFC_62
+	PUSH HL
+	LD B,$08
 LAFFC_61:
-
 	ld A,(HL)
 	and %01111111	; RES 7,(HL)
 	ld (HL),A
-
 	inc l
-  dec B
-  jp nz,LAFFC_61
-  POP HL
+	dec B
+	jp nz,LAFFC_61
+	POP HL
 
 ;-------------------------------------------------------
 ; Обработка соседнего кирпича СПРАВА от выбитого кирпича
 LAFFC_62:
-  LD A,(IX+$01)
-  CP $E0
-  JP NC,LAFFC_64
-  LD B,(IX+$02)
-  SLA B
-  SLA B
-  SLA B
-  ADD A,B
-  CP $F8
-  JP Z,LAFFC_64
-  AND $08
-  JP Z,LAFFC_64
+	LD A,(IX+$01)
+	CP $E0
+	JP NC,LAFFC_64
+	LD B,(IX+$02)
+	SLA B
+	SLA B
+	SLA B
+	ADD A,B
+	CP $F8
+	JP Z,LAFFC_64
+	AND $08
+	JP Z,LAFFC_64
 
-  PUSH HL
-  LD A,(IX+$02)
-  DEC A
-  add a,h
-  ld h,a
-  LD B,$08
+	PUSH HL
+	LD A,(IX+$02)
+	DEC A
+	add a,h
+	ld h,a
+	LD B,$08
 LAFFC_63:
   IFDEF MX
 	ld A,(HL)
@@ -5345,51 +5361,49 @@ LAFFC_63:
 ;-----------------------------------------------
 ; Обработка стороны кирпича над и под выбитым кирпичом
 LAFFC_64:
-  set 0,h
-  LD A,(LB292+$01)
-  BIT 2,A
-  JP NZ,LAFFC_65
-	; В D - 0
-	; Подводка под кирпичом, который над выбитым
-  LD (HL),D
+	ld A,H
+	or $01		; set 0,h
+	ld H,A
+	LD A,(LB292+1)
+	BIT 2,A
+	JP NZ,LAFFC_65
+; В D - 0
+; Подводка под кирпичом, который над выбитым
+	LD (HL),D
 	inc h
-  LD (HL),D
+	LD (HL),D
 	dec h
-
 LAFFC_65:
+	AND $08
+	JP NZ,LAFFC_66
+	ld a,l
+	add $07
+	ld l,a
 
-  AND $08
-  JP NZ,LAFFC_66
-  ld a,l
-  add $07
-  ld l,a
-
-	IFDEF MX
-  LD (HL),D
-  inc h
-  LD (HL),D
-	ELSE
-
+  IFDEF MX
+	LD (HL),D
+	inc h
+	LD (HL),D
+  ELSE
 	; ld a,$ff
 	; ld (hl),a
 	; inc h
 	; ld (hl),a
 
-  LD (HL),D
-  inc h
-  LD (HL),D
+	LD (HL),D
+	inc h
+	LD (HL),D
+  ENDIF
 
-
-	ENDIF
 ;------------------------------------------
 ; Восстановление цвета под выбитым кирпичом
 LAFFC_66:
-  LD DE,$0004
-  ADD IX,DE
-  LD (LB2D8+$02),IX
-  POP IX
-  LD HL,(LB28F+$01)
-  CALL scr_buff_attr_calc
+	LD DE,$0004
+	ADD IX,DE
+	LD (LB2D8+$02),IX
+	POP IX
+	LD HL,(LB28F+$01)
+	CALL scr_buff_attr_calc
 ;  В HL адрес в буфере атрибутов
 
   IFDEF MX
@@ -5398,16 +5412,14 @@ LAFFC_66:
 	ld HL,(attr_buff+$0202)
 	ex DE,HL
 
-	; RES 6,E
 	ld a,e
-	and %01110111
+	and %01110111	; RES 6,E
 	ld e,a
 	LD A,(LB28F+$01)
 	CP $08
 	JP Z,LAFFC_67
-	; SET 6,E
 	ld a,e
-	and %00000111
+	and %00000111	; SET 6,E
 	ld a,e
 	jp nz,col_res_01
 	or %10000000
@@ -5421,28 +5433,24 @@ LAFFC_67:
 	LD A,(LB28F+$02)
 	CP $20
 	JP Z,LAFFC_69
-	BIT 7,(IY-$10)
-	JP NZ,LAFFC_68
-
-	; RES 6,E
+	or A		; BIT 7,(IY-$10)
+	JP M,LAFFC_68
 	ld a,e
-	and %01110111
+	and %01110111		; RES 6,E
 	ld e,a
 
 LAFFC_68:
-	BIT 7,(IY-$0F)
-	JP NZ,LAFFC_69
-
-	; RES 6,D
+	ld A,(IY-$0F)
+	or A		; BIT 7,(IY-$0F)
+	JP M,LAFFC_69
 	ld a,d
-	and %01110111
+	and %01110111		; RES 6,D
 	ld d,a
 
 LAFFC_69:
 	LD (HL),E
 	inc h
 	LD (HL),D
-
 	inc l
 	LD A,(LB28F+$02)
 	CP $78
@@ -5459,7 +5467,6 @@ col_res_03:
 	or %10001000
 col_res_04:
 	ld (hl),a
-
 	inc h
 
   	; SET 6,(HL)
@@ -5476,8 +5483,9 @@ col_res_06:
 
 	JP LAFFC_72
 LAFFC_70:
-	BIT 7,(IY+$0F)
-	JP Z,LAFFC_71
+	ld A,(IY+$0F)
+	or A		; BIT 7,(IY+$0F)
+	JP P,LAFFC_71
 
   	; SET 6,(HL)
 	ld a,(hl)
@@ -5496,8 +5504,9 @@ LAFFC_71:
 	LD A,(LB28F+$01)
 	CP $E8
 	JP Z,LAFFC_72
-	BIT 7,(IY+$10)
-	JP Z,LAFFC_72
+	ld A,(IY+$10)
+	or A		; BIT 7,(IY+$10)
+	JP P,LAFFC_72
 
   	; SET 6,(HL)
 	ld a,(hl)
@@ -5523,21 +5532,21 @@ LAFFC_72:
 
 ;----------------------------------------------------------------
 ; Моментальное восстановление цвета на экране из буфера атрибутов
-	  call col_zm_rest
-	  inc h
-	  call col_zm_rest
-	  inc l
-	  call col_zm_rest
-	  inc h
-	  call col_zm_rest
-  SET 7,(IY+$00)
-  RET
+	call col_zm_rest
+	inc h
+	call col_zm_rest
+	inc l
+	call col_zm_rest
+	inc h
+	call col_zm_rest
+	SET 7,(IY+$00)
+	RET
 
 ; Обновление цвета знакоместа сразу на экране по данным из буфера цвета
 ; На входе в HL - адрес в буфере атрибутов
 col_zm_rest:
 	push hl
-	; Устанавливаем текущий цвет для знакоместа
+; Устанавливаем текущий цвет для знакоместа
 ;	ld a,(hl)
 ;	ld (color_port),a
 	; Из адреса знакоместа буфере получаем адрес байта на экране
@@ -5551,7 +5560,7 @@ col_zm_rest:
 	ld a,h
 	add zx_scr/256 - scr_buff/256
 	ld h,a
-	; Освежаем данные на экране
+; Освежаем данные на экране
 	ld b,$08
 col_zm_rest_0:
 	;ld a,(hl)
@@ -5565,111 +5574,111 @@ col_zm_rest_0:
 ; Used by the routines at show_window_round_number, input_new_record_name, disp_main_menu_and_wait_keys, print_message and print_txt_players_1_and_2.
 ; На входе в DE адрес сообщения
 print_line:			; Specialist ready
-  EX DE,HL
-  LD E,(HL)
-  INC HL
-  LD D,(HL)
-  INC HL
-  LD A,(HL)
-;  ld (color_port),a
-  INC HL
-  LD B,(HL)
-  INC HL
+	EX DE,HL
+	LD E,(HL)
+	INC HL
+	LD D,(HL)
+	INC HL
+	LD A,(HL)
+	;  ld (color_port),a
+	INC HL
+	LD B,(HL)
+	INC HL
 
-  LD A,LB551/256
-  LD (symbol_call_jump+$02),A
-  LD A,LB551%256
-  LD (symbol_call_jump+$01),A 		; Переход на LB551
-  LD A,B
-  AND %10000000	;  BIT 7,B
-  JP Z,print_line_0
-  LD A,B
-  AND %1000000	;  BIT 6,B
-  JP NZ,print_line_0
+	LD A,LB551/256
+	LD (symbol_call_jump+$02),A
+	LD A,LB551%256
+	LD (symbol_call_jump+$01),A 	; Переход на LB551
+	LD A,B
+	and %10000000	;  BIT 7,B
+	JP Z,print_line_0
+	LD A,B
+	and %1000000	;  BIT 6,B
+	JP NZ,print_line_0
 
-  LD A,LB55D/256			; Адрес процедуры удвоения символов по высоте при печати
-  LD (symbol_call_jump+$02),A
-  LD A,LB55D%256
-  LD (symbol_call_jump+$01),A 		; Переход на LB55D
+	LD A,LB55D/256		; Адрес процедуры удвоения символов по высоте при печати
+	LD (symbol_call_jump+$02),A
+	LD A,LB55D%256
+	LD (symbol_call_jump+$01),A 	; Переход на LB55D
 
-  JP print_line_0
+	JP print_line_0
 
 print_line_0:
-  EX DE,HL
-  push bc
-  CALL screen_addr_calc
-  pop bc
-  LD A,B
-  AND $3F
-  LD B,A
+	EX DE,HL
+	push bc
+	CALL screen_addr_calc
+	pop bc
+	LD A,B
+	AND $3F
+	LD B,A
 print_line_1:
-  PUSH BC
-  CALL print_symbol
-  POP BC
-  INC DE
-  DEC B
-  JP NZ,print_line_1
-  RET
+	PUSH BC
+	CALL print_symbol
+	POP BC
+	INC DE
+	DEC B
+	JP NZ,print_line_1
+	RET
 
 ; Used by the routine at print_line.
 ; DE указывает на код печатаемого символа
 print_symbol:		; Specialist ready
-  PUSH DE
-  LD A,(DE)
-  EX DE,HL
-  PUSH DE
+	PUSH DE
+	LD A,(DE)
+	EX DE,HL
+	PUSH DE
 
-  LD L,A
-  LD H,$00
-  ADD HL,HL
-  LD E,L
-  LD D,H
-  ADD HL,HL	; А умножаем на 6
-  ADD HL,DE	; и помещаем HL
+	LD L,A
+	LD H,$00
+	ADD HL,HL
+	LD E,L
+	LD D,H
+	ADD HL,HL	; А умножаем на 6
+	ADD HL,DE	; и помещаем HL
 
-  LD DE,font+$05
-  ADD HL,DE  ; В HL адрес символа в знакогенераторе
+	LD DE,font+$05
+	ADD HL,DE  ; В HL адрес символа в знакогенераторе
 
-  POP DE
-  EX DE,HL
-  PUSH HL
-  LD B,$06
+	POP DE
+	EX DE,HL
+	PUSH HL
+	LD B,$06
 ; HL - указатель на код печатаемого символа
 ; DE - адрес символа в знакогенераторе
 ; B - $06
 symbol_call_jump:
-  JP symbol_call_jump
+	JP symbol_call_jump
 
-LB551:		; Vector ready
-  LD A,(DE)
-  LD (HL),A
-  DEC DE
-  inc l		; поправлено направление для Вектора
-  DEC B
-  JP NZ,LB551
-  POP HL
-  INC H
-  POP DE
-  RET
+LB551:
+	LD A,(DE)
+	LD (HL),A
+	DEC DE
+	inc l		; поправлено направление для Вектора
+	DEC B
+	JP NZ,LB551
+	POP HL
+	INC H
+	POP DE
+	RET
 
 ;--------------------------------------
 ; Routine at B55D
 ; Нигде неиспользуемый код. Мусор?
 ; Удвоение по высоте символов при печати
-LB55D:		; Specialist ready
-  LD A,(DE)
-  LD (HL),A
-  DEC HL
-  LD A,(DE)
-  LD (HL),A
-  inc L		; изменение направления для Вектора
-  DEC DE
-  DEC B
-  JP NZ,LB55D
-  POP HL
-  INC H
-  POP DE
-  RET
+LB55D:
+	LD A,(DE)
+	LD (HL),A
+	DEC HL
+	LD A,(DE)
+	LD (HL),A
+	inc L		; изменение направления для Вектора
+	DEC DE
+	DEC B
+	JP NZ,LB55D
+	POP HL
+	INC H
+	POP DE
+	RET
 
 ; Used by the routines at fill_color_current_game_mode and fill_gen_win_attrib.
 ; Вычисляет координаты в экранной области
@@ -5736,37 +5745,37 @@ print_sprite_pix_3:
 	inc h
 	dec c
 	jp nz,print_sprite_pix_1
-  POP HL
-  RET
+	POP HL
+	RET
 
 ; Used by the routine at disp_main_menu_and_wait_keys.
 ; Вывод ч/б спрайта без маски на экран
 print_sprite:
-  PUSH HL
-  CALL screen_addr_calc
-  LD A,(DE)
-  LD (LB605+$01),A
-  INC DE
-  LD A,(DE)
-  INC DE
-  LD C,A
+	PUSH HL
+	CALL screen_addr_calc
+	LD A,(DE)
+	LD (LB605+$01),A
+	INC DE
+	LD A,(DE)
+	INC DE
+	LD C,A
 print_sprite_0:
-  PUSH HL
+	PUSH HL
 LB605:
-  LD B,$00
+	LD B,$00
 print_sprite_1:
-  LD A,(DE)
-  LD (HL),A
-  INC DE
-  INC H
-  DEC B
-  JP NZ,print_sprite_1
-  POP HL
-  inc l   ; поправлено направление для Вектора
-  DEC C
-  JP NZ,print_sprite_0
-  POP HL
-  RET
+	LD A,(DE)
+	LD (HL),A
+	INC DE
+	INC H
+	DEC B
+	JP NZ,print_sprite_1
+	POP HL
+	inc l   	; поправлено направление для Вектора
+	DEC C
+	JP NZ,print_sprite_0
+	POP HL
+	RET
 
 ; Used by the routine at game_screen_draw_to_buffer.
 ; Вывод атрибутов цветного спрайта в буфер
@@ -5885,8 +5894,9 @@ metal_brik_anim:
   pop IY
 	LD L,(IY+$05)
 	LD H,(IY+$06)
-	BIT 7,(HL)		; Проверяем 7 бит (пустота) текущего элемента
-	JP Z,LB6A9_0
+	ld A,(HL)
+	or A		; BIT 7,(HL)		; Проверяем 7 бит (пустота) текущего элемента
+	JP P,LB6A9_0
 	LD (IY+$00),$00		; Помечаем текущий слот данных свободным
 	RET
 LB6A9_0:
@@ -6364,13 +6374,11 @@ game_start:
 	CALL scr_buff_addr_calc
 	LD (hi_score_in_game),HL	; Адрес в буфере по координатам
 
-;---------------------------------
 ; Переносим свойства 11 спрайтов в буфер по адресу 6000
 	ld DE,objects_buff_2
 	ld HL,object_ball_1
 	ld BC,11*$0016
 	CALL LDIR8080		; LDIR
-;---------------------------------
 
 	xor a
 	ld (objs_width_sum),A
@@ -6378,7 +6386,7 @@ game_start:
 ; Used by the routine at LBC10.
 ; Повторный запуск главного меню (после проигрыша), минуя некоторые инициализации
 game_restart:
-	ld a,(score_1up_in_game+$01)
+	ld a,(score_1up_in_game+1)
 	sub scr_buff/$100
 	AND $1F
 	CP $02
@@ -6410,7 +6418,7 @@ game_restart:
 	LD (current_level_number_1up),A
 	LD (round_number_1up),A
 	LD (player_number),A
-	CALL briks_calc
+	CALL briks_calc		; Сброс свойств всех кирпичей на уровне
 	LD DE,current_level_copy
 	LD HL,(current_level_addr)
 	LD BC,$00B4		; 180 - количество ячеек на уровне
@@ -6422,7 +6430,8 @@ game_restart:
 	LD A,(game_mode)
 	AND A
 	JP NZ,LB9E8_0
-	LD (lives_2up),A
+; Есть второй игрок
+	LD (lives_2up),A	; = 0
 LB9E8_0:
 	CALL clear_screen_attrib
 	CALL clear_screen_pix
@@ -6643,7 +6652,7 @@ LBBE0_0:
 	XOR A
 	LD (current_level_number_1up),A
 LBBE0_1:
-	JP briks_calc
+	JP briks_calc		; Сброс свойств всех кирпичей на уровне, и возврат
 
 ; Used by the routine at LBB97.
 LBBFB:
@@ -7002,7 +7011,7 @@ players_swap:
 briks_calc:
 	CALL level_addr_calc
 	PUSH HL			; Адрес уровня
-	CALL bricks_reset
+	CALL bricks_reset	; Сброс свойств всех кирпичей на уровне
 	POP HL
 	LD B,$B4		; 180 - количество всех ячеек на уровне
 	LD C,$00
