@@ -11,35 +11,6 @@ start_bin:
 ; Адрес начала окна ZX-экрана на экране Специалиста
 zx_scr EQU $C0E0	; поправка для Вектора
 
-	IFDEF MX
-
-;sound_port EQU $ffe3
-
-; Цвета для Специалиста MX
-c00 EQU %00000000 ; $00 - 00 000 000 Чёрный
-c03 EQU %01010000 ; $03 - 00 000 011 Фиолетовый (Маджента)
-c04 EQU %00100000 ; $04 - 00 000 100 Зелёный
-c05 EQU %00110000 ; $05 - 00 000 101 Голубой (Циан)
-c06 EQU %01100000 ; $06 - 00 000 110 Жёлтый
-c07 EQU %01110000 ; $07 - 00 000 111 Белый
-
-c20 EQU %00000010 ; $20 - 00 100 000 Зелёный-Чёрный
-
-c42 EQU %11000000 ; $42 - 01 000 010 Красный
-c43 EQU %11010000 ; $43 - 01 000 011 Фиолетовый (Маджента)
-c44 EQU %10100000 ; $44 - 01 000 100 Зелёный
-c45 EQU %10110000 ; $45 - 01 000 101 Голубой (Циан)
-c46 EQU %11100000 ; $46 - 01 000 110 Жёлтый
-c47 EQU %11110000 ; $47 - 01 000 111 Белый
-
-c4F EQU %11111001 ; $4f - 01 001 111 Синий-Белый
-c57 EQU %11111100 ; $57 - 01 010 111 Красный-Белый
-c5F EQU %11111101 ; $5f - 01 011 111 Фиолетовый-Белый
-
-c70 EQU %00001110 ; $70 - 01 110 000 Жёлтый-Чёрный
-
-	ELSE
-
 ;sound_port EQU $ff03
 
 ; Цвета для стандартного Специалиста
@@ -65,7 +36,6 @@ c5F EQU $00 ; $5f - 01 011 111 Фиолетовый-Белый
 
 c70 EQU $d0 ; $70 - 01 110 000 Жёлтый-Чёрный
 
-	ENDIF
 
 ; Начало программы
 
@@ -4236,9 +4206,9 @@ print_frame_metal_brik:
 ;	ld (LADBC_02+$01),a	; Устанавливаем цвет для правой половины кирпича
 
 	; Индивидуальная обработка чёрного кирпича
-  IFDEF MX
-	; Ничего не делаем
-  ELSE
+;   IFDEF MX
+; 	; Ничего не делаем
+;   ELSE
 	or a
 	jp nz,print_frame_metal_brik_01
 	ld a,(anim_brik+$0e)%256
@@ -4251,7 +4221,7 @@ print_frame_metal_brik:
 	ld (print_frame_metal_brik_02),a	; NOP
 	ld ix,anim_brik_black
 print_frame_metal_brik_01:
-  ENDIF
+;   ENDIF
 
 	ex HL,DE		; сейчас HL свободен
 	ld HL,$0000
@@ -4286,15 +4256,15 @@ LADDD:
 	ei
 
 	; Индивидуальная обработка чёрного кирпича
-  IFDEF MX
-	; Ничего не делаем
-  ELSE
+;   IFDEF MX
+; 	; Ничего не делаем
+;   ELSE
 print_frame_metal_brik_02:
 	ret			; изменяемый оператор NOP / RET
 	ld ix,anim_brik+$0e
 	ld a,$c9		; RET
 	ld (print_frame_metal_brik_02),a
-  ENDIF
+;   ENDIF
 
 	RET
 
@@ -4313,15 +4283,15 @@ LADE1_0:
 	CALL print_line_briks
 	POP IY
 
-  IFDEF MX
-	CALL brik_shadow
-  ELSE
+;   IFDEF MX
+; 	CALL brik_shadow
+;   ELSE
 	ld b,$0f
 LADE1_01:
 	inc iy
 	dec B
 	jp nz,LADE1_01
-  ENDIF
+;   ENDIF
 
 	LD HL,(brik_addr_buf)
 	ld a,l
@@ -4356,37 +4326,37 @@ LAE13_0:
 	RET
 
 ; Used by the routine at print_briks.
-  IFDEF MX
-brik_shadow:
-	LD B,$0F
-	LD HL,(brik_attr_buf)
-brik_shadow_0:
-	ld A,(IY+$00)
-	or A		; BIT 7,(IY+$00)
-	JP M,brik_shadow_1
-	ld a,(hl)
-	and %01110111
-	ld (hl),a
-	inc h
-; Проверка на правый крайний столбец - обрамление поля
-	ld a,h
-	sub attr_buff/$100
-	CPL
-	AND $1F
-	JP Z,brik_shadow_1
-	ld a,(hl)
-	and %01110111
-	ld (hl),a
-	JP brik_shadow_2
-brik_shadow_1:
-	inc h
-brik_shadow_2:
-	inc h
-	INC IY
-	dec B
-	jp nz,brik_shadow_0
-	RET
-  ENDIF
+;   IFDEF MX
+; brik_shadow:
+; 	LD B,$0F
+; 	LD HL,(brik_attr_buf)
+; brik_shadow_0:
+; 	ld A,(IY+$00)
+; 	or A		; BIT 7,(IY+$00)
+; 	JP M,brik_shadow_1
+; 	ld a,(hl)
+; 	and %01110111
+; 	ld (hl),a
+; 	inc h
+; ; Проверка на правый крайний столбец - обрамление поля
+; 	ld a,h
+; 	sub attr_buff/$100
+; 	CPL
+; 	AND $1F
+; 	JP Z,brik_shadow_1
+; 	ld a,(hl)
+; 	and %01110111
+; 	ld (hl),a
+; 	JP brik_shadow_2
+; brik_shadow_1:
+; 	inc h
+; brik_shadow_2:
+; 	inc h
+; 	INC IY
+; 	dec B
+; 	jp nz,brik_shadow_0
+; 	RET
+;   ENDIF
 
 ;-----------------------------------------------
 
@@ -4405,11 +4375,6 @@ print_one_brik_buf:
 	PUSH HL
 	dec l
 
-  IFDEF MX
-	LD (HL),$00	; Линия над кирпичом
-	inc h
-	LD (HL),$00	; Линия над кирпичом
-  ELSE
 	LD (HL),$00	; Линия над кирпичом
 	inc h
 	LD (HL),$00	; Линия над кирпичом
@@ -4417,7 +4382,6 @@ print_one_brik_buf:
 	; LD (HL),$ff	; Линия над кирпичом
 	; inc h
 	; LD (HL),$ff	; Линия над кирпичом
-  ENDIF
 
 	POP HL
 
@@ -4435,17 +4399,10 @@ print_one_brik_buf:
 	dec h
 	LD B,$08
 LAE82_0:
-
-  IFDEF MX
+	; SET 0,(HL)		; Сброс стороны справа от кирпича
 	ld A,(HL)
 	and %11111110	; RES 0,(HL)	; Сброс стороны справа от кирпича
 	ld (HL),A
-  ELSE
-  ; SET 0,(HL)	; Сброс стороны справа от кирпича
-	ld A,(HL)
-	and %11111110	; RES 0,(HL)	; Сброс стороны справа от кирпича
-	ld (HL),A
-  ENDIF
 
 	inc l
 	dec B
@@ -4472,15 +4429,15 @@ LAE82_1:
 	di
 	LD SP,spr_brik_1
 
-  IFDEF MX
-	; Ничего не делаем
-  ELSE
+;   IFDEF MX
+; 	; Ничего не делаем
+;   ELSE
 	ld a,b
 	or a
 	jp nz,LAE82_21
 	LD SP,spr_brik_black
 LAE82_21:
-  ENDIF
+;   ENDIF
 
 	LD A,$08
 LAE82_2:
@@ -4521,19 +4478,11 @@ LAE82_3:
 
 ; Цвета кирпичей
 briks_colors:
-  IFDEF MX
-	DEFB c57,c4F,c5F,c20,c70	; Цвета обычных кирпичей
-	DEFB c47,c57,c5F,c4F		; Цвета трудновыбиваемых кирпичей
-	DEFB c00			; Не используется
-	DEFB c47,c57,c4F,c5F		; Цвета невыбиваемых кирпичей
-	DEFB c00			; Не используется
-  ELSE
 	DEFB $50,$C0,$40,$90,$10	; Цвета обычных кирпичей
 	DEFB $00,$50,$40,$C0		; Цвета трудновыбиваемых кирпичей
 	DEFB $D0			; Не используется
 	DEFB $00,$50,$C0,$40		; Цвета невыбиваемых кирпичей
 	DEFB $D0			; Не используется
-  ENDIF
 
 ; Хранит адреса пикселей и атрибутов в буфере текущего кирпича
 brik_addr_buf:
@@ -4557,13 +4506,13 @@ anim_brik:
 	DEFW $0000
 
 	; Индивидуальная обработка чёрного кирпича
-  IFDEF MX
-	; Ничего не делаем
-  ELSE
+;   IFDEF MX
+; 	; Ничего не делаем
+;   ELSE
 anim_brik_black:
 	DEFW spr_brik_black
 	DEFW $0000
-  ENDIF
+;   ENDIF
 
 
 ; Used by the routine at LBBFB.
@@ -5224,12 +5173,7 @@ LAFFC_56:
 	bit 0,b
 	JP NZ,LAFFC_57
 
-  IFDEF MX
 	XOR A
-  ELSE
-	XOR A
-	; ld a,$ff
-  ENDIF
 	LD (BC),A
 
 	LD A,E
@@ -5252,12 +5196,9 @@ LAFFC_57:
 
 	AND $01
 	JP Z,LAFFC_58
-  IFDEF MX
-	XOR A
-  ELSE
+
 	XOR A
 	; ld a,$ff
-  ENDIF
 	LD (BC),A
 
 LAFFC_58:
@@ -5345,16 +5286,11 @@ LAFFC_62:
 	ld h,a
 	LD B,$08
 LAFFC_63:
-  IFDEF MX
-	ld A,(HL)
-	and %11111110	; RES 0,(HL)
-	ld (HL),A
-  ELSE
 	; SET 0,(HL)
 	ld A,(HL)
 	and %11111110	; RES 0,(HL)
 	ld (HL),A
-  ENDIF
+
 	inc l
 	dec B
 	jp nz,LAFFC_63
@@ -5382,11 +5318,6 @@ LAFFC_65:
 	add $07
 	ld l,a
 
-  IFDEF MX
-	LD (HL),D
-	inc h
-	LD (HL),D
-  ELSE
 	; ld a,$ff
 	; ld (hl),a
 	; inc h
@@ -5395,7 +5326,6 @@ LAFFC_65:
 	LD (HL),D
 	inc h
 	LD (HL),D
-  ENDIF
 
 ;------------------------------------------
 ; Восстановление цвета под выбитым кирпичом
@@ -5408,129 +5338,129 @@ LAFFC_66:
 	CALL scr_buff_attr_calc
 ;  В HL адрес в буфере атрибутов
 
-  IFDEF MX
-	PUSH HL
-	ex DE,HL
-	ld HL,(attr_buff+$0202)
-	ex DE,HL
+;   IFDEF MX
+; 	PUSH HL
+; 	ex DE,HL
+; 	ld HL,(attr_buff+$0202)
+; 	ex DE,HL
 
-	ld a,e
-	and %01110111	; RES 6,E
-	ld e,a
-	LD A,(LB28F+$01)
-	CP $08
-	JP Z,LAFFC_67
-	ld a,e
-	and %00000111	; SET 6,E
-	ld a,e
-	jp nz,col_res_01
-	or %10000000
-	jp col_res_02
-col_res_01:
-	or %10001000
-col_res_02:
-	ld e,a
+; 	ld a,e
+; 	and %01110111	; RES 6,E
+; 	ld e,a
+; 	LD A,(LB28F+$01)
+; 	CP $08
+; 	JP Z,LAFFC_67
+; 	ld a,e
+; 	and %00000111	; SET 6,E
+; 	ld a,e
+; 	jp nz,col_res_01
+; 	or %10000000
+; 	jp col_res_02
+; col_res_01:
+; 	or %10001000
+; col_res_02:
+; 	ld e,a
 
-LAFFC_67:
-	LD A,(LB28F+$02)
-	CP $20
-	JP Z,LAFFC_69
-	or A		; BIT 7,(IY-$10)
-	JP M,LAFFC_68
-	ld a,e
-	and %01110111		; RES 6,E
-	ld e,a
+; LAFFC_67:
+; 	LD A,(LB28F+$02)
+; 	CP $20
+; 	JP Z,LAFFC_69
+; 	or A		; BIT 7,(IY-$10)
+; 	JP M,LAFFC_68
+; 	ld a,e
+; 	and %01110111		; RES 6,E
+; 	ld e,a
 
-LAFFC_68:
-	ld A,(IY-$0F)
-	or A		; BIT 7,(IY-$0F)
-	JP M,LAFFC_69
-	ld a,d
-	and %01110111		; RES 6,D
-	ld d,a
+; LAFFC_68:
+; 	ld A,(IY-$0F)
+; 	or A		; BIT 7,(IY-$0F)
+; 	JP M,LAFFC_69
+; 	ld a,d
+; 	and %01110111		; RES 6,D
+; 	ld d,a
 
-LAFFC_69:
-	LD (HL),E
-	inc h
-	LD (HL),D
-	inc l
-	LD A,(LB28F+$02)
-	CP $78
-	JP NZ,LAFFC_70
+; LAFFC_69:
+; 	LD (HL),E
+; 	inc h
+; 	LD (HL),D
+; 	inc l
+; 	LD A,(LB28F+$02)
+; 	CP $78
+; 	JP NZ,LAFFC_70
 
-  	; SET 6,(HL)
-	ld a,(hl)
-	and %00000111
-	ld a,(hl)
-	jp nz,col_res_03
-	or %10000000
-	jp col_res_04
-col_res_03:
-	or %10001000
-col_res_04:
-	ld (hl),a
-	inc h
+;   	; SET 6,(HL)
+; 	ld a,(hl)
+; 	and %00000111
+; 	ld a,(hl)
+; 	jp nz,col_res_03
+; 	or %10000000
+; 	jp col_res_04
+; col_res_03:
+; 	or %10001000
+; col_res_04:
+; 	ld (hl),a
+; 	inc h
 
-  	; SET 6,(HL)
-	ld a,(hl)
-	and %00000111
-	ld a,(hl)
-	jp nz,col_res_05
-	or %10000000
-	jp col_res_06
-col_res_05:
-	or %10001000
-col_res_06:
-	ld (hl),a
+;   	; SET 6,(HL)
+; 	ld a,(hl)
+; 	and %00000111
+; 	ld a,(hl)
+; 	jp nz,col_res_05
+; 	or %10000000
+; 	jp col_res_06
+; col_res_05:
+; 	or %10001000
+; col_res_06:
+; 	ld (hl),a
 
-	JP LAFFC_72
-LAFFC_70:
-	ld A,(IY+$0F)
-	or A		; BIT 7,(IY+$0F)
-	JP P,LAFFC_71
+; 	JP LAFFC_72
+; LAFFC_70:
+; 	ld A,(IY+$0F)
+; 	or A		; BIT 7,(IY+$0F)
+; 	JP P,LAFFC_71
 
-  	; SET 6,(HL)
-	ld a,(hl)
-	and %00000111
-	ld a,(hl)
-	jp nz,col_res_07
-	or %10000000
-	jp col_res_08
-col_res_07:
-	or %10001000
-col_res_08:
-	ld (hl),a
+;   	; SET 6,(HL)
+; 	ld a,(hl)
+; 	and %00000111
+; 	ld a,(hl)
+; 	jp nz,col_res_07
+; 	or %10000000
+; 	jp col_res_08
+; col_res_07:
+; 	or %10001000
+; col_res_08:
+; 	ld (hl),a
 
-LAFFC_71:
-	inc h
-	LD A,(LB28F+$01)
-	CP $E8
-	JP Z,LAFFC_72
-	ld A,(IY+$10)
-	or A		; BIT 7,(IY+$10)
-	JP P,LAFFC_72
+; LAFFC_71:
+; 	inc h
+; 	LD A,(LB28F+$01)
+; 	CP $E8
+; 	JP Z,LAFFC_72
+; 	ld A,(IY+$10)
+; 	or A		; BIT 7,(IY+$10)
+; 	JP P,LAFFC_72
 
-  	; SET 6,(HL)
-	ld a,(hl)
-	and %00000111
-	ld a,(hl)
-	jp nz,col_res_09
-	or %10000000
-	jp col_res_10
-col_res_09:
-	or %10001000
-col_res_10:
-	ld (hl),a
-LAFFC_72:
-	POP HL		; hl - адрес в буфере атрибутов
-  ELSE
+;   	; SET 6,(HL)
+; 	ld a,(hl)
+; 	and %00000111
+; 	ld a,(hl)
+; 	jp nz,col_res_09
+; 	or %10000000
+; 	jp col_res_10
+; col_res_09:
+; 	or %10001000
+; col_res_10:
+; 	ld (hl),a
+; LAFFC_72:
+; 	POP HL		; hl - адрес в буфере атрибутов
+;   ELSE
 	ex DE,HL
 	ld HL,(attr_buff+$0202)
 	ex DE,HL
 	ld (hl),e
 	inc h
 	ld (hl),d
-  ENDIF
+;   ENDIF
 
 ;----------------------------------------------------------------
 ; Моментальное восстановление цвета на экране из буфера атрибутов
@@ -5924,9 +5854,6 @@ LB6A9_0:
 	;dec B
 	ld c,d
 ; Индивидуальная обработка чёрного кирпича
-  IFDEF MX
-	; Ничего не делаем
-  ELSE
 	or a
 	jp nz,LB6A9_01
 	ld a,e
@@ -5934,7 +5861,7 @@ LB6A9_0:
 	jp nz,LB6A9_03
 	ld hl,anim_brik_black
 	jp LB6A9_02
-  ENDIF
+
 LB6A9_01:
 	ld a,e
 LB6A9_03:
@@ -7280,29 +7207,29 @@ LBE8B_11:
 
 	CALL print_briks
 
-  IFDEF MX
-; Рисует на поле тень от бордюра
-	; Вертикаль
-	LD HL,attr_buff+$0101
-	LD B,$17
-LBFCF_0:
-	ld a,(hl)
-	and %01110111
-	ld (hl),a
-	inc l
-	dec B
-	jp nz,LBFCF_0
-	; Горизонталь
-	LD HL,attr_buff+$0201
-	LD B,$1D
-LBFCF_1:
-	ld a,(hl)
-	and %01110111
-	ld (hl),a
-	INC h
-	dec B
-	jp nz,LBFCF_1
-  ENDIF
+;   IFDEF MX
+; ; Рисует на поле тень от бордюра
+; 	; Вертикаль
+; 	LD HL,attr_buff+$0101
+; 	LD B,$17
+; LBFCF_0:
+; 	ld a,(hl)
+; 	and %01110111
+; 	ld (hl),a
+; 	inc l
+; 	dec B
+; 	jp nz,LBFCF_0
+; 	; Горизонталь
+; 	LD HL,attr_buff+$0201
+; 	LD B,$1D
+; LBFCF_1:
+; 	ld a,(hl)
+; 	and %01110111
+; 	ld (hl),a
+; 	INC h
+; 	dec B
+; 	jp nz,LBFCF_1
+;   ENDIF
 
 	ret
 
