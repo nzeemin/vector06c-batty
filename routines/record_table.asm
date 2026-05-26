@@ -2,7 +2,7 @@
 ; Ввод имени нового рекордсмена, обновление таблицы рекордов и её вывод на экран
 input_new_record_name:
   ; DI
-  LD IX,txt_high_score_table+227 ; Текст последней строчки таблицы
+;TODO  LD IX,txt_high_score_table+227 ; Текст последней строчки таблицы
   LD HL,current_score_1up+2
   LD DE,score_six_digits
   LD B,$03
@@ -22,34 +22,34 @@ L910C_0:
   DEC HL
   dec b
   jp nz,L910C_0
-  LD IY,score_six_digits
+;TODO  LD IY,score_six_digits
   LD D,$0B
 L910C_1:
   LD B,$06
-  PUSH IY
-  PUSH IX
+;TODO  PUSH IY
+;TODO  PUSH IX
 L910C_2:
-  LD A,(IX+$00)
-  CP (IY+$00)
+;TODO  LD A,(IX+$00)
+;TODO  CP (IY+$00)
   JP C,L910C_4
   JP NZ,L910C_3
-  INC IX
-  INC IY
+;TODO  INC IX
+;TODO  INC IY
   dec b
   jp nz,L910C_2
 L910C_3:
-  POP IX
-  POP IY
+;TODO  POP IX
+;TODO  POP IY
   LD A,D
   CP $0B
   RET Z
   JP L910C_5
 L910C_4:
   DEC D
-  POP IX
-  POP IY
+;TODO  POP IX
+;TODO  POP IY
   LD BC,$FFEE
-  ADD IX,BC
+;TODO  ADD IX,BC
   LD A,D
   DEC A
   JP NZ,L910C_1
@@ -74,18 +74,18 @@ L910C_6:
   JP NZ,L910C_6
 L910C_7:
   LD DE,$0012
-  ADD IX,DE
-  PUSH IX
+;TODO  ADD IX,DE
+;TODO  PUSH IX
   POP DE
   LD HL,score_six_digits
   LD BC,$0006
   CALL LDIR8080
   LD C,$26
-  LD (IX+$09),$0A
-  LD (IX+$0A),C
-  LD (IX+$0B),C
-  LD (IX+$0C),C
-  LD (IX+$0D),C
+;TODO  LD (IX+$09),$0A
+;TODO  LD (IX+$0A),C
+;TODO  LD (IX+$0B),C
+;TODO  LD (IX+$0C),C
+;TODO  LD (IX+$0D),C
   CALL clear_screen_attrib
   CALL clear_screen_pix
   CALL disp_high_score_table_screen
@@ -95,7 +95,7 @@ L910C_7:
   LD DE,txt_player_0_enter_your_name
   CALL print_line
   CALL print_line
-  PUSH IX
+;TODO  PUSH IX
   POP HL
   DEC HL
   DEC HL
@@ -111,7 +111,7 @@ L910C_9:
   LD A,(ctrl_btns_pressed)
   AND $13
   JP Z,L910C_9
-  BIT 4,A
+;TODO  BIT 4,A
   JP NZ,L910C_12
   CP $03
   JP Z,L910C_9
@@ -126,11 +126,11 @@ L910C_9:
   JP L910C_11
 L910C_10:
   DEC C
-  BIT 7,C
+;TODO  BIT 7,C
   JP Z,L910C_11
   LD C,$27
 L910C_11:
-  LD (IX+$09),C
+;TODO  LD (IX+$09),C
   PUSH BC
 	ex DE,HL
 	ld HL,(text_line_addr)
@@ -145,8 +145,8 @@ L910C_12:
   POP BC
   DEC B
   JP Z,L910C_14
-  INC IX
-  LD (IX+$09),$0A
+;TODO  INC IX
+;TODO  LD (IX+$09),$0A
   PUSH BC
 	ex DE,HL
 	ld HL,(text_line_addr)
@@ -228,7 +228,7 @@ disp_high_score_table_screen:
 disp_hs_table_and_wait_keys:
 	CALL disp_high_score_table_screen
 check_0_button:
-	ld A,(KEYLINE2)		; Проверка ряда цифр '0'..'7'
+	ld A,(KeyLine2)		; Проверка ряда цифр '0'..'7'
 	cpl
 	and %00000001		; '0'?
 	ret nz			; Выход из общей процедуры (запуск игры), если нажат 0

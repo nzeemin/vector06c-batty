@@ -12,18 +12,14 @@ rem https://stackoverflow.com/questions/2048509/how-to-echo-with-different-color
 for /F "delims=#" %%E in ('"prompt #$E# & for %%E in (1) do rem"') do set "ESCchar=%%E"
 
 @echo on
-tools\tasm -85 -b -i batty0.asm batty0.bin
+tools\sjasmplus --nologo --msg=war --i8080 batty0.asm --lst=batty0.lst --exp=batty0.inc
 @if errorlevel 1 goto Failed
 @echo off
 
 dir /-c batty0.bin|findstr /R /C:"batty0.bin"
 
-powershell -Command "(gc batty0.exp) -replace '.EQU', 'EQU' | Out-File -encoding ASCII batty0.inc"
-if exist batty0.exp del batty0.exp
-@if errorlevel 1 goto Failed
-
 @echo on
-tools\sjasmplus --nobanner batty.asm --raw=batty.bin --target=Z80 --nofakes --lst=batty.lst
+tools\sjasmplus --nologo batty.asm --raw=batty.bin --nofakes --lst=batty.lst
 @if errorlevel 1 goto Failed
 @echo off
 
@@ -34,17 +30,13 @@ copy /b batty0.bin+batty.bin batty.rom >nul
 
 dir /-c batty.rom|findstr /R /C:"batty.rom"
 
-echo %ESCchar%[92mSUCCESS%ESCchar%[0m
+tools\sjasmplus --nologo batty.asm --raw=batty8080.bin --i8080 --nofakes --lst=batty8080.lst 2>error8080.txt
 
-@echo on
-tools\sjasmplus --nobanner batty.asm --raw=batty8080.bin --target=i8080 --nofakes --lst=batty8080.lst >error8080.txt
-@echo off
-findstr /B "Errors:" error8080.txt
+echo %ESCchar%[92mSUCCESS%ESCchar%[0m
 
 exit
 
 :Failed
 @echo off
 echo %ESCchar%[91mFAILED%ESCchar%[0m
-pause
 exit /b

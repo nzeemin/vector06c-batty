@@ -132,11 +132,11 @@ ctrl_btns_pressed:
 read_keyboard:
   ld hl,read_keyboard_map	; Point HL at the keyboard list
   ld b,$0C
-  ld de,KEYLINE0
+  ld de,KeyLine0
   call read_keyboard_0
-  ld de,KEYLINE7
+  ld de,KeyLine7
   call read_keyboard_0
-  ld de,JOYSTICKP
+  ld de,JoystickP
   call read_keyboard_0
   ld a,b
   ret
@@ -628,7 +628,7 @@ pause_game_2:
 ; Проверка нажатия клавиш 1-4
 ; Выход: Z=1: нет нажатия, Z=0: есть нажатие
 press_1_4_check:
-	ld A,(KEYLINE2)		; Проверка ряда цифр '0'..'7'
+	ld A,(KeyLine2)		; Проверка ряда цифр '0'..'7'
 	cpl			; Необходимо для правильно установки флага на выходе
 	and %00011110		; Маска для клавиш '1'..'4'
 	ret
@@ -4562,8 +4562,8 @@ points_calc_and_add:
   CALL hl_add_2a
   LD B,(HL)
   INC HL
-  LD C,(HL)		; В BC нужное количество очков
-  LD A,(IY+$00)	; В IY текущий элемент уровня
+  LD C,(HL)			; В BC нужное количество очков
+  LD A,(IY+$00)			; В IY текущий элемент уровня
   AND $0F
   CP $06			; Если цвет меньше 6 (то есть обычный кирпич), то
   JP C,add_points_to_score	; добавляем одинарное количество очков

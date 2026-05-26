@@ -5,8 +5,8 @@
 ; На выходе в DE адрес спрайта
 
 sprite_search:
-  push IX
-  pop HL
+;TODO  push IX
+;TODO  pop HL
 	;ld HL,(IXobj)
 	ld (sprite_search_1+1),HL
 	inc HL

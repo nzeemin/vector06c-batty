@@ -1,51 +1,58 @@
 ;----------------------------------------------------------------------------
 
-	.EXPORT KeyLine0, KeyLine2, KeyLine4, KeyLine7, JoystickP
-	.EXPORT BorderColor
-	.EXPORT LDIR8080, LDDR8080, SBCHLDE8080
-	.EXPORT BATTY0_END
+	EXPORT KeyLine0
+	EXPORT KeyLine2
+	EXPORT KeyLine4
+	EXPORT KeyLine7
+	EXPORT JoystickP
+	EXPORT BorderColor
+	EXPORT LDIR8080
+	EXPORT LDDR8080
+	EXPORT SBCHLDE8080
+	EXPORT BATTY0_END
 
 ;----------------------------------------------------------------------------
 
-	.org	100h
+	OUTPUT "batty0.bin"
+	ORG	100h
 
 	di
-	xra	a
-	out	10h			; turn off the quasi-disk
-	lxi	sp,0100h
-	lxi	h,0C3F3h
-	shld	0
-	mov	a,h
-	lxi	h,RestartInt
-	shld	2
-	sta	38h
-	lxi	h,KEYINT		; interrupt handler address
-	shld	38h+1
+	xor a
+	out (10h),a		; turn off the quasi-disk
+	ld sp,0100h
+	ld hl,0C3F3h
+	ld (0),hl
+	ld a,h
+	ld hl,RestartInt
+	ld (2),hl
+	ld (38h),a
+	ld hl,KEYINT		; interrupt handler address
+	ld (38h+1),hl
 
 ; Clear memory from C000h to FFFFh
-	xra	a
-	lxi	b,0C000h	; destination addr
+	xor a
+	ld bc,0C000h	; destination addr
 Init_2:
-	stax	b
-	inr	c
-	jnz	Init_2
-	inr	b
-	jnz	Init_2
+	ld (bc),a
+	inc c
+	jp nz,Init_2
+	inc b
+	jp nz,Init_2
 
-	call	SetPaletteGame
+	call SetPaletteGame
 	di
 
 RestartInt:
-	lxi	sp,100h
-	mvi	a, 88h
-	out	4			; initialize R-Sound 2
+	ld sp,100h
+	ld a,88h
+	out (4),a		; initialize R-Sound 2
 ; Joystick init
-	mvi	a, 83h			; control byte
-	out	4			; initialize the I/O controller
-	mvi	a, 9Fh			; bits to check Joystick-P, both P1 and P2
-	out	5			; set Joystick-P query bits
-	in	6			; read Joystick-P initial value
-	sta	KEYINT_J+1		; store as xra instruction parameter
+	ld a,83h		; control byte
+	out (4),a		; initialize the I/O controller
+	ld a,9Fh		; bits to check Joystick-P, both P1 and P2
+	out (5),a		; set Joystick-P query bits
+	in a,(6)		; read Joystick-P initial value
+	ld (KEYINT_J+1),a	; store as xra instruction parameter
 
 ; Start BATTY
 	; ei
@@ -53,153 +60,153 @@ RestartInt:
 
 ; Set game palette
 SetPaletteGame:
-	lxi	h, PaletteGame+15
+	ld hl,PaletteGame+15
 ; Programming the Palette
 SetPalette:
 	ei
-	hlt
-	lxi	d, 100Fh
+	halt
+	ld de,100Fh
 PaletLoop:
-	mov	a, e
-	out	2
-	mov	a, m
-	out	0Ch
-	out	0Ch
-	out	0Ch
-	out	0Ch
-	out	0Ch
-	dcx	h
-	out	0Ch
-	dcr	e
-	out	0Ch
-	dcr	d
-	out	0Ch
-	jnz	PaletLoop
+	ld a,e
+	out (2),a
+	ld a,(hl)
+	out (0Ch),a
+	out (0Ch),a
+	out (0Ch),a
+	out (0Ch),a
+	out (0Ch),a
+	dec hl
+	out (0Ch),a
+	dec e
+	out (0Ch),a
+	dec d
+	out (0Ch),a
+	jp nz,PaletLoop
 	ret
 
 ;----------------------------------------------------------------------------
 
 KEYINT:
-	push	psw
-	mvi	a, 8Ah
-	out	0
+	push af
+	ld a,8Ah
+	out (0),A
 ; Keyboard scan
-	in	1
-	ori	00011111b
-	sta	KeyLineEx
-	mvi	a, 0FEh
-	out	3
-	in	2
-	sta	KeyLine0
-	mvi	a, 0FBh
-	out	3
-	in	2
-	sta	KeyLine2
-	mvi	a, 0EFh
-	out	3
-	in	2
-	sta	KeyLine4
-	mvi	a, 07Fh
-	out	3
-	in	2
-	sta	KeyLine7
+	in a,(1)
+	or 00011111b
+	ld (KeyLineEx),a
+	ld a,0FEh
+	out (3),a
+	in a,(2)
+	ld (KeyLine0),a
+	ld a,0FBh
+	out (3),a
+	in a,(2)
+	ld (KeyLine2),a
+	ld a,0EFh
+	out (3),a
+	in a,(2)
+	ld (KeyLine4),a
+	ld a,07Fh
+	out (3),a
+	in a,(2)
+	ld (KeyLine7),A
 ; Joystick scan
-	in	6		; read Joystick-P
+	in A,(6)		; read Joystick-P
 KEYINT_J:
-	xri	0		; XOR with initial value - mutable param!
-	cma
-	sta	JoystickP	; save to analyze later
+	xor 0			; XOR with initial value - mutable param!
+	cpl
+	ld (JoystickP),A	; save to analyze later
 
 ; Scrolling, screen mode, border
-	mvi	a, 88h
-	out	0
-	mvi	a, 2
-	out	1
-	mvi	a, 0ffh
-	out	3		; scrolling
-	lda	BorderColor
-	ani	0Fh
-	out	2		; screen mode and border
+	ld A,88h
+	out (0),A
+	ld A,2
+	out (1),A
+	ld A,0FFh
+	out (3),A		; scrolling
+	ld A,(BorderColor)
+	and 0Fh
+	out (2),A		; screen mode and border
 ;
-	lda	IntCount
-	inr	a
-	sta	IntCount
+	ld A,(IntCount)
+	inc a
+	ld (IntCount),A
 ;
-	pop	psw
+	pop af
 	ei
 	ret
 
 IntCount .EQU 0E000h
 
-KeyLineEx:	.db 11111111b
-KeyLine0:	.db 11111111b
-KeyLine2:	.db 11111111b	;   7   6   5   4   3   2   1   0
-KeyLine4:	.db 11111111b	;   G   F   E   D   C   B   A   @
-KeyLine7:	.db 11111111b	;  SPC  ^   ]   \   [   Z   Y   X
-JoystickP:	.db 11111111b
+KeyLineEx:	db 11111111b
+KeyLine0:	db 11111111b
+KeyLine2:	db 11111111b	;   7   6   5   4   3   2   1   0
+KeyLine4:	db 11111111b	;   G   F   E   D   C   B   A   @
+KeyLine7:	db 11111111b	;  SPC  ^   ]   \   [   Z   Y   X
+JoystickP:	db 11111111b
 
-BorderColor:	.db 0		; border color number 0..15
+BorderColor:	db 0		; border color number 0..15
 
 ;----------------------------------------------------------------------------
 
-ColorNone .equ 00000000b    ; Color for empty bits  - black
-ColorGame .equ 11011011b    ; Color for $E000-$FFFF - yellow
-ColorText .equ 10111111b    ; Color for $C000-$DFFF - blue
-ColorBoth .equ 00000111b    ; Color for both planes - red
+ColorNone equ 00000000b    ; Color for empty bits  - black
+ColorGame equ 11011011b    ; Color for $E000-$FFFF - yellow
+ColorText equ 10111111b    ; Color for $C000-$DFFF - blue
+ColorBoth equ 00000111b    ; Color for both planes - red
 ; Palette colors, game
 PaletteGame:		; Palette
-	.db	ColorNone, ColorGame, ColorText, ColorBoth	; 0..3
-	.db	ColorNone, ColorGame, ColorText, ColorBoth	; 4..7
-	.db	ColorNone, ColorGame, ColorText, ColorBoth	; 8..11
-	.db	ColorNone, ColorGame, ColorText, ColorBoth	; 12..15
+	db	ColorNone, ColorGame, ColorText, ColorBoth	; 0..3
+	db	ColorNone, ColorGame, ColorText, ColorBoth	; 4..7
+	db	ColorNone, ColorGame, ColorText, ColorBoth	; 8..11
+	db	ColorNone, ColorGame, ColorText, ColorBoth	; 12..15
 
 ;----------------------------------------------------------------------------
 
 ; LDIR
 LDIR8080:
-	push psw
+	push af
 LDIR8080_1:
-	mov a,m
-	stax d
-	inx h
-	inx d
-	dcx b
-	mov a,b
-	ora c
-	jnz LDIR8080_1
-	pop psw
+	ld a,(HL)
+	ld (de),a
+	inc hl
+	inc de
+	dec bc
+	ld a,b
+	or c
+	jp nz,LDIR8080_1
+	pop af
 	ret
 
 ; LDDR
 LDDR8080:
-	push psw
+	push af
 LDDR8080_1:
-	mov a,m
-	stax d
-	dcx h
-	dcx d
-	dcx b
-	mov a,b
-	ora c
-	jnz LDDR8080_1
-	pop psw
+	ld a,(HL)
+	ld (de),a
+	dec hl
+	dec de
+	dec bc
+	ld a,b
+	or c
+	jp NZ,LDDR8080_1
+	pop af
 	ret
 
 ; SBC HL,DE
 SBCHLDE8080:
-	sta SBCHLDE8080_TMP
-	mov a,l
-	sbb e
-	mov l,a
-	mov a,h
-	sbb d
-	mov h,a
-	jc $+7
-	ora l
-	jmp $+5
-	ora l
-	stc
-	lda SBCHLDE8080_TMP
+	ld (SBCHLDE8080_TMP),A
+	ld a,l
+	sbc A,e
+	ld l,a
+	ld a,h
+	sbc A,d
+	ld h,a
+	jp C,$+7
+	or l
+	jp $+5
+	or l
+	scf
+	ld A,(SBCHLDE8080_TMP)
 	ret
 SBCHLDE8080_TMP:
 	.DB	0
@@ -320,6 +327,7 @@ SBCHLDE8080_TMP:
 ; 		ret
 
 ;----------------------------------------------------------------------------
-BATTY0_END
 
-	.end
+BATTY0_END
+	OUTEND
+	END

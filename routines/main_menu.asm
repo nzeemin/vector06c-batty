@@ -56,12 +56,12 @@ L93F8_0:
   LD HL,(game_mode)
   EX HL,DE
 
-	ld A,(KEYLINE2)
+	ld A,(KeyLine2)
 	cpl
 	and %00001110		; клавиши 1, 2, 3
 	jp z,L93F8_4		; Не нажата ни одна цифра
 
-	ld A,(KEYLINE2)
+	ld A,(KeyLine2)
 	cpl
 	and %00000010		; Нажата ли клавиша 1?
 	jp z,L93F8_1
@@ -74,7 +74,7 @@ L93F8_0:
   JP L93F8_3
 
 L93F8_1:
-	ld A,(KEYLINE2)
+	ld A,(KeyLine2)
 	cpl
 	and %00001000		; Нажата ли клавиша 3?
 	jp z,L93F8_2
@@ -87,7 +87,7 @@ L93F8_1:
   JP L93F8_3
 
 L93F8_2:
-	ld A,(KEYLINE2)
+	ld A,(KeyLine2)
 	cpl
 	and %00000100		; Нажата ли клавиша 2?
 	jp z,L93F8_4
@@ -127,7 +127,7 @@ L93F8_4:
   JP L93F8_7
 
 L93F8_5:
-	ld A,(KEYLINE4)		; Проверка ряда клавиш
+	ld A,(KeyLine4)		; Проверка ряда клавиш
 	cpl
 	and %00000010		; Проверка клавиши 'A'
 	jp z,L93F8_7
@@ -163,7 +163,7 @@ L93F8_7:
   JP L93F8_10
 
 L93F8_8:
-	ld A,(KEYLINE4)		; Проверка ряда клавиш
+	ld A,(KeyLine4)		; Проверка ряда клавиш
 	cpl
 	and %00000100		; Проверка клавиши 'B'
 	jp z,L93F8_10
@@ -194,7 +194,7 @@ L93F8_9:
 L93F8_10:
   LD DE,current_game_mode_line_prop
   CALL fill_color_current_game_mode
-	ld A,(KEYLINE2)		; Проверка ряда цифр '0'..'7'
+	ld A,(KeyLine2)		; Проверка ряда цифр '0'..'7'
 	cpl
 	and %00000001		; Проверка клавиши '0'
 	ret nz			; Выход из общей процедуры (запуск игры), если нажат '0'

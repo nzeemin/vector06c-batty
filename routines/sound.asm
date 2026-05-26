@@ -103,8 +103,8 @@ sound_bat_resize_2 	EQU $0C
 play_sound_normall_brik:
   LD DE,$0844
   CALL sound_beep_cont_d
-  DEC (IX+$01)
-  LD (IX+$00),$00
+;TODO  DEC (IX+$01)
+;TODO  LD (IX+$00),$00
   RET
 
 ; Routine at C101
@@ -116,7 +116,7 @@ play_sound_metal_brik:
   LD (frames_copy),A
   LD A,$80
   LD (frames),A
-  LD (IX+$00),$00
+;TODO  LD (IX+$00),$00
   RET
 
 ; Routine at C116
@@ -124,7 +124,7 @@ play_sound_ball_start:
   LD C,$09
   LD E,$14
   CALL play_sound_LC122
-  LD (IX+$00),$00
+;TODO  LD (IX+$00),$00
   RET
 
 ; Used by the routines at play_sound_ball_start, play_sound_confirm_letter and play_sound_shot.
@@ -202,16 +202,16 @@ play_sound_confirm_letter:
 play_sound_bat_beat:
   LD DE,$0466
   CALL sound_beep_cont_d
-  LD (IX+$00),$00
+;TODO  LD (IX+$00),$00
   RET
 
 play_sound_05:
-  LD E,(IX+$02)
+;TODO  LD E,(IX+$02)
   LD D,$01
   CALL sound_beep_cont_d
-  INC (IX+$02)
-  INC (IX+$02)
-  INC (IX+$02)
+;TODO  INC (IX+$02)
+;TODO  INC (IX+$02)
+;TODO  INC (IX+$02)
   RET
 
 ;-----------------------------
@@ -246,41 +246,41 @@ play_sound_05:
 play_sound_06:
   LD A,(random_number)
   AND $3F
-  ADD A,(IX+$01)
+;TODO  ADD A,(IX+$01)
   LD E,A
   LD D,$01
   CALL sound_beep_cont_d
-  LD A,(IX+$01)
+;TODO  LD A,(IX+$01)
   ADD A,$08
-  LD (IX+$01),A
+;TODO  LD (IX+$01),A
   CP $A1
   JP Z,play_sound_06_0
   CP $60
   RET NZ
-  LD (IX+$01),$21
+;TODO  LD (IX+$01),$21
   RET
 play_sound_06_0:
-  LD (IX+$00),$00
+;TODO  LD (IX+$00),$00
   RET
 
 play_sound_live_add:
-  LD A,(IX+$01)
+;TODO  LD A,(IX+$01)
   AND $03
   JP NZ,play_sound_07_0
-  LD A,(IX+$01)
+;TODO  LD A,(IX+$01)
   ADD A,$14
   LD E,A
   LD D,$03
   CALL sound_beep_cont_d
 play_sound_07_0:
-  DEC (IX+$01)
-  DEC (IX+$01)
+;TODO  DEC (IX+$01)
+;TODO  DEC (IX+$01)
   RET NZ
-  LD (IX+$00),$00
+;TODO  LD (IX+$00),$00
   RET
 
 play_sound_08:
-  LD A,(IX+$01)
+;TODO  LD A,(IX+$01)
   RRA
   RRA
   AND $3F
@@ -288,48 +288,48 @@ play_sound_08:
   LD E,A
   LD D,$02
   CALL sound_beep_cont_de
-  INC (IX+$01)
+;TODO  INC (IX+$01)
   RET
 
 play_sound_bat_resize_1:
   LD A,(bonus_flag)
   AND A
   RET NZ
-  LD E,(IX+$01)
+;TODO  LD E,(IX+$01)
   LD D,$01
   CALL sound_beep_cont_d
-  LD A,(IX+$01)
+;TODO  LD A,(IX+$01)
   SUB $0B
-  LD (IX+$01),A
+;TODO  LD (IX+$01),A
   CP $10
   RET NC
-  LD (IX+$00),$00
+;TODO  LD (IX+$00),$00
   RET
 
 play_sound_triple_ball:
-  LD E,(IX+$01)
+;TODO  LD E,(IX+$01)
   LD D,$01
   CALL sound_beep_cont_d
-  LD A,(IX+$01)
+;TODO  LD A,(IX+$01)
   ADD A,$0B
-  LD (IX+$01),A
+;TODO  LD (IX+$01),A
   CP $C1
   RET C
-  LD (IX+$00),$00
+;TODO  LD (IX+$00),$00
   RET
 
 play_sound_shot:
   LD C,$04
   LD E,$0F
   CALL play_sound_LC122
-  LD (IX+$00),$00
+;TODO  LD (IX+$00),$00
   RET
 
 play_sound_bat_resize_2:
   LD E,$30
   LD D,$0A
   CALL sound_beep_cont_de
-  LD (IX+$00),$00
+;TODO  LD (IX+$00),$00
   RET
 
 ; Used by the routines at sound_beep_cont_d and sound_beep_cont_de.
