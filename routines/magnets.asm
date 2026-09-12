@@ -10,39 +10,71 @@ print_magnets:
   LD E,(HL)
   INC HL
   LD D,(HL)
-  PUSH DE
-  POP IY		; В IY адрес данных по магнитам для данного уровня
-  LD A,(IY+$00)
+  EX DE,HL
+  LD (IYobj),HL		; В IYobj адрес данных по магнитам для данного уровня
+  LD A,(HL)		; IY+$00
   LD (magnets_quantity),A
   AND A
   RET Z
-  LD IX,magnet_properties
+  LD HL,magnet_properties
+  LD (IXobj),HL
 L8D4C_0:
   PUSH AF
-  LD (IX+$01),$06
-  LD L,(IY+$01)		; Координата X магнита
-  LD H,(IY+$02)		; Координата Y магнита
-  INC IY
-  INC IY
-  LD (IX+$02),L		; Запоминаем координату X магнита
-  LD (IX+$04),H		; Запоминаем координату X магнита
+  LD HL,(IXobj)
+  INC HL		; +$01
+  LD (HL),$06		; IX+$01
+
+  LD HL,(IYobj)
+  EX DE,HL
+  INC DE		; +$01
+  LD A,(DE)		; IY+$01 Координата X магнита
+  LD L,A
+  INC DE		; +$02
+  LD A,(DE)		; IY+$02 Координата Y магнита
+  LD H,A
+  ; DE уже указывает на +$02 (продвинут на 2 от исходного IYobj, как INC IY / INC IY)
+  PUSH HL		; сохраняем координаты (X,Y)
+  EX DE,HL
+  LD (IYobj),HL
+  POP HL
+
+  PUSH HL		; HL = (X,Y) magnet coords
+  LD HL,(IXobj)
+  INC HL
+  INC HL		; +$02
+  POP DE		; D=H(Y), E=L(X)
+  LD (HL),E		; IX+$02 Запоминаем координату X магнита
+  INC HL
+  INC HL		; +$04
+  LD (HL),D		; IX+$04 Запоминаем координату Y магнита
+
   CALL ix_buf_addr_calc
   CALL print_obj_to_buff
-  LD A,(IX+$04)
+  LD HL,(IXobj)
+  LD DE,$0004
+  ADD HL,DE
+  LD A,(HL)		; IX+$04
   ADD A,$05
-  LD (IX+$04),A
+  LD (HL),A		; IX+$04
   CALL random_generate
   LD A,(random_number)
   RRA
   JP C,L8D4C_1
-  LD (IX+$01),$07
+  LD HL,(IXobj)
+  INC HL		; +$01
+  LD (HL),$07		; IX+$01
   CALL print_obj_to_buff
 L8D4C_1:
-  LD A,(IX+$02)
+  LD HL,(IXobj)
+  INC HL
+  INC HL		; +$02
+  LD A,(HL)		; IX+$02
   ADD A,$05
-  LD (IX+$02),A
+  LD (HL),A		; IX+$02
+  LD HL,(IXobj)
   LD DE,$0010
-  ADD IX,DE
+  ADD HL,DE
+  LD (IXobj),HL
   POP AF
   DEC A
   JP NZ,L8D4C_0
@@ -147,8 +179,7 @@ L8E72_1:
   LD HL,magnet_properties
   CALL hl_add_a
   LD (current_magnet_prop),HL
-  PUSH HL
-  POP IX ;NOTE: нужен для print_obj_to_buff
+  LD (IXobj),HL ;NOTE: нужен для print_obj_to_buff
   inc HL
   LD A,(HL)		; IX+$01
   XOR $01

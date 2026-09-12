@@ -5,9 +5,7 @@
 ; На выходе в DE адрес спрайта
 
 sprite_search:
-;TODO  push IX
-;TODO  pop HL
-	;ld HL,(IXobj)
+; Вход: HL = адрес объекта (устанавливается вызывающей стороной через (IXobj))
 	ld (sprite_search_1+1),HL
 	inc HL
 	ld (sprite_search_2+1),HL

@@ -23,9 +23,9 @@ tools\sjasmplus --nologo batty.asm --raw=batty8080.bin --i8080 --nofakes --lst=b
 @if errorlevel 1 goto Failed
 @echo off
 
-dir /-c batty.bin|findstr /R /C:"batty.bin"
+dir /-c batty8080.bin|findstr /R /C:"batty8080.bin"
 
-copy /b batty0.bin+batty.bin batty.rom >nul
+copy /b batty0.bin+batty8080.bin batty.rom >nul
 @if errorlevel 1 goto Failed
 
 dir /-c batty.rom|findstr /R /C:"batty.rom"

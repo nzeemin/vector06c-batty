@@ -6,8 +6,10 @@
 	EXPORT KeyLine7
 	EXPORT JoystickP
 	EXPORT BorderColor
-	EXPORT LDIR8080
-	EXPORT LDDR8080
+	;EXPORT LDIR8080
+	EXPORT LDIR8080B
+	;EXPORT LDDR8080
+	EXPORT LDDR8080B
 	EXPORT SBCHLDE8080
 	EXPORT BATTY0_END
 
@@ -162,34 +164,56 @@ PaletteGame:		; Palette
 
 ;----------------------------------------------------------------------------
 
-; LDIR
-LDIR8080:
-	push af
-LDIR8080_1:
-	ld a,(HL)
+; LDIR command replacement
+;LDIR8080:
+;	push af
+;LDIR8080_1:
+;	ld a,(HL)
+;	ld (de),a
+;	inc hl
+;	inc de
+;	dec bc
+;	ld a,b
+;	or c
+;	jp nz,LDIR8080_1
+;	pop af
+;	ret
+
+; LDIR command replacement (счётчик - полный BC, как и ожидают все вызывающие)
+LDIR8080B:
+.loop:	ld a,(hl)
 	ld (de),a
 	inc hl
 	inc de
 	dec bc
 	ld a,b
 	or c
-	jp nz,LDIR8080_1
-	pop af
+	jp nz,.loop
 	ret
 
-; LDDR
-LDDR8080:
-	push af
-LDDR8080_1:
-	ld a,(HL)
+; LDDR command replacement
+;LDDR8080:
+;	push af
+;LDDR8080_1:
+;	ld a,(HL)
+;	ld (de),a
+;	dec hl
+;	dec de
+;	dec bc
+;	ld a,b
+;	or c
+;	jp NZ,LDDR8080_1
+;	pop af
+;	ret
+
+; LDDR command replacement, but for B as counter (BC in full LDDR)
+LDDR8080B:
+.loop:	ld a,(hl)
 	ld (de),a
 	dec hl
 	dec de
-	dec bc
-	ld a,b
-	or c
-	jp NZ,LDDR8080_1
-	pop af
+	dec b
+	jp nz,.loop
 	ret
 
 ; SBC HL,DE

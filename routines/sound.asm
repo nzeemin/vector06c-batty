@@ -23,33 +23,37 @@ LC064_0:
 ; На выходе Z, если уложились менее, чем во сколько-то прерываний
 play_sounds_queue:
 ;   LD IY,(iy_storage)
-;   LD A,(frames)
-;   LD (frames_copy),A
+  LD A,(frames)
+  LD (frames_copy),A
 
 ; Исключаем прерывания
   ; EI
   ; IM 1
 
-;   LD A,(scr_score_need_upd)
-;   AND A
-;   CALL NZ,scr_score_update
-;   LD IX,sounds_queue
-;   LD B,$05
-; play_sounds_queue_0:
-;   PUSH BC
-;   LD A,(IX+$00)
-;   AND A
-;   CALL NZ,play_selected_sound
-;   LD BC,$0007
-;   ADD IX,BC
-;   POP BC
-;   dec b
-;   jp nz,play_sounds_queue_0
-;   LD A,(frames)
-;   LD B,A
-;   LD A,(frames_copy)
-;   CP B
-;   ;DI
+  LD A,(scr_score_need_upd)
+  AND A
+  CALL NZ,scr_score_update
+  LD HL,sounds_queue
+  LD (snd_slot_ptr),HL
+  LD B,$05
+play_sounds_queue_0:
+  PUSH BC
+  LD HL,(snd_slot_ptr)
+  LD A,(HL)		; IX+$00
+  AND A
+  CALL NZ,play_selected_sound
+  LD HL,(snd_slot_ptr)
+  LD BC,$0007
+  ADD HL,BC
+  LD (snd_slot_ptr),HL
+  POP BC
+  dec b
+  jp nz,play_sounds_queue_0
+  LD A,(frames)
+  LD B,A
+  LD A,(frames_copy)
+  CP B
+  ;DI
   RET
 
 ; Used by the routine at play_sounds_queue.
@@ -66,6 +70,10 @@ play_selected_sound:
   LD D,(HL)
   EX DE,HL
   JP (HL)
+
+; Указатель на текущий слот очереди звуков, заменяет регистр IX
+snd_slot_ptr:
+  DEFW $0000
 
 ; Очередь проигрываемых звуков по IM1: 5 строк по 7 элементов
 sounds_queue:
@@ -103,8 +111,11 @@ sound_bat_resize_2 	EQU $0C
 play_sound_normall_brik:
   LD DE,$0844
   CALL sound_beep_cont_d
-;TODO  DEC (IX+$01)
-;TODO  LD (IX+$00),$00
+  LD HL,(snd_slot_ptr)
+  INC HL		; +$01
+  DEC (HL)		; IX+$01
+  LD HL,(snd_slot_ptr)
+  LD (HL),$00	; IX+$00
   RET
 
 ; Routine at C101
@@ -116,7 +127,8 @@ play_sound_metal_brik:
   LD (frames_copy),A
   LD A,$80
   LD (frames),A
-;TODO  LD (IX+$00),$00
+  LD HL,(snd_slot_ptr)
+  LD (HL),$00	; IX+$00
   RET
 
 ; Routine at C116
@@ -124,7 +136,8 @@ play_sound_ball_start:
   LD C,$09
   LD E,$14
   CALL play_sound_LC122
-;TODO  LD (IX+$00),$00
+  LD HL,(snd_slot_ptr)
+  LD (HL),$00	; IX+$00
   RET
 
 ; Used by the routines at play_sound_ball_start, play_sound_confirm_letter and play_sound_shot.
@@ -202,16 +215,23 @@ play_sound_confirm_letter:
 play_sound_bat_beat:
   LD DE,$0466
   CALL sound_beep_cont_d
-;TODO  LD (IX+$00),$00
+  LD HL,(snd_slot_ptr)
+  LD (HL),$00	; IX+$00
   RET
 
 play_sound_05:
-;TODO  LD E,(IX+$02)
+  LD HL,(snd_slot_ptr)
+  INC HL
+  INC HL		; +$02
+  LD E,(HL)		; IX+$02
   LD D,$01
   CALL sound_beep_cont_d
-;TODO  INC (IX+$02)
-;TODO  INC (IX+$02)
-;TODO  INC (IX+$02)
+  LD HL,(snd_slot_ptr)
+  INC HL
+  INC HL		; +$02
+  INC (HL)		; IX+$02
+  INC (HL)		; IX+$02
+  INC (HL)		; IX+$02
   RET
 
 ;-----------------------------
@@ -246,41 +266,59 @@ play_sound_05:
 play_sound_06:
   LD A,(random_number)
   AND $3F
-;TODO  ADD A,(IX+$01)
+  PUSH AF
+  LD HL,(snd_slot_ptr)
+  INC HL		; +$01
+  POP AF
+  ADD A,(HL)		; IX+$01
   LD E,A
   LD D,$01
   CALL sound_beep_cont_d
-;TODO  LD A,(IX+$01)
+  LD HL,(snd_slot_ptr)
+  INC HL		; +$01
+  LD A,(HL)		; IX+$01
   ADD A,$08
-;TODO  LD (IX+$01),A
+  LD (HL),A		; IX+$01
   CP $A1
   JP Z,play_sound_06_0
   CP $60
   RET NZ
-;TODO  LD (IX+$01),$21
+  LD HL,(snd_slot_ptr)
+  INC HL		; +$01
+  LD (HL),$21	; IX+$01
   RET
 play_sound_06_0:
-;TODO  LD (IX+$00),$00
+  LD HL,(snd_slot_ptr)
+  LD (HL),$00	; IX+$00
   RET
 
 play_sound_live_add:
-;TODO  LD A,(IX+$01)
+  LD HL,(snd_slot_ptr)
+  INC HL		; +$01
+  LD A,(HL)		; IX+$01
   AND $03
   JP NZ,play_sound_07_0
-;TODO  LD A,(IX+$01)
+  LD HL,(snd_slot_ptr)
+  INC HL		; +$01
+  LD A,(HL)		; IX+$01
   ADD A,$14
   LD E,A
   LD D,$03
   CALL sound_beep_cont_d
 play_sound_07_0:
-;TODO  DEC (IX+$01)
-;TODO  DEC (IX+$01)
+  LD HL,(snd_slot_ptr)
+  INC HL		; +$01
+  DEC (HL)		; IX+$01
+  DEC (HL)		; IX+$01
   RET NZ
-;TODO  LD (IX+$00),$00
+  LD HL,(snd_slot_ptr)
+  LD (HL),$00	; IX+$00
   RET
 
 play_sound_08:
-;TODO  LD A,(IX+$01)
+  LD HL,(snd_slot_ptr)
+  INC HL		; +$01
+  LD A,(HL)		; IX+$01
   RRA
   RRA
   AND $3F
@@ -288,48 +326,62 @@ play_sound_08:
   LD E,A
   LD D,$02
   CALL sound_beep_cont_de
-;TODO  INC (IX+$01)
+  LD HL,(snd_slot_ptr)
+  INC HL		; +$01
+  INC (HL)		; IX+$01
   RET
 
 play_sound_bat_resize_1:
   LD A,(bonus_flag)
   AND A
   RET NZ
-;TODO  LD E,(IX+$01)
+  LD HL,(snd_slot_ptr)
+  INC HL		; +$01
+  LD E,(HL)		; IX+$01
   LD D,$01
   CALL sound_beep_cont_d
-;TODO  LD A,(IX+$01)
+  LD HL,(snd_slot_ptr)
+  INC HL		; +$01
+  LD A,(HL)		; IX+$01
   SUB $0B
-;TODO  LD (IX+$01),A
+  LD (HL),A		; IX+$01
   CP $10
   RET NC
-;TODO  LD (IX+$00),$00
+  LD HL,(snd_slot_ptr)
+  LD (HL),$00	; IX+$00
   RET
 
 play_sound_triple_ball:
-;TODO  LD E,(IX+$01)
+  LD HL,(snd_slot_ptr)
+  INC HL		; +$01
+  LD E,(HL)		; IX+$01
   LD D,$01
   CALL sound_beep_cont_d
-;TODO  LD A,(IX+$01)
+  LD HL,(snd_slot_ptr)
+  INC HL		; +$01
+  LD A,(HL)		; IX+$01
   ADD A,$0B
-;TODO  LD (IX+$01),A
+  LD (HL),A		; IX+$01
   CP $C1
   RET C
-;TODO  LD (IX+$00),$00
+  LD HL,(snd_slot_ptr)
+  LD (HL),$00	; IX+$00
   RET
 
 play_sound_shot:
   LD C,$04
   LD E,$0F
   CALL play_sound_LC122
-;TODO  LD (IX+$00),$00
+  LD HL,(snd_slot_ptr)
+  LD (HL),$00	; IX+$00
   RET
 
 play_sound_bat_resize_2:
   LD E,$30
   LD D,$0A
   CALL sound_beep_cont_de
-;TODO  LD (IX+$00),$00
+  LD HL,(snd_slot_ptr)
+  LD (HL),$00	; IX+$00
   RET
 
 ; Used by the routines at sound_beep_cont_d and sound_beep_cont_de.

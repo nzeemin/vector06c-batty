@@ -2,7 +2,6 @@
 ; Ввод имени нового рекордсмена, обновление таблицы рекордов и её вывод на экран
 input_new_record_name:
   ; DI
-;TODO  LD IX,txt_high_score_table+227 ; Текст последней строчки таблицы
   LD HL,current_score_1up+2
   LD DE,score_six_digits
   LD B,$03
@@ -22,38 +21,39 @@ L910C_0:
   DEC HL
   dec b
   jp nz,L910C_0
-;TODO  LD IY,score_six_digits
+  LD HL,txt_high_score_table+227 ; Текст последней строчки таблицы (указатель строки = "IX")
   LD D,$0B
 L910C_1:
   LD B,$06
-;TODO  PUSH IY
-;TODO  PUSH IX
+  PUSH HL			; сохраняем указатель строки (замена PUSH IX)
+  LD DE,score_six_digits	; указатель цифр нового счёта (замена IY, база не меняется между попытками)
 L910C_2:
-;TODO  LD A,(IX+$00)
-;TODO  CP (IY+$00)
+  LD A,(DE)		; IY+$00
+  LD C,A
+  LD A,(HL)		; IX+$00
+  CP C
   JP C,L910C_4
   JP NZ,L910C_3
-;TODO  INC IX
-;TODO  INC IY
+  INC HL
+  INC DE
   dec b
   jp nz,L910C_2
 L910C_3:
-;TODO  POP IX
-;TODO  POP IY
+  POP HL
   LD A,D
   CP $0B
   RET Z
   JP L910C_5
 L910C_4:
   DEC D
-;TODO  POP IX
-;TODO  POP IY
+  POP HL
   LD BC,$FFEE
-;TODO  ADD IX,BC
+  ADD HL,BC
   LD A,D
   DEC A
   JP NZ,L910C_1
 L910C_5:
+  LD (hs_row_ptr),HL	; сохраняем указатель строки перед сдвигом таблицы (HL нужен для LDDR)
   LD A,$0A
   SUB D
   JP Z,L910C_7
@@ -61,7 +61,7 @@ L910C_5:
   LD HL,txt_high_score_table+222 ; Последняя строка таблицы рекордов
 L910C_6:
   LD BC,$000E
-  CALL LDDR8080
+  call LDDR8080B		; LDDR
   DEC HL
   DEC HL
   DEC HL
@@ -73,20 +73,28 @@ L910C_6:
   DEC A
   JP NZ,L910C_6
 L910C_7:
+  LD HL,(hs_row_ptr)
   LD DE,$0012
-;TODO  ADD IX,DE
-;TODO  PUSH IX
-  POP DE
+  ADD HL,DE
+  LD (hs_row_ptr),HL
+  EX DE,HL		; DE = обновлённый указатель строки (адресат для LDIR)
   LD HL,score_six_digits
   LD BC,$0006
-  CALL LDIR8080
+  call LDIR8080B
   LD C,$26
-;TODO  LD (IX+$09),$0A
-;TODO  LD (IX+$0A),C
-;TODO  LD (IX+$0B),C
-;TODO  LD (IX+$0C),C
-;TODO  LD (IX+$0D),C
-  CALL clear_screen_attrib
+  LD HL,(hs_row_ptr)
+  LD DE,$0009
+  ADD HL,DE
+  LD (HL),$0A		; IX+$09
+  INC HL
+  LD (HL),C		; IX+$0A
+  INC HL
+  LD (HL),C		; IX+$0B
+  INC HL
+  LD (HL),C		; IX+$0C
+  INC HL
+  LD (HL),C		; IX+$0D
+  ;CALL clear_screen_attrib
   CALL clear_screen_pix
   CALL disp_high_score_table_screen
   LD A,(player_number)
@@ -95,8 +103,7 @@ L910C_7:
   LD DE,txt_player_0_enter_your_name
   CALL print_line
   CALL print_line
-;TODO  PUSH IX
-  POP HL
+  LD HL,(hs_row_ptr)
   DEC HL
   DEC HL
   DEC HL
@@ -111,7 +118,7 @@ L910C_9:
   LD A,(ctrl_btns_pressed)
   AND $13
   JP Z,L910C_9
-;TODO  BIT 4,A
+  and %00010000		; BIT 4,A
   JP NZ,L910C_12
   CP $03
   JP Z,L910C_9
@@ -126,11 +133,17 @@ L910C_9:
   JP L910C_11
 L910C_10:
   DEC C
-;TODO  BIT 7,C
+  ld A,C
+  and %10000000		; BIT 7,C
   JP Z,L910C_11
   LD C,$27
 L910C_11:
-;TODO  LD (IX+$09),C
+  PUSH HL
+  LD HL,(hs_row_ptr)
+  LD DE,$0009
+  ADD HL,DE
+  LD (HL),C		; IX+$09
+  POP HL
   PUSH BC
 	ex DE,HL
 	ld HL,(text_line_addr)
@@ -145,8 +158,12 @@ L910C_12:
   POP BC
   DEC B
   JP Z,L910C_14
-;TODO  INC IX
-;TODO  LD (IX+$09),$0A
+  LD HL,(hs_row_ptr)
+  INC HL
+  LD (hs_row_ptr),HL
+  LD DE,$0009
+  ADD HL,DE
+  LD (HL),$0A		; IX+$09
   PUSH BC
 	ex DE,HL
 	ld HL,(text_line_addr)
@@ -168,49 +185,48 @@ L910C_14:
 text_line_addr:
   DEFW $0000
 
+; Указатель на текущую строку таблицы рекордов, заменяет регистр IX
+hs_row_ptr:
+  DEFW $0000
+
 ; Used by the routines at disp_high_score_table_screen and L93F8.
 ; Рисует рамку вокруг экрана
-draw_frame:		; Specialist ready
-  LD HL,$0000
-  LD (counter_misc),HL
-
-  CALL clear_screen_attrib
-  CALL clear_screen_pix
-
+draw_frame:			; Vector 8080 ready
+	ld HL,$0000
+	ld (counter_misc),HL
+	;call clear_screen_attrib
+	call clear_screen_pix
 ; Рисуются боковины
-  LD HL,zx_scr-$bf		; Адрес в экранной области $98DF
-  LD DE,zx_scr+$1f00-$bf	; Адрес в экранной области $B7DF
-  LD B,$C0
+	ld HL,zx_scr-$bf	; Адрес в экранной области $98DF
+	ld DE,zx_scr+$1f00-$bf	; Адрес в экранной области $B7DF
+	ld B,$C0
 draw_frame_0:
-  LD (HL),$C0
-  LD A,$03
-  LD (DE),A
-  inc E			; поправлено направление для Вектора
-  inc L			; поправлено направление для Вектора
-  DEC B
-  JP NZ,draw_frame_0
-
+	ld (HL),$C0
+	ld A,$03
+	ld (DE),A
+	inc E			; поправлено направление для Вектора
+	inc L			; поправлено направление для Вектора
+	dec B
+	jp nz,draw_frame_0
 ; Рисуется верх и низ
-  LD HL,zx_scr		; Адрес в экранной области $98DE
-  LD DE,zx_scr-$be	; Адрес в экранной области $9820
-  LD B,$20
-  LD A,$FF
+	ld HL,zx_scr		; Адрес в экранной области $98DE
+	ld DE,zx_scr-$be	; Адрес в экранной области $9820
+	ld B,$20
+	ld A,$FF
 draw_frame_1:
-  LD (HL),A
-  dec L			; поправлено направление для Вектора
-  LD (HL),A
-  inc L
-
-  LD (DE),A
-  dec E			; поправлено направление для Вектора
-  LD (DE),A
-  inc E
-
-  INC H
-  INC D
-  DEC B
-  JP NZ,draw_frame_1
-  RET
+	ld (HL),A
+	dec L			; поправлено направление для Вектора
+	ld (HL),A
+	inc L
+	ld (DE),A
+	dec E			; поправлено направление для Вектора
+	ld (DE),A
+	inc E
+	inc H
+	inc D
+	dec B
+	jp nz,draw_frame_1
+	ret
 
 ; Used by the routines at input_new_record_name and L927F.
 disp_high_score_table_screen:
@@ -218,11 +234,11 @@ disp_high_score_table_screen:
 ;  	ld a,c42
 ;	ld (color_port),a	; Красный цвет
 
-  CALL draw_frame
+	CALL draw_frame
 
-  LD DE,txt_high_score_table
-  LD B,$16
-  JP print_message
+	LD DE,txt_high_score_table
+	LD B,$16
+	JP print_message
 
 ; Used by the routine at disp_main_menu_and_wait_keys.
 disp_hs_table_and_wait_keys:
@@ -233,12 +249,12 @@ check_0_button:
 	and %00000001		; '0'?
 	ret nz			; Выход из общей процедуры (запуск игры), если нажат 0
 any_key:
-		ld		a,$82
-;		ld		(kb_port_3),a
-;		ld		a,(kb_port_1)
-		or		$01
-		inc a
-  JP NZ,disp_main_menu_and_wait_keys
+	ld		a,$82
+;	ld		(kb_port_3),a
+;	ld		a,(kb_port_1)
+	or		$01
+	inc a
+	JP NZ,disp_main_menu_and_wait_keys
 
   LD A,$49		; Цикл задержки $80
 L927F_1:		; Цикл задержки
